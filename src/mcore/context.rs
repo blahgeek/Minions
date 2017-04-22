@@ -2,12 +2,13 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-20
+* @Last Modified time: 2017-04-21
 */
 
 use std::error::Error;
 use mcore::item::Item;
 use mcore::fuzzymatch::fuzzymatch;
+use mcore::quicksend::quicksend;
 use actions;
 
 
@@ -108,6 +109,23 @@ impl Context {
         Ok(())
     }
 
+    pub fn quicksend_able(&self, item: &Item) -> bool {
+        self.reference_item.is_none() && item.data.is_some()
+    }
+
+    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error>> {
+        if !self.quicksend_able(&item) {
+            panic!("Item {} is not quicksend_able", item);
+        }
+        if let Some(ref data) = item.data {
+            self.list_items = quicksend(data);
+        } else {
+            panic!("Should not reach here");
+        }
+        self.reference_item = Some(item);
+        Ok(())
+    }
+
     pub fn back(&mut self) -> Result<(), Box<Error>> {
         if let Some(action_item) = self.history_items.pop() {
             self.select(action_item)
@@ -118,11 +136,3 @@ impl Context {
     }
 }
 
-
-#[cfg(test)]
-mod tests {
-    use core::context::Context;
-    #[test]
-    fn dummytest() {
-    }
-}

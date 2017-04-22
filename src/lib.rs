@@ -1,5 +1,8 @@
+extern crate gtk;
+
 pub mod mcore;
 pub mod actions;
+pub mod frontend;
 
 #[cfg(test)]
 mod tests {

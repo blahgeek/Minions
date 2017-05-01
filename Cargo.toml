@@ -3,8 +3,18 @@ name = "minions"
 version = "0.1.0"
 authors = ["BlahGeek <i@BlahGeek.com>"]
 
-[dependencies]
+[lib]
+name = "minions"
+path = "src/lib.rs"
+doc = false
 
+[[bin]]
+name = "minions"
+path = "src/bin/minions.rs"
+doc = false
+
+[dependencies]
+gdk = "0.5.2"
 
 [dependencies.gtk]
 version = "0.1.2"

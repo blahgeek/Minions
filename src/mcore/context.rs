@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-21
+* @Last Modified time: 2017-05-01
 */
 
 use std::error::Error;
@@ -42,17 +42,23 @@ impl Context {
     }
 
     /// Filter list_items using fuzzymatch
-    pub fn filter(&self, pattern: &str) -> Vec<(usize, &Item)> {
-        let mut items_ref = self.list_items.iter().enumerate().collect::<Vec<(usize, &Item)>>();
-        items_ref.sort_by_key(|item| {
-            let search_str = if let Some(ref search_str) = item.1.search_str {
-                search_str // clone
+    pub fn filter(&self, pattern: &str) -> Vec<&Item> {
+        println!("filter: {:?}", pattern);
+        let scores = self.list_items.iter().map(|item| {
+            let search_str = if let Some(ref search_str) = item.search_str {
+                search_str
             } else {
-                &item.1.title // clone
+                &item.title
             };
-            - fuzzymatch(search_str, pattern, false)
+            fuzzymatch(search_str, pattern, false)
         });
-        items_ref
+        let mut items_and_scores = self.list_items.iter().zip(scores.into_iter())
+            .collect::<Vec<(&Item, i32)>>();
+        items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
+        items_and_scores.into_iter()
+            .filter(|item_and_score| item_and_score.1 > 0)
+            .map(|item_and_score| item_and_score.0)
+            .collect::<Vec<&Item>>()
     }
 
     /// Get item from context, destroy list_items

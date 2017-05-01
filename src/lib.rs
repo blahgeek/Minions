@@ -1,4 +1,5 @@
 extern crate gtk;
+extern crate gdk;
 
 pub mod mcore;
 pub mod actions;

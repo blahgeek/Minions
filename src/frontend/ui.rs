@@ -2,20 +2,20 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-22
+* @Last Modified time: 2017-05-01
 */
 
 use mcore::item::Item;
-
-use std::rc::Rc;
 
 use gtk;
 use gtk::prelude::*;
 
 pub struct MinionsUI {
     window_builder: gtk::Builder,
-    pub window: Rc<gtk::Window>,
-    listbox: Rc<gtk::ListBox>,
+    pub window: gtk::Window,
+    listbox: gtk::ListBox,
+    filterlabel: gtk::Label,
+    textentry: gtk::Entry,
 }
 
 impl MinionsUI {
@@ -25,6 +25,8 @@ impl MinionsUI {
         let window = window_builder.get_object::<gtk::Window>("root")
                      .expect("Failed to initialize from glade file");
         let listbox = window_builder.get_object::<gtk::ListBox>("listbox").unwrap();
+        let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
+        let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
 
         window.show_all();
         window.connect_delete_event(|_, _| {
@@ -34,9 +36,15 @@ impl MinionsUI {
 
         MinionsUI {
             window_builder: window_builder,
-            window: Rc::new(window),
-            listbox: Rc::new(listbox),
+            window: window,
+            listbox: listbox,
+            filterlabel: label,
+            textentry: entry,
         }
+    }
+
+    pub fn set_filter_text(&self, text: &str) {
+        self.filterlabel.set_text(text);
     }
 
     pub fn set_reference_item(&self, item: &Option<Item>) {
@@ -52,6 +60,9 @@ impl MinionsUI {
     }
 
     pub fn set_items(&self, items: &Vec<&Item>) {
+        for item_ui in self.listbox.get_children().iter() {
+            self.listbox.remove(item_ui);
+        }
         for item in items.iter() {
             let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
             let item_ui = builder.get_object::<gtk::Box>("item_template")

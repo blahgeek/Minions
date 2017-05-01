@@ -93,7 +93,7 @@
                 <property name="hexpand">True</property>
                 <property name="editable">False</property>
                 <property name="caps_lock_warning">False</property>
-                <property name="placeholder_text" translatable="yes">Placeholder</property>
+                <property name="placeholder_text" translatable="yes">Minions</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -107,7 +107,6 @@
                 <property name="can_focus">False</property>
                 <property name="margin_left">5</property>
                 <property name="margin_right">10</property>
-                <property name="label" translatable="yes">label</property>
                 <attributes>
                   <attribute name="font-desc" value="&lt;Enter Value&gt; 12"/>
                   <attribute name="underline" value="True"/>
@@ -155,7 +154,7 @@
         </child>
       </object>
     </child>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
   </object>

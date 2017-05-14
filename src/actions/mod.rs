@@ -34,7 +34,11 @@ impl fmt::Display for ActionError {
 use mcore::action::Action;
 
 pub fn get_actions() -> Vec<Box<Action>> {
-    vec![
+    let mut ret : Vec<Box<Action>> = vec![
         Box::new(capital::Capital{}),
-    ]
+    ];
+    for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all().into_iter() {
+        ret.push(Box::new(desktop_entry));
+    }
+    ret
 }

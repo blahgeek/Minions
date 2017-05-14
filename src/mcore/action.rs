@@ -2,12 +2,17 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-13
+* @Last Modified time: 2017-05-14
 */
 
 use std;
 use std::error::Error;
 use mcore::item::Item;
+
+pub enum Icon {
+    Name(String),
+    File(std::path::PathBuf),
+}
 
 #[derive(Debug)]
 pub enum ActionArg {
@@ -20,7 +25,7 @@ pub enum ActionArg {
 pub trait Action {
     // metadata
     fn name(&self) -> &str;
-    // fn icon(&self); // TODO
+    fn icon(&self) -> Option<Icon> { None }
 
     /// Whether this action runs without input
     fn accept_nothing(&self) -> bool { false }

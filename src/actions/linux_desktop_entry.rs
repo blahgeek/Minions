@@ -12,9 +12,9 @@ use self::ini::Ini;
 
 use std::ffi::OsStr;
 use std::error::Error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
-use mcore::action::Action;
+use mcore::action::{Action, Icon};
 use mcore::item::Item;
 use actions::ActionError;
 
@@ -23,12 +23,25 @@ pub struct LinuxDesktopEntry {
     name: String,
     comment: Option<String>,
     exec: Vec<String>,
+    icon_text: Option<String>,
 
     // TODO: exec, accept_path, accept_url
 }
 
 impl Action for LinuxDesktopEntry {
     fn name(&self) -> &str { &self.name }
+    fn icon(&self) -> Option<Icon> {
+        if let Some(ref icon_text) = self.icon_text {
+            if icon_text.chars().next() == Some('/') {
+                Some(Icon::File(PathBuf::from(&icon_text)))
+            } else {
+                Some(Icon::Name(icon_text.clone()))
+            }
+        } else {
+            None
+        }
+    }
+
     fn accept_nothing(&self) -> bool { true }
 
     fn accept_path(&self) -> bool {
@@ -85,6 +98,10 @@ impl LinuxDesktopEntry {
             name: config.get_from(Some("Desktop Entry"), "Name").ok_or(err.clone())?.into(),
             comment: Some(config.get_from(Some("Desktop Entry"), "Comment").ok_or(err.clone())?.into()),
             exec: shlex::split(exec_str).ok_or(err.clone())?,
+            icon_text: match config.get_from(Some("Desktop Entry"), "Icon") {
+                Some(s) => Some(s.into()),
+                None => None,
+            },
         })
     }
 

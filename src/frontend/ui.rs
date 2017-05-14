@@ -2,10 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-01
+* @Last Modified time: 2017-05-14
 */
 
 use mcore::item::Item;
+use mcore::action::Icon;
 
 use gtk;
 use gtk::prelude::*;
@@ -73,8 +74,17 @@ impl MinionsUI {
             let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
             let badge = builder.get_object::<gtk::Label>("badge").unwrap();
             let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
+            let icon = builder.get_object::<gtk::Image>("icon").unwrap();
 
             title.set_text(&item.title);
+
+            if let Some(ref ico) = item.icon {
+                match ico {
+                    &Icon::Name(ref ico_name) => icon.set_from_icon_name(&ico_name, -1),
+                    &Icon::File(ref path) => icon.set_from_file(&path),
+                }
+            }
+
             match item.subtitle {
                 Some(ref text) => subtitle.set_text(&text),
                 None => titlebox.remove(&subtitle),

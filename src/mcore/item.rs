@@ -2,12 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-13
+* @Last Modified time: 2017-05-14
 */
 
 use std;
 use std::fmt;
-use mcore::action::{Action, ActionArg};
+use mcore::action::{Action, ActionArg, Icon};
 
 /// Typed data in item
 #[derive(Debug)]
@@ -22,7 +22,8 @@ pub struct Item {
     pub title: String,
     /// Sub-title text
     pub subtitle: Option<String>,
-    // TODO: icon
+    /// Icon, optional
+    pub icon: Option<Icon>,
     /// Badge text (like label), optional
     pub badge: Option<String>,
 
@@ -62,6 +63,7 @@ impl Item {
         Item {
             title: String::new(),
             subtitle: None,
+            icon: None,
             badge: None,
             data: None,
             search_str: None,
@@ -80,6 +82,7 @@ impl Item {
     pub fn new_action_item(action: Box<Action>) -> Item {
         let mut item = Item::new();
         item.title = action.name().into();
+        item.icon = action.icon();
         item.action = Some(action);
         item
     }

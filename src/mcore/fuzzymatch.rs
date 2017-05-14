@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-20
+* @Last Modified time: 2017-05-13
 */
 
 
@@ -70,7 +70,7 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use core::fuzzymatch::fuzzymatch;
+    use mcore::fuzzymatch::fuzzymatch;
     #[test]
     fn fuzzymatch_test() {
         assert!(fuzzymatch("hello world", "hw", false) > 0);

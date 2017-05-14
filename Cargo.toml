@@ -15,6 +15,8 @@ doc = false
 
 [dependencies]
 gdk = "0.5.2"
+rust-ini = "0.10.0"
+shlex = "0.1.1"
 
 [dependencies.gtk]
 version = "0.1.2"

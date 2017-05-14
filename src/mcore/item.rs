@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-20
+* @Last Modified time: 2017-05-13
 */
 
 use std;
@@ -10,6 +10,7 @@ use std::fmt;
 use mcore::action::{Action, ActionArg};
 
 /// Typed data in item
+#[derive(Debug)]
 pub enum ItemData {
     Text(String),
     Path(std::path::PathBuf),
@@ -78,7 +79,7 @@ impl Item {
 
     pub fn new_action_item(action: Box<Action>) -> Item {
         let mut item = Item::new();
-        item.title = action.name();
+        item.title = action.name().into();
         item.action = Some(action);
         item
     }

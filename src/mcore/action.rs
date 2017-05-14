@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-20
+* @Last Modified time: 2017-05-13
 */
 
 use std;
@@ -19,7 +19,7 @@ pub enum ActionArg {
 /// The general action type
 pub trait Action {
     // metadata
-    fn name(&self) -> String;
+    fn name(&self) -> &str;
     // fn icon(&self); // TODO
 
     /// Whether this action runs without input

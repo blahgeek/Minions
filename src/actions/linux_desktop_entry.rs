@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-14
+* @Last Modified time: 2017-05-20
 */
 
 extern crate shlex;
@@ -62,7 +62,7 @@ impl Action for LinuxDesktopEntry {
 impl LinuxDesktopEntry {
 
     fn run_path_or_empty(&self, path: Option<&Path>) -> Result<Vec<Item>, Box<Error>> {
-        if self.exec.len() <= 1 {
+        if self.exec.len() <= 0 {
             return Err(Box::new(ActionError::NotSupported));
         }
         let mut cmd = Command::new(&self.exec[0]);

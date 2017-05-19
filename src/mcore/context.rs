@@ -2,10 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-01
+* @Last Modified time: 2017-05-19
 */
 
 use std::error::Error;
+use std::rc::Rc;
 use mcore::item::Item;
 use mcore::fuzzymatch::fuzzymatch;
 use mcore::quicksend::quicksend;
@@ -14,13 +15,13 @@ use actions;
 
 pub struct Context {
     /// Reference item for quick-send
-    pub reference_item: Option<Item>,
+    pub reference_item: Option<Rc<Item>>,
     /// Candidates items list
-    pub list_items: Vec<Item>,
+    pub list_items: Vec<Rc<Item>>,
 
     /// Stack of history items, init with empty stack
     /// Calling the last item's action would yields list_items
-    history_items: Vec<Item>,
+    history_items: Vec<Rc<Item>>,
 }
 
 
@@ -35,14 +36,14 @@ impl Context {
                 action.accept_nothing() || action.accept_text()
             })
             .map(|action| {
-                Item::new_action_item(action)
+                Rc::new(Item::new_action_item(action))
             }).collect(),
             history_items: Vec::new(),
         }
     }
 
     /// Filter list_items using fuzzymatch
-    pub fn filter(&self, pattern: &str) -> Vec<&Item> {
+    pub fn filter(&self, pattern: &str) -> Vec<Rc<Item>> {
         println!("filter: {:?}", pattern);
         let scores = self.list_items.iter().map(|item| {
             let search_str = if let Some(ref search_str) = item.search_str {
@@ -52,23 +53,13 @@ impl Context {
             };
             fuzzymatch(search_str, pattern, false)
         });
-        let mut items_and_scores = self.list_items.iter().zip(scores.into_iter())
-            .collect::<Vec<(&Item, i32)>>();
+        let mut items_and_scores = self.list_items.clone().into_iter().zip(scores.into_iter())
+            .collect::<Vec<(Rc<Item>, i32)>>();
         items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
         items_and_scores.into_iter()
             .filter(|item_and_score| item_and_score.1 > 0)
             .map(|item_and_score| item_and_score.0)
-            .collect::<Vec<&Item>>()
-    }
-
-    /// Get item from context, destroy list_items
-    pub fn get_item(&mut self, idx: usize) -> Item {
-        while self.list_items.len() > idx + 1 {
-            self.list_items.pop();
-        }
-        let ret = self.list_items.pop();
-        self.list_items.clear();
-        ret.unwrap()
+            .collect::<Vec<Rc<Item>>>()
     }
 
     pub fn selectable(&self, item: &Item) -> bool {
@@ -87,12 +78,15 @@ impl Context {
         }
     }
 
-    pub fn select(&mut self, item: Item) -> Result<(), Box<Error>> {
+    pub fn select(&mut self, item: Rc<Item>) -> Result<(), Box<Error>> {
         if !self.selectable(&item) {
             panic!("Item {} is not selectable", item);
         }
         if let Some(ref action) = item.action {
-            self.list_items = action.run_arg(&item.action_arg)?;
+            self.list_items = action.run_arg(&item.action_arg)?
+                              .into_iter()
+                              .map(|x| Rc::new(x))
+                              .collect::<Vec<Rc<Item>>>();
         } else {
             panic!("Should not reach here");
         }
@@ -101,12 +95,15 @@ impl Context {
         Ok(())
     }
 
-    pub fn select_with_text(&mut self, item: Item, text: &str) -> Result<(), Box<Error>> {
+    pub fn select_with_text(&mut self, item: Rc<Item>, text: &str) -> Result<(), Box<Error>> {
         if !self.selectable_with_text(&item) {
-            panic!("Item {} is not selectable with text", item);
+            panic!("Item {} is not selectable with text", &item);
         }
         if let Some(ref action) = item.action {
-            self.list_items = action.run_text(text)?;
+            self.list_items = action.run_text(text)?
+                              .into_iter()
+                              .map(|x| Rc::new(x))
+                              .collect::<Vec<Rc<Item>>>();
         } else {
             panic!("Should not reach here");
         }
@@ -119,12 +116,13 @@ impl Context {
         self.reference_item.is_none() && item.data.is_some()
     }
 
-    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error>> {
+    pub fn quicksend(&mut self, item: Rc<Item>) -> Result<(), Box<Error>> {
         if !self.quicksend_able(&item) {
             panic!("Item {} is not quicksend_able", item);
         }
         if let Some(ref data) = item.data {
-            self.list_items = quicksend(data);
+            self.list_items = quicksend(data).into_iter().map(|x| Rc::new(x))
+                                             .collect::<Vec<Rc<Item>>>();
         } else {
             panic!("Should not reach here");
         }

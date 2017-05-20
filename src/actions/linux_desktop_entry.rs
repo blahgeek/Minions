@@ -71,7 +71,7 @@ impl LinuxDesktopEntry {
                 if let Some(p) = path {
                     cmd.arg(p.as_os_str());
                 }
-            } else if *arg == "%u" || *arg == "%F" {
+            } else if *arg == "%u" || *arg == "%U" {
                 // nop
             } else {
                 cmd.arg(arg);

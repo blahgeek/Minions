@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-20
+* @Last Modified time: 2017-05-21
 */
 
 use std;
@@ -25,6 +25,7 @@ pub struct MinionsApp {
     // filter related
     filter_text: String,
     filter_text_lasttime: std::time::Instant,
+    filter_text_should_reset: bool,
 
     filtered_items: Vec<Rc<Item>>,
 
@@ -33,8 +34,18 @@ pub struct MinionsApp {
 
 impl MinionsApp {
 
+    fn reset_to_ctx(&mut self) {
+        self.filter_text = String::new();
+        self.update_filter();
+        self.ui.set_reference_item(match self.ctx.reference_item {
+            None => None,
+            Some(ref item) => Some(&item),
+        });
+    }
+
     fn update_filter(&mut self) {
         self.filter_text_lasttime = std::time::Instant::now();
+        self.filter_text_should_reset = true;
         self.ui.set_filter_text(&self.filter_text);
         if self.filter_text.len() == 0 {
             self.filtered_items = self.ctx.list_items.clone();
@@ -76,11 +87,15 @@ impl MinionsApp {
         println!("Key pressed: {:?}", key);
         if key == gdk::enums::key::Return {
             self.enter_item();
+        } else if key == gdk::enums::key::Escape {
+            self.reset_to_ctx();
         } else if key == gdk::enums::key::Down {
             self.highlighting_idx += 1;
+            self.filter_text_should_reset = false;
             self.update_highlight();
         } else if key == gdk::enums::key::Up {
             self.highlighting_idx -= 1;
+            self.filter_text_should_reset = false;
             self.update_highlight();
         } else if let Some(ch) = gdk::keyval_to_unicode(key) {
             if ch.is_alphabetic() {
@@ -93,7 +108,9 @@ impl MinionsApp {
 
     fn process_timeout(&mut self) {
         let duration = self.filter_text_lasttime.elapsed();
-        if duration > std::time::Duration::new(1, 0) && self.filter_text.len() > 0 {
+        if self.filter_text_should_reset &&
+           duration > std::time::Duration::new(1, 0) &&
+           self.filter_text.len() > 0 {
             self.filter_text = String::new();
             self.update_filter();
         }
@@ -105,11 +122,11 @@ impl MinionsApp {
             ctx: Context::new(),
             filter_text: String::new(),
             filter_text_lasttime: std::time::Instant::now(),
+            filter_text_should_reset: true,
             filtered_items: Vec::new(),
             highlighting_idx: 0,
         };
-        app.ui.set_reference_item(None);
-        app.update_filter();
+        app.reset_to_ctx();
 
         let app  = Rc::new(RefCell::new(app));
         let app_ = app.clone();

@@ -4,6 +4,8 @@ pub mod actions;
 #[cfg(feature="use-gtk")]
 pub mod frontend_gtk;
 
+pub mod frontend_rofi;
+
 #[cfg(test)]
 mod tests {
     use actions;

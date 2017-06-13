@@ -2,14 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-19
+* @Last Modified time: 2017-06-13
 */
 
 use mcore::item::Item;
 use mcore::action::Icon;
 
-use gtk;
-use gtk::prelude::*;
+use frontend_gtk::gtk;
+use frontend_gtk::gtk::prelude::*;
 
 pub struct MinionsUI {
     window_builder: gtk::Builder,

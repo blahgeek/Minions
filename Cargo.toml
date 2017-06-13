@@ -3,21 +3,22 @@ name = "minions"
 version = "0.1.0"
 authors = ["BlahGeek <i@BlahGeek.com>"]
 
+[features]
+use-gtk = ["gtk", "gdk"]
+
 [lib]
 name = "minions"
 path = "src/lib.rs"
 doc = false
 
 [[bin]]
-name = "minions"
-path = "src/bin/minions.rs"
+name = "minions_gtk"
+path = "src/bin/minions_gtk.rs"
+required-features = ["use-gtk"]
 doc = false
 
 [dependencies]
-gdk = "0.5.2"
 rust-ini = "0.10.0"
 shlex = "0.1.1"
-
-[dependencies.gtk]
-version = "0.1.2"
-features = ["v3_10"]
+gdk = { version = "0.5.2", optional = true }
+gtk = { version = "0.1.2", features = ["v3_10"], optional = true }

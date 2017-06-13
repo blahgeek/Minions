@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-21
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-23
+* @Last Modified time: 2017-06-13
 */
 
 extern crate gtk;
@@ -15,7 +15,7 @@ extern crate minions;
 
 // use minions::mcore::context::Context;
 // use minions::mcore::item::Item;
-use minions::frontend::app::MinionsApp;
+use minions::frontend_gtk::app::MinionsApp;
 
 
 fn main() {

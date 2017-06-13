@@ -2,19 +2,19 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-21
+* @Last Modified time: 2017-06-13
 */
 
 use std;
-use gdk;
-use gtk;
-use gtk::prelude::*;
+use frontend_gtk::gdk;
+use frontend_gtk::gtk;
+use frontend_gtk::gtk::prelude::*;
 
 use std::rc::Rc;
 use std::ops::Deref;
 use std::cell::RefCell;
 
-use frontend::ui::MinionsUI;
+use frontend_gtk::ui::MinionsUI;
 use mcore::context::Context;
 use mcore::item::Item;
 

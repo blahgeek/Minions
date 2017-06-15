@@ -1,5 +1,6 @@
 pub mod mcore;
 pub mod actions;
+pub mod items;
 
 #[cfg(feature="use-gtk")]
 pub mod frontend_gtk;

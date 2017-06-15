@@ -2,10 +2,9 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-14
+* @Last Modified time: 2017-06-15
 */
 
-use std::fmt;
 use std::rc::Rc;
 use std::io::Write;
 use std::io::Read;
@@ -49,7 +48,7 @@ impl MinionsApp {
 
         Ok (match status {
             0 => { // enter
-                self.ctx.select_with_text(item, &stdout_str);
+                self.ctx.select_with_text(item, &stdout_str)?;
                 State::Filtering(-1, String::new())
             },
             1 => { // esc
@@ -58,7 +57,6 @@ impl MinionsApp {
             },
             _ => {
                 panic!("Unexpected rofi return code");
-                State::Exiting
             }
         })
     }

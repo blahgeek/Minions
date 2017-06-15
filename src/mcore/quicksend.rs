@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-21
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-04-21
+* @Last Modified time: 2017-06-15
 */
 
 use actions;
@@ -27,7 +27,7 @@ pub fn quicksend(data: &ItemData) -> Vec<Item> {
             .filter(|action| action.accept_path())
             .map(|action| {
                 let mut item = Item::new_action_item(action);
-                item.action_arg = ActionArg::Path(path.into());
+                item.action_arg = ActionArg::Path(path.clone());
                 item
             })
             .collect()

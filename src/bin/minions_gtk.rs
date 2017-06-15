@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-21
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-13
+* @Last Modified time: 2017-06-15
 */
 
 extern crate gtk;
@@ -21,7 +21,7 @@ use minions::frontend_gtk::app::MinionsApp;
 fn main() {
     gtk::init().expect("Failed to initialize GTK");
 
-    let app = MinionsApp::new();
+    MinionsApp::new();
 
     // let minions_ui = MinionsUI::new();
     // let context = Context::new();

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-14
+* @Last Modified time: 2017-06-15
 */
 
 use std;
@@ -49,9 +49,6 @@ impl fmt::Display for Item {
         if let & Some(ref badge) = &self.badge {
             try!(write!(f, "[{}]", badge));
         };
-        if let & Some(ref action) = &self.action {
-            try!(write!(f, "[ACTION: {}, {:?}]", action.name(), self.action_arg));
-        };
         Ok(())
     }
 }
@@ -59,9 +56,9 @@ impl fmt::Display for Item {
 
 impl Item {
 
-    pub fn new() -> Item {
+    pub fn new(title: &str) -> Item {
         Item {
-            title: String::new(),
+            title: title.into(),
             subtitle: None,
             icon: None,
             badge: None,
@@ -73,16 +70,13 @@ impl Item {
     }
 
     pub fn new_text_item(text: &str) -> Item {
-        let mut item = Item::new();
-        item.title = text.into();
+        let mut item = Item::new(text);
         item.data = Some(ItemData::Text(text.into()));
         item
     }
 
     pub fn new_action_item(action: Box<Action>) -> Item {
-        let mut item = Item::new();
-        item.title = action.name().into();
-        item.icon = action.icon();
+        let mut item = action.get_item();
         item.action = Some(action);
         item
     }

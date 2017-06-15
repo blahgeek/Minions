@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-13
+* @Last Modified time: 2017-06-15
 */
 
 use std::error::Error;
@@ -10,7 +10,7 @@ use std::rc::Rc;
 use mcore::item::Item;
 use mcore::fuzzymatch::fuzzymatch;
 use mcore::quicksend::quicksend;
-use actions;
+use items;
 
 
 pub struct Context {
@@ -31,13 +31,8 @@ impl Context {
     pub fn new() -> Context {
         Context {
             reference_item: None,
-            list_items: actions::get_actions().into_iter()
-            .filter(|action| {
-                action.accept_nothing() || action.accept_text()
-            })
-            .map(|action| {
-                Rc::new(Item::new_action_item(action))
-            }).collect(),
+            list_items: items::get_initial_items().into_iter()
+                              .map(|x| Rc::new(x)).collect(),
             history_items: Vec::new(),
         }
     }

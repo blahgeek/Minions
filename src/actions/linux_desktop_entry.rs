@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-20
+* @Last Modified time: 2017-06-15
 */
 
 extern crate shlex;
@@ -14,8 +14,8 @@ use std::ffi::OsStr;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use mcore::action::{Action, Icon};
-use mcore::item::Item;
+use mcore::action::Action;
+use mcore::item::{Item, ItemData};
 use actions::ActionError;
 
 #[derive(Debug)]
@@ -24,22 +24,22 @@ pub struct LinuxDesktopEntry {
     comment: Option<String>,
     exec: Vec<String>,
     icon_text: Option<String>,
-
-    // TODO: exec, accept_path, accept_url
 }
 
 impl Action for LinuxDesktopEntry {
-    fn name(&self) -> &str { &self.name }
-    fn icon(&self) -> Option<Icon> {
-        if let Some(ref icon_text) = self.icon_text {
-            if icon_text.chars().next() == Some('/') {
-                Some(Icon::File(PathBuf::from(&icon_text)))
-            } else {
-                Some(Icon::Name(icon_text.clone()))
-            }
-        } else {
-            None
+
+    fn get_item(&self) -> Item {
+        let exe_path = if self.exec.len() > 0 {
+            Some(self.exec[0].clone())
+        } else { None };
+        let comment = self.comment.clone();
+
+        let mut item = Item::new(&self.name);
+        if let Some(exe_path) = exe_path {
+            item.data = Some(ItemData::Path(PathBuf::from(&exe_path)));
         }
+        item.subtitle = comment;
+        item
     }
 
     fn accept_nothing(&self) -> bool { true }

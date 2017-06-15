@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-14
+* @Last Modified time: 2017-06-15
 */
 
 use std;
@@ -23,9 +23,9 @@ pub enum ActionArg {
 
 /// The general action type
 pub trait Action {
-    // metadata
-    fn name(&self) -> &str;
-    fn icon(&self) -> Option<Icon> { None }
+
+    /// Get an item representing itself
+    fn get_item(&self) -> Item;
 
     /// Whether this action runs without input
     fn accept_nothing(&self) -> bool { false }

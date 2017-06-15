@@ -67,7 +67,7 @@ impl Context {
 
     pub fn selectable_with_text(&self, item: &Item) -> bool {
         if let Some(ref action) = item.action {
-            action.accept_text()
+            item.action_arg.is_none() && action.accept_text()
         } else {
             false
         }

@@ -14,6 +14,8 @@ use std::process::{Command, Stdio};
 use mcore::context::Context;
 use mcore::item::Item;
 
+use frontend_rofi::utils;
+
 #[derive(Clone)]
 enum State {
     Filtering(i32, String),
@@ -27,6 +29,8 @@ pub struct MinionsApp {
     state: State,
 }
 
+static ROFI_WIDTH: i32 = 120;
+
 impl MinionsApp {
 
     fn rofi_enter_text(&mut self, item: Rc<Item>) -> Result<State, Box<Error>> {
@@ -35,6 +39,7 @@ impl MinionsApp {
         cmd.stdin(Stdio::piped())
            .stdout(Stdio::piped())
            .arg("-dmenu")
+           .arg("-width").arg((-ROFI_WIDTH-2).to_string())
            .arg("-p").arg(&prompt)
            .arg("-format").arg("f");
         println!("Executing: {:?}", cmd);
@@ -72,6 +77,8 @@ impl MinionsApp {
            .stdout(Stdio::piped())
            .arg("-dmenu")
            .arg("-no-custom")
+           .arg("-markup-rows")
+           .arg("-width").arg((-ROFI_WIDTH-2).to_string())
            .arg("-p").arg(&prompt)
            .arg("-format").arg("i|f")
            .arg("-selected-row").arg(select_idx.to_string())
@@ -85,7 +92,8 @@ impl MinionsApp {
 
         for item in self.ctx.list_items.iter() {
             if let Some(ref mut stdin) = child.stdin {
-                stdin.write_fmt(format_args!("{}\n", item.title))?;
+                let item_str = utils::format_item(&self.ctx, item, ROFI_WIDTH).into_bytes();
+                stdin.write(&item_str)?;
             }
         }
         let status = child.wait()?.code().unwrap();

@@ -39,6 +39,7 @@ impl Action for LinuxDesktopEntry {
             item.data = Some(ItemData::Path(PathBuf::from(&exe_path)));
         }
         item.subtitle = comment;
+        item.badge = Some("Desktop Entry".into());
         item
     }
 

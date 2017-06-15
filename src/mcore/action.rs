@@ -21,6 +21,15 @@ pub enum ActionArg {
     Path(std::path::PathBuf),
 }
 
+impl ActionArg {
+    pub fn is_none(&self) -> bool {
+        match self {
+            &ActionArg::None => { true },
+            _ => { false }
+        }
+    }
+}
+
 /// The general action type
 pub trait Action {
 

@@ -150,6 +150,7 @@ impl MinionsApp {
     }
 
     pub fn run_loop(&mut self) {
+        let mut exiting_count = 0;
         loop {
             if self.ctx.list_items.len() == 0 {
                 println!("No listing items");
@@ -172,10 +173,17 @@ impl MinionsApp {
                     break;
                 },
                 Ok(State::Exiting) => {
-                    println!("Exit!");
-                    break;
+                    if exiting_count == 0 {
+                        self.ctx = Context::new();
+                        self.state = State::Filtering(-1, String::new());
+                        exiting_count += 1;
+                    } else {
+                        println!("Exit!");
+                        break;
+                    }
                 },
                 Ok(s) => {
+                    exiting_count = 0;
                     self.state = s;
                 }
             };

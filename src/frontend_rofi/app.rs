@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-15
+* @Last Modified time: 2017-06-16
 */
 
 use std::rc::Rc;
@@ -49,6 +49,7 @@ impl MinionsApp {
         let status = child.wait()?.code().unwrap();
         let mut stdout_str = String::new();
         child.stdout.unwrap().read_to_string(&mut stdout_str)?;
+        let stdout_str = stdout_str.as_str().trim();
         println!("Rofi output: {:?}", stdout_str);
 
         Ok (match status {
@@ -86,6 +87,10 @@ impl MinionsApp {
            .arg("-kb-custom-1").arg("space")
            .arg("-kb-row-tab").arg("") // disable default Tab
            .arg("-kb-custom-2").arg("Tab");
+        if let Some(ref item) = self.ctx.reference_item {
+            let msg = utils::format_reference_info(item);
+            cmd.arg("-mesg").arg(&msg);
+        }
         println!("Executing: {:?}", cmd);
 
         let mut child = cmd.spawn()?;
@@ -110,6 +115,7 @@ impl MinionsApp {
         let mut stdout_str: Vec<&str> = stdout_str.splitn(2, '|').collect();
 
         let filter_str = stdout_str.pop().unwrap().trim();
+        println!("filter_str: {:?}", filter_str);
         let selected_idx: i32 = stdout_str.pop().unwrap().parse()?;
         let selected_item = self.ctx.list_items[selected_idx as usize].clone();
 

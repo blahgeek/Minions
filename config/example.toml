@@ -1,0 +1,22 @@
+# example config for minions app
+
+# list of search engines
+[search_engine]
+    [[search_engine.sites]]
+    name = "Google"
+    address = "https://www.google.com/search?q=%s"
+    [[search_engine.sites]]
+    name = "Bing"
+    address = "https://www.bing.com/search?q=%s"
+    [[search_engine.sites]]
+    name = "DuckDuckGo"
+    address = "https://duckduckgo.com/?q=%s"
+    [[search_engine.sites]]
+    name = "Wikipedia"
+    address = "https://en.wikipedia.org/wiki/Special:Search?search=%s"
+
+[linux_desktop_entry]
+directories = [
+    "/usr/local/share/applications/",
+    "/usr/share/applications/",
+]

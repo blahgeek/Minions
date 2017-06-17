@@ -8,6 +8,7 @@
 extern crate url;
 
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use toml;
 
 use std::error::Error;
 use std::process::Command;
@@ -41,25 +42,35 @@ impl Action for SearchEngine {
     }
 }
 
+#[derive(Deserialize)]
+struct ConfigSite {
+    name: String,
+    address: String,
+}
+
+#[derive(Deserialize)]
+struct Config {
+    sites: Vec<ConfigSite>,
+}
+
 impl SearchEngine {
-    pub fn get_all() -> Vec<SearchEngine> {
-        vec![
-            SearchEngine {
-                name: "Google".into(),
-                address: "https://www.google.com/search?q=%s".into(),
-            },
-            SearchEngine {
-                name: "Bing".into(),
-                address: "https://www.bing.com/search?q=%s".into(),
-            },
-            SearchEngine {
-                name: "DuckDuckGo".into(),
-                address: "https://duckduckgo.com/?q=%s".into(),
-            },
-            SearchEngine {
-                name: "Wikipedia".into(),
-                address: "https://en.wikipedia.org/wiki/Special:Search?search=%s".into(),
-            },
-        ]
+    pub fn get_all(config: toml::Value) -> Vec<SearchEngine> {
+        let config = config.try_into::<Config>();
+        match config {
+            Ok(config) =>
+                config.sites.into_iter()
+                .map(|site| {
+                    debug!("Load search engine: {} = {}", site.name, site.address);
+                    SearchEngine {
+                        name: site.name,
+                        address: site.address,
+                    }
+                })
+                .collect(),
+            Err(error) => {
+                warn!("Error loading search engine sites: {}", error);
+                vec![]
+            }
+        }
     }
 }

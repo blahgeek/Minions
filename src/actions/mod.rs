@@ -9,6 +9,8 @@ mod capital;
 mod linux_desktop_entry;
 mod search_engine;
 
+use toml;
+
 use std::fmt;
 use std::rc::Rc;
 use std::sync::{Mutex, Arc};
@@ -40,14 +42,14 @@ use mcore::action::Action;
 // But I cannot do that since static variables requires Sync and Send
 // which is not possible because I used Rc ...
 
-pub fn get_actions() -> Vec<Rc<Box<Action>>> {
+pub fn get_actions(config: toml::Value) -> Vec<Rc<Box<Action>>> {
     let mut ret : Vec<Rc<Box<Action>>> = vec![
         Rc::new(Box::new(capital::Capital{})),
     ];
-    for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all().into_iter() {
+    for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all(config["linux_desktop_entry"].clone()) {
         ret.push(Rc::new(Box::new(desktop_entry)));
     }
-    for se in search_engine::SearchEngine::get_all() {
+    for se in search_engine::SearchEngine::get_all(config["search_engine"].clone()) {
         ret.push(Rc::new(Box::new(se)));
     }
     ret

@@ -5,6 +5,8 @@
 * @Last Modified time: 2017-06-17
 */
 
+use toml;
+
 use std::error::Error;
 use std::rc::Rc;
 use mcore::action::{Action, ActionArg};
@@ -31,12 +33,12 @@ pub struct Context {
 impl Context {
 
     /// Create context with initial items
-    pub fn new() -> Context {
+    pub fn new(config: toml::Value) -> Context {
         let mut ctx = Context {
             reference_item: None,
             list_items: Vec::new(),
             history_items: Vec::new(),
-            all_actions: actions::get_actions(),
+            all_actions: actions::get_actions(config),
         };
         ctx.reset();
         ctx
@@ -167,7 +169,7 @@ impl Context {
         if let Some(action_item) = self.history_items.pop() {
             self.select(action_item)
         } else {
-            *self = Context::new();
+            self.reset();
             Ok(())
         }
     }

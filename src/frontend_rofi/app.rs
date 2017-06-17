@@ -5,6 +5,8 @@
 * @Last Modified time: 2017-06-17
 */
 
+use toml;
+
 use std::rc::Rc;
 use std::io::Write;
 use std::io::Read;
@@ -194,9 +196,9 @@ impl MinionsApp {
     }
 
 
-    pub fn new() -> MinionsApp {
+    pub fn new(config: toml::Value) -> MinionsApp {
         MinionsApp {
-            ctx: Context::new(),
+            ctx: Context::new(config),
             state: State::Filtering(-1, String::new()),
         }
     }

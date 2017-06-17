@@ -7,10 +7,14 @@
 
 extern crate minions;
 extern crate env_logger;
+extern crate toml;
 
 fn main() {
     env_logger::init().unwrap();
 
-    let mut app = minions::frontend_rofi::app::MinionsApp::new();
+    let config = include_str!("../../config/example.toml");
+    let config = config.parse::<toml::Value>().unwrap();
+
+    let mut app = minions::frontend_rofi::app::MinionsApp::new(config);
     app.run_loop();
 }

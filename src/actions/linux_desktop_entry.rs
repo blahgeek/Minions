@@ -2,13 +2,15 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-15
+* @Last Modified time: 2017-06-17
 */
 
 extern crate shlex;
 
 extern crate ini;
 use self::ini::Ini;
+
+use toml;
 
 use std::ffi::OsStr;
 use std::error::Error;
@@ -60,6 +62,11 @@ impl Action for LinuxDesktopEntry {
     fn should_return_items(&self) -> bool { false }
 }
 
+#[derive(Deserialize)]
+struct Config {
+    directories: Vec<String>,
+}
+
 impl LinuxDesktopEntry {
 
     fn run_path_or_empty(&self, path: Option<&Path>) -> Result<Vec<Item>, Box<Error>> {
@@ -106,14 +113,19 @@ impl LinuxDesktopEntry {
         })
     }
 
-    pub fn get_all() -> Vec<LinuxDesktopEntry> {
-        let application_dirs = [
-            Path::new("/usr/local/share/applications/"),
-            Path::new("/usr/share/applications/"),
-        ];
+    pub fn get_all(config: toml::Value) -> Vec<LinuxDesktopEntry> {
+        let config = config.try_into::<Config>();
+        if let Err(ref error) = config {
+            warn!("Error loading linux desktop entry config: {}", error);
+            return Vec::new();
+        }
+        let config = config.unwrap();
+
+        let application_dirs = config.directories.iter().map(|x| Path::new(x));
         let mut ret = Vec::new();
 
-        for application_dir in application_dirs.iter() {
+        for application_dir in application_dirs {
+            debug!("Loading linux desktop entries in {:?}", application_dir);
             let entries = application_dir.read_dir();
             if entries.is_err() { continue; }
             let entries = entries.unwrap();

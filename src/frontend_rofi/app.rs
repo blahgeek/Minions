@@ -180,7 +180,7 @@ impl MinionsApp {
                 },
                 Ok(State::Exiting) => {
                     if exiting_count == 0 {
-                        self.ctx = Context::new();
+                        self.ctx.reset();
                         self.state = State::Filtering(-1, String::new());
                         exiting_count += 1;
                     } else {

@@ -2,13 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-18
 */
 
 use toml;
 
 use std::error::Error;
 use std::rc::Rc;
+use std::process::Command;
 use mcore::action::{Action, ActionArg};
 use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
@@ -56,6 +57,18 @@ impl Context {
             .collect();
         self.list_items.sort_by_key(|item| item.priority );
         self.history_items = Vec::new();
+    }
+
+    /// Initialize quicksend item from clipboard
+    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error>> {
+        let clip = Command::new("xclip").arg("-o").output()?;
+        let clip = String::from_utf8(clip.stdout)?;
+        if clip.len() > 0 {
+            let clip_item = Item::new_text_item(&clip);
+            self.quicksend(Rc::new(clip_item))
+        } else {
+            Ok(())
+        }
     }
 
     /// Filter list_items using fuzzymatch

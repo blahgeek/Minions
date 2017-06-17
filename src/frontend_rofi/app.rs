@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-18
 */
 
 use toml;
@@ -197,11 +197,17 @@ impl MinionsApp {
     }
 
 
-    pub fn new(config: toml::Value) -> MinionsApp {
-        MinionsApp {
+    pub fn new(config: toml::Value, from_clipboard: bool) -> MinionsApp {
+        let mut app = MinionsApp {
             ctx: Context::new(config),
             state: State::Filtering(-1, String::new()),
+        };
+        if from_clipboard {
+            if let Err(error) = app.ctx.quicksend_from_clipboard() {
+                warn!("Unable to get content from clipboard: {}", error);
+            }
         }
+        app
     }
 
 }

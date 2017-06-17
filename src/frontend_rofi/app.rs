@@ -78,6 +78,7 @@ impl MinionsApp {
         cmd.stdin(Stdio::piped())
            .stdout(Stdio::piped())
            .arg("-dmenu")
+           .arg("-i")  // case insensitive
            .arg("-no-custom")
            .arg("-markup-rows")
            .arg("-width").arg((-ROFI_WIDTH-2).to_string())

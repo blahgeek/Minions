@@ -16,7 +16,7 @@ use mcore::action::Action;
 use std::process::Command;
 
 pub struct FileBrowserEntry {
-    name: Option<String>, // only available for initial action
+    name: String,
     path: PathBuf,
     is_file: bool,
 }
@@ -34,7 +34,7 @@ struct Config {
 }
 
 impl FileBrowserEntry {
-    fn new(name: Option<String>, path: PathBuf) -> Option<FileBrowserEntry> {
+    fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
         if ! (path.is_dir() || path.is_file()) {
             warn!("Invalid path: {:?}", path);
             None
@@ -58,7 +58,7 @@ impl FileBrowserEntry {
 
         config.entries.into_iter()
         .map(|c| {
-            FileBrowserEntry::new(Some(c.name), Path::new(&c.path).to_path_buf())
+            FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
         })
         .filter(|x| x.is_some())
         .map(|x| x.unwrap())
@@ -69,14 +69,8 @@ impl FileBrowserEntry {
 
 impl Action for FileBrowserEntry {
     fn get_item (&self) -> Item {
-        let mut ret = match self.name {
-            Some(ref name) => {
-                let mut x = Item::new(&name);
-                x.subtitle = Some(self.path.to_string_lossy().into());
-                x
-            },
-            None => Item::new(&self.path.to_string_lossy()),
-        };
+        let mut ret = Item::new(&self.name);
+        ret.subtitle = Some(self.path.to_string_lossy().into());
         ret.badge = if self.is_file {
             Some("File".into())
         } else {
@@ -104,7 +98,7 @@ impl Action for FileBrowserEntry {
             for entry in entries.into_iter() {
                 match entry {
                     Ok(entry) => {
-                        if let Some(act) = FileBrowserEntry::new(None, entry.path()) {
+                        if let Some(act) = FileBrowserEntry::new(entry.file_name().to_string_lossy().into(), entry.path()) {
                             let mut item = act.get_item();
                             item.action = Some(Rc::new(Box::new(act)));
                             ret.push(item);
@@ -113,6 +107,14 @@ impl Action for FileBrowserEntry {
                     Err(error) => {
                         warn!("Read dir error: {}", error);
                     }
+                }
+            }
+            if let Some(parent) = self.path.parent() {
+                if let Some(act) = FileBrowserEntry::new("..".into(), parent.into()) {
+                    let mut item = act.get_item();
+                    item.action = Some(Rc::new(Box::new(act)));
+                    item.priority = -100;
+                    ret.push(item);
                 }
             }
             Ok(ret)

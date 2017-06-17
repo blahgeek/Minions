@@ -2,15 +2,15 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-15
+* @Last Modified time: 2017-06-17
 */
 
 use std::error::Error;
 use std::rc::Rc;
-use mcore::item::Item;
+use mcore::action::{Action, ActionArg};
+use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
-use mcore::quicksend::quicksend;
-use items;
+use actions;
 
 
 pub struct Context {
@@ -22,6 +22,9 @@ pub struct Context {
     /// Stack of history items, init with empty stack
     /// Calling the last item's action would yields list_items
     history_items: Vec<Rc<Item>>,
+
+    /// Cached all actions
+    all_actions: Vec<Rc<Box<Action>>>,
 }
 
 
@@ -29,12 +32,27 @@ impl Context {
 
     /// Create context with initial items
     pub fn new() -> Context {
-        Context {
+        let mut ctx = Context {
             reference_item: None,
-            list_items: items::get_initial_items().into_iter()
-                              .map(|x| Rc::new(x)).collect(),
+            list_items: Vec::new(),
             history_items: Vec::new(),
-        }
+            all_actions: actions::get_actions(),
+        };
+        ctx.reset();
+        ctx
+    }
+
+    /// Reset context to initial state
+    pub fn reset(&mut self) {
+        self.reference_item = None;
+        self.list_items = self.all_actions.iter()
+            .filter(|action| {
+                action.accept_nothing() || action.accept_text()
+            })
+            .map(|action| Item::new_action_item(action.clone()))
+            .map(|item| Rc::new(item))
+            .collect();
+        self.history_items = Vec::new();
     }
 
     /// Filter list_items using fuzzymatch
@@ -116,8 +134,28 @@ impl Context {
             panic!("Item {} is not quicksend_able", item);
         }
         if let Some(ref data) = item.data {
-            self.list_items = quicksend(data).into_iter().map(|x| Rc::new(x))
-                                             .collect::<Vec<Rc<Item>>>();
+            self.list_items = match data {
+                &ItemData::Text(ref text) => {
+                    self.all_actions.iter()
+                    .filter(|action| action.accept_text())
+                    .map(|action| {
+                        let mut item = Item::new_action_item(action.clone());
+                        item.action_arg = ActionArg::Text(text.clone());
+                        Rc::new(item)
+                    })
+                    .collect()
+                },
+                &ItemData::Path(ref path) => {
+                    self.all_actions.iter()
+                    .filter(|action| action.accept_path())
+                    .map(|action| {
+                        let mut item = Item::new_action_item(action.clone());
+                        item.action_arg = ActionArg::Path(path.clone());
+                        Rc::new(item)
+                    })
+                    .collect()
+                },
+            };
         } else {
             panic!("Should not reach here");
         }

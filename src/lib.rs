@@ -1,6 +1,8 @@
 pub mod mcore;
 pub mod actions;
-pub mod items;
+
+#[macro_use]
+extern crate lazy_static;
 
 #[cfg(feature="use-gtk")]
 pub mod frontend_gtk;

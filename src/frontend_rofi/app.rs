@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-16
+* @Last Modified time: 2017-06-17
 */
 
 use std::rc::Rc;
@@ -156,7 +156,7 @@ impl MinionsApp {
     }
 
     pub fn run_loop(&mut self) {
-        let mut exiting_count = 0;
+        let mut exiting_count = 1;
         loop {
             if self.ctx.list_items.len() == 0 {
                 println!("No listing items");

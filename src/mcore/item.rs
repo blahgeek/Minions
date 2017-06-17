@@ -2,11 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-15
+* @Last Modified time: 2017-06-17
 */
 
 use std;
 use std::fmt;
+use std::rc::Rc;
 use mcore::action::{Action, ActionArg, Icon};
 
 /// Typed data in item
@@ -34,7 +35,7 @@ pub struct Item {
     pub search_str: Option<String>,
 
     /// Action, optional
-    pub action: Option<Box<Action>>,
+    pub action: Option<Rc<Box<Action>>>,
     /// Argument for action, optional
     pub action_arg: ActionArg,
 }
@@ -75,7 +76,7 @@ impl Item {
         item
     }
 
-    pub fn new_action_item(action: Box<Action>) -> Item {
+    pub fn new_action_item(action: Rc<Box<Action>>) -> Item {
         let mut item = action.get_item();
         item.action = Some(action);
         item

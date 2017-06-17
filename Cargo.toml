@@ -22,6 +22,7 @@ name = "minions_rofi"
 path = "src/bin/minions_rofi.rs"
 
 [dependencies]
+lazy_static = "0.2.8"
 rust-ini = "0.10.0"
 shlex = "0.1.1"
 url = "1.5.0"

@@ -24,5 +24,6 @@ path = "src/bin/minions_rofi.rs"
 [dependencies]
 rust-ini = "0.10.0"
 shlex = "0.1.1"
+url = "1.5.0"
 gdk = { version = "0.5.2", optional = true }
 gtk = { version = "0.1.2", features = ["v3_10"], optional = true }

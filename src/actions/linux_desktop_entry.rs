@@ -48,7 +48,7 @@ impl Action for LinuxDesktopEntry {
     fn accept_nothing(&self) -> bool { true }
 
     fn accept_path(&self) -> bool {
-        self.exec.iter().find(|arg| (*arg == "%f" || *arg == "%f")).is_some()
+        self.exec.iter().find(|arg| (*arg == "%f" || *arg == "%F")).is_some()
     }
 
     fn run_path(&self, path: &Path) -> Result<Vec<Item>, Box<Error>> {

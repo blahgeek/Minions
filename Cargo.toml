@@ -24,6 +24,7 @@ path = "src/bin/minions_rofi.rs"
 [dependencies]
 toml = "0.4.1"
 clap = "2.24.2"
+htmlescape = "0.3.1"
 serde = "1.0"
 serde_derive = "1.0.8"
 log = "0.3.7"

@@ -2,12 +2,36 @@
 * @Author: BlahGeek
 * @Date:   2017-06-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-16
+* @Last Modified time: 2017-06-18
 */
+
+extern crate htmlescape;
+use self::htmlescape::encode_minimal;
 
 use std::fmt;
 use mcore::item::{Item, ItemData};
 use mcore::context::Context;
+
+pub fn format_fit_to_line(text: &str, line_width: i32) -> (String, i32) {
+    let mut ret = String::new();
+    let mut size = 0;
+
+    if line_width == 0 {
+        return (ret, size);
+    }
+
+    for c in text.chars() {
+        size += 1;
+        if size < line_width {
+            ret.push(if c == '\n' { ' ' } else { c });
+        } else {
+            ret.push('…');
+            break;
+        }
+    }
+
+    (ret, size)
+}
 
 pub fn format_item(ctx: &Context, item: &Item, line_width: i32) -> String {
     let mut available_width = line_width;
@@ -43,32 +67,18 @@ pub fn format_item(ctx: &Context, item: &Item, line_width: i32) -> String {
     ret.reserve((line_width * 2) as usize);
 
     ret += "<b>";
-    for c in item.title.chars() {
-        if c == '\n' { continue; }
-        available_width -= 1;
-        if available_width > 1 {
-            ret.push(c);
-        } else {
-            ret.push('…');
-            break;
-        }
-    }
+    let (title_str, title_str_len) = format_fit_to_line(&item.title, available_width - 1);
+    ret += &encode_minimal(&title_str);
+    available_width -= title_str_len;
     ret += "</b> ";
     available_width -= 1;
 
     if available_width > 0 {
         if let Some(ref subtitle) = item.subtitle {
             ret += "<i>";
-            for c in subtitle.chars() {
-                if c == '\n' { continue; }
-                available_width -= 1;
-                if available_width > 0 {
-                    ret.push(c);
-                } else {
-                    ret.push('…');
-                    break;
-                }
-            }
+            let (subtitle_str, subtitle_str_len) = format_fit_to_line(subtitle, available_width);
+            ret += &encode_minimal(&subtitle_str);
+            available_width -= subtitle_str_len;
             ret += "</i>";
         }
     }
@@ -78,21 +88,23 @@ pub fn format_item(ctx: &Context, item: &Item, line_width: i32) -> String {
         ret.push(' ');
     }
     ret += "  ";
-    ret += &righttext;
+    ret += &encode_minimal(&righttext);
     ret += "\n";
 
     ret
 }
 
-pub fn format_reference_info(item: &Item) -> String {
+pub fn format_reference_info(item: &Item, line_width: i32) -> String {
     let mut ret = String::from("<u>QuickSend:</u>\n");
     ret += "<b>";
-    ret += &item.title;
+    let (title_str, _) = format_fit_to_line(&item.title, line_width * 2);
+    ret += &encode_minimal(&title_str);
     ret += "</b>";
     ret.push(' ');
     if let Some(ref subtitle) = item.subtitle {
         ret += "<i>";
-        ret += subtitle;
+        let (subtitle_str, _) = format_fit_to_line(subtitle, line_width * 2);
+        ret += &encode_minimal(&subtitle_str);
         ret += "</i>";
     }
     ret.push('\n');
@@ -101,12 +113,13 @@ pub fn format_reference_info(item: &Item) -> String {
     match item.data {
         Some(ItemData::Text(ref text)) => {
             ret += "Text = ";
-            ret += text;
+            let (text_str, _) = format_fit_to_line(text, line_width * 5);
+            ret += &encode_minimal(&text_str);
         },
         Some(ItemData::Path(ref path)) => {
             if let Some(path_str) = path.to_str() {
                 ret += "Path = ";
-                ret += path_str;
+                ret += &encode_minimal(path_str);
             }
         },
         _ => {}

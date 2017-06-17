@@ -73,7 +73,7 @@ impl MinionsApp {
 
         let prompt = match self.ctx.reference_item {
             None => "Minions: ".into(),
-            Some(ref item) => format!("{}> ", item.title),
+            Some(ref item) => utils::format_fit_to_line(&item.title, ROFI_WIDTH / 3).0 + " >",
         };
         cmd.stdin(Stdio::piped())
            .stdout(Stdio::piped())
@@ -90,7 +90,7 @@ impl MinionsApp {
            .arg("-kb-row-tab").arg("") // disable default Tab
            .arg("-kb-custom-2").arg("Tab");
         if let Some(ref item) = self.ctx.reference_item {
-            let msg = utils::format_reference_info(item);
+            let msg = utils::format_reference_info(item, ROFI_WIDTH);
             cmd.arg("-mesg").arg(&msg);
         }
         debug!("Executing: {:?}", cmd);

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-13
+* @Last Modified time: 2017-06-17
 */
 
 use std;
@@ -71,7 +71,7 @@ impl MinionsApp {
     }
 
     fn enter_item(&mut self) {
-        println!("Enter item!");
+        debug!("Enter item!");
         if self.highlighting_idx < 0 {
             return;
         }
@@ -84,7 +84,7 @@ impl MinionsApp {
 
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {
         let key = event.get_keyval();
-        println!("Key pressed: {:?}", key);
+        debug!("Key pressed: {:?}", key);
         if key == gdk::enums::key::Return {
             self.enter_item();
         } else if key == gdk::enums::key::Escape {

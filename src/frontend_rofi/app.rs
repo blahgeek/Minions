@@ -42,7 +42,7 @@ impl MinionsApp {
            .arg("-width").arg((-ROFI_WIDTH-2).to_string())
            .arg("-p").arg(&prompt)
            .arg("-format").arg("f");
-        println!("Executing: {:?}", cmd);
+        debug!("Executing: {:?}", cmd);
 
         let mut child = cmd.spawn()?;
 
@@ -50,7 +50,6 @@ impl MinionsApp {
         let mut stdout_str = String::new();
         child.stdout.unwrap().read_to_string(&mut stdout_str)?;
         let stdout_str = stdout_str.as_str().trim();
-        println!("Rofi output: {:?}", stdout_str);
 
         Ok (match status {
             0 => { // enter
@@ -58,7 +57,7 @@ impl MinionsApp {
                 State::Filtering(-1, String::new())
             },
             1 => { // esc
-                println!("Return to filter mode");
+                debug!("Return to filter mode");
                 State::Filtering(-1, String::new())
             },
             _ => {
@@ -91,7 +90,7 @@ impl MinionsApp {
             let msg = utils::format_reference_info(item);
             cmd.arg("-mesg").arg(&msg);
         }
-        println!("Executing: {:?}", cmd);
+        debug!("Executing: {:?}", cmd);
 
         let mut child = cmd.spawn()?;
 
@@ -110,12 +109,10 @@ impl MinionsApp {
 
         let mut stdout_str = String::new();
         child.stdout.unwrap().read_to_string(&mut stdout_str)?;
-        println!("Rofi output: {:?}", stdout_str);
 
         let mut stdout_str: Vec<&str> = stdout_str.splitn(2, '|').collect();
 
         let filter_str = stdout_str.pop().unwrap().trim();
-        println!("filter_str: {:?}", filter_str);
         let selected_idx: i32 = stdout_str.pop().unwrap().parse()?;
         let selected_item = self.ctx.list_items[selected_idx as usize].clone();
 
@@ -124,7 +121,7 @@ impl MinionsApp {
                 if self.ctx.selectable_with_text(&selected_item) {
                     State::EnteringText(selected_item)
                 } else {
-                    println!("Item {} not selectable with text", selected_item.title);
+                    warn!("Item {} not selectable with text", selected_item.title);
                     State::Filtering(selected_idx, filter_str.into())
                 }
             },
@@ -133,7 +130,7 @@ impl MinionsApp {
                     self.ctx.quicksend(selected_item)?;
                     State::Filtering(-1, String::new())
                 } else {
-                    println!("Item {} not quicksend-able", selected_item.title);
+                    warn!("Item {} not quicksend-able", selected_item.title);
                     State::Filtering(selected_idx, filter_str.into())
                 }
             },
@@ -144,7 +141,7 @@ impl MinionsApp {
                 } else if self.ctx.selectable_with_text(&selected_item) {
                     State::EnteringText(selected_item)
                 } else {
-                    println!("Item {} not selectable", selected_item.title);
+                    warn!("Item {} not selectable", selected_item.title);
                     State::Filtering(selected_idx, filter_str.into())
                 }
             },
@@ -159,7 +156,7 @@ impl MinionsApp {
         let mut exiting_count = 1;
         loop {
             if self.ctx.list_items.len() == 0 {
-                println!("No listing items");
+                warn!("No listing items");
                 break;
             }
             let new_state = match self.state.clone() {
@@ -175,7 +172,7 @@ impl MinionsApp {
             };
             match new_state {
                 Err(err) => {
-                    println!("Error: {}", err);
+                    error!("Error: {}", err);
                     break;
                 },
                 Ok(State::Exiting) => {
@@ -184,7 +181,7 @@ impl MinionsApp {
                         self.state = State::Filtering(-1, String::new());
                         exiting_count += 1;
                     } else {
-                        println!("Exit!");
+                        info!("Exit!");
                         break;
                     }
                 },

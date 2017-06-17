@@ -57,7 +57,7 @@ impl Context {
 
     /// Filter list_items using fuzzymatch
     pub fn filter(&self, pattern: &str) -> Vec<Rc<Item>> {
-        println!("filter: {:?}", pattern);
+        trace!("filter: {:?}", pattern);
         let scores = self.list_items.iter().map(|item| {
             let search_str = if let Some(ref search_str) = item.search_str {
                 search_str

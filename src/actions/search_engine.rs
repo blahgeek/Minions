@@ -35,7 +35,7 @@ impl Action for SearchEngine {
     fn run_text(&self, text: &str) -> Result<Vec<Item>, Box<Error>> {
         let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
-        println!("xdg-open: {}", url);
+        info!("xdg-open: {}", url);
         Command::new("xdg-open").arg(&url).output()?;
         Ok(Vec::new())
     }

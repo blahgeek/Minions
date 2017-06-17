@@ -54,6 +54,7 @@ impl Context {
             .map(|action| Item::new_action_item(action.clone()))
             .map(|item| Rc::new(item))
             .collect();
+        self.list_items.sort_by_key(|item| item.priority );
         self.history_items = Vec::new();
     }
 
@@ -102,6 +103,7 @@ impl Context {
                               .into_iter()
                               .map(|x| Rc::new(x))
                               .collect::<Vec<Rc<Item>>>();
+            self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
         }
@@ -119,6 +121,7 @@ impl Context {
                               .into_iter()
                               .map(|x| Rc::new(x))
                               .collect::<Vec<Rc<Item>>>();
+            self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
         }
@@ -158,6 +161,7 @@ impl Context {
                     .collect()
                 },
             };
+            self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
         }

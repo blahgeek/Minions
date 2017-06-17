@@ -27,6 +27,8 @@ pub struct Item {
     pub icon: Option<Icon>,
     /// Badge text (like label), optional
     pub badge: Option<String>,
+    /// Priority, smaller is more important, default to 0
+    pub priority: i32,
 
     /// Item data, for quick-send and/or info
     pub data: Option<ItemData>,
@@ -63,6 +65,7 @@ impl Item {
             subtitle: None,
             icon: None,
             badge: None,
+            priority: 0,
             data: None,
             search_str: None,
             action: None,

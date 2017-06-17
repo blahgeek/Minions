@@ -28,6 +28,7 @@ impl Action for SearchEngine {
     fn get_item(&self) -> Item {
         let mut item = Item::new(&self.name);
         item.badge = Some("Search Engine".into());
+        item.priority = -10;
         item
     }
 

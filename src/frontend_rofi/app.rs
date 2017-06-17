@@ -156,7 +156,7 @@ impl MinionsApp {
     }
 
     pub fn run_loop(&mut self) {
-        let mut exiting_count = 1;
+        let mut exiting_count = 0;
         loop {
             if self.ctx.list_items.len() == 0 {
                 warn!("No listing items");

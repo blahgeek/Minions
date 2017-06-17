@@ -20,3 +20,11 @@ directories = [
     "/usr/local/share/applications/",
     "/usr/share/applications/",
 ]
+
+[file_browser]
+    [[file_browser.entries]]
+    name = "Home Directory"
+    path = "/home/blahgeek/"
+    [[file_browser.entries]]
+    name = "Root Directory"
+    path = "/"

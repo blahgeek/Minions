@@ -8,6 +8,7 @@
 mod capital;
 mod linux_desktop_entry;
 mod search_engine;
+mod file_browser;
 
 use toml;
 
@@ -46,11 +47,20 @@ pub fn get_actions(config: toml::Value) -> Vec<Rc<Box<Action>>> {
     let mut ret : Vec<Rc<Box<Action>>> = vec![
         Rc::new(Box::new(capital::Capital{})),
     ];
-    for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all(config["linux_desktop_entry"].clone()) {
-        ret.push(Rc::new(Box::new(desktop_entry)));
+    if let Some(opts) = config.get("linux_desktop_entry") {
+        for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all(opts.clone()) {
+            ret.push(Rc::new(Box::new(desktop_entry)));
+        }
     }
-    for se in search_engine::SearchEngine::get_all(config["search_engine"].clone()) {
-        ret.push(Rc::new(Box::new(se)));
+    if let Some(opts) = config.get("search_engine") {
+        for se in search_engine::SearchEngine::get_all(opts.clone()) {
+            ret.push(Rc::new(Box::new(se)));
+        }
+    }
+    if let Some(opts) = config.get("file_browser") {
+        for x in file_browser::FileBrowserEntry::get_all(opts.clone()) {
+            ret.push(Rc::new(Box::new(x)));
+        }
     }
     ret
 }

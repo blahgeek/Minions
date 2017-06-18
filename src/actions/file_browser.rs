@@ -35,7 +35,7 @@ struct Config {
 }
 
 impl FileBrowserEntry {
-    fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
+    pub fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
         if ! (path.is_dir() || path.is_file()) {
             warn!("Invalid path: {:?}", path);
             None

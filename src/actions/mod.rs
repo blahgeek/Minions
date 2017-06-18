@@ -2,21 +2,21 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-18
 */
 
 mod capital;
 mod linux_desktop_entry;
 mod search_engine;
 mod file_browser;
+mod custom_script;
 
 use toml;
 
 use std::fmt;
 use std::rc::Rc;
-use std::sync::{Mutex, Arc};
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 #[derive(Clone)]
 #[derive(Debug)]
@@ -60,6 +60,17 @@ pub fn get_actions(config: toml::Value) -> Vec<Rc<Box<Action>>> {
     if let Some(opts) = config.get("file_browser") {
         for x in file_browser::FileBrowserEntry::get_all(opts.clone()) {
             ret.push(Rc::new(Box::new(x)));
+        }
+    }
+    if let Some(opts) = config.get("plugin_directories") {
+        if let Some(opts) = opts.as_array() {
+            for dir in opts {
+                if let Some(dir) = dir.as_str() {
+                    for x in custom_script::ScriptAction::get_all(Path::new(dir)) {
+                        ret.push(Rc::new(Box::new(x)));
+                    }
+                }
+            }
         }
     }
     ret

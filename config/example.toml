@@ -1,4 +1,7 @@
 # example config for minions app
+plugin_directories = [
+    "/home/blahgeek/Documents/projects/Minions/plugins/",
+]
 
 # list of search engines
 [search_engine]

@@ -176,7 +176,8 @@ impl MinionsApp {
             match new_state {
                 Err(err) => {
                     error!("Error: {}", err);
-                    break;
+                    self.ctx.reset();
+                    self.state = State::Filtering(-1, String::new());
                 },
                 Ok(State::Exiting) => {
                     if exiting_count == 0 {

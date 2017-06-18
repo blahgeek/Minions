@@ -2,8 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-18
 */
+
+extern crate open;
 
 use toml;
 
@@ -13,7 +15,6 @@ use std::error::Error;
 
 use mcore::item::{Item, ItemData};
 use mcore::action::Action;
-use std::process::Command;
 
 pub struct FileBrowserEntry {
     name: String,
@@ -87,8 +88,8 @@ impl Action for FileBrowserEntry {
 
     fn run(&self) -> Result<Vec<Item>, Box<Error>> {
         if self.is_file {
-            info!("xdg-open: {:?}", self.path);
-            Command::new("xdg-open").arg(self.path.as_os_str()).output()?;
+            info!("open: {:?}", self.path);
+            open::that(&self.path)?;
             Ok(Vec::new())
         } else {
             let mut ret = Vec::new();

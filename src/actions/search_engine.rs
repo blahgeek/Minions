@@ -2,16 +2,16 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-18
 */
 
 extern crate url;
+extern crate open;
 
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use toml;
 
 use std::error::Error;
-use std::process::Command;
 
 use mcore::action::Action;
 use mcore::item::Item;
@@ -37,8 +37,8 @@ impl Action for SearchEngine {
     fn run_text(&self, text: &str) -> Result<Vec<Item>, Box<Error>> {
         let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
-        info!("xdg-open: {}", url);
-        Command::new("xdg-open").arg(&url).output()?;
+        info!("open: {}", url);
+        open::that(&url)?;
         Ok(Vec::new())
     }
 }

@@ -9,7 +9,8 @@ use toml;
 
 use std::error::Error;
 use std::rc::Rc;
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 use mcore::action::{Action, ActionArg};
 use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
@@ -69,6 +70,24 @@ impl Context {
         } else {
             Ok(())
         }
+    }
+
+    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error>> {
+        let s : &str = match item.data {
+            Some(ItemData::Text(ref text)) => text,
+            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
+            _ => &item.title,
+        };
+        let mut cmd = Command::new("xclip");
+        cmd.stdin(Stdio::piped());
+        cmd.arg("-selection").arg("clipboard");
+        let mut child = cmd.spawn()?;
+
+        if let Some(ref mut stdin) = child.stdin {
+            stdin.write(s.as_bytes())?;
+        }
+        child.wait()?;
+        Ok(())
     }
 
     /// Filter list_items using fuzzymatch

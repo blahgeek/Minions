@@ -88,7 +88,8 @@ impl MinionsApp {
            .arg("-filter").arg(filter_str.to_string())
            .arg("-kb-custom-1").arg("space")
            .arg("-kb-row-tab").arg("") // disable default Tab
-           .arg("-kb-custom-2").arg("Tab");
+           .arg("-kb-custom-2").arg("Tab")
+           .arg("-kb-custom-3").arg("Control+c");
         if let Some(ref item) = self.ctx.reference_item {
             let msg = utils::format_reference_info(item, ROFI_WIDTH);
             cmd.arg("-mesg").arg(&msg);
@@ -137,6 +138,13 @@ impl MinionsApp {
                     State::Filtering(selected_idx, filter_str.into())
                 }
             },
+            12 => { // control-c, copy
+                let copy_ret = self.ctx.copy_content_to_clipboard(&selected_item); // ignore error
+                if let Err(error) = copy_ret {
+                    warn!("Copy {} to clipboard failed", error);
+                }
+                State::Filtering(selected_idx, filter_str.into())
+            }
             0 => { // enter
                 if self.ctx.selectable(&selected_item) {
                     self.ctx.select(selected_item)?;

@@ -1,0 +1,7 @@
+name = "Emojis"
+description = "Find emojis by keywords"
+script = "run.py"
+script_returns = true
+accept_nothing = true
+accept_text = false
+accept_path = false

@@ -118,6 +118,7 @@ impl Action for ScriptAction {
         let mut item = Item::new(&self.name);
         item.subtitle = Some(self.description.clone());
         item.badge = Some("Script".into());
+        item.priority = -50;
         item
     }
     fn accept_nothing(&self) -> bool { self.accept_nothing_ }

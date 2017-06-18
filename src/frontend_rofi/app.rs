@@ -79,6 +79,7 @@ impl MinionsApp {
            .stdout(Stdio::piped())
            .arg("-dmenu")
            .arg("-i")  // case insensitive
+           .arg("-matching").arg("fuzzy")
            .arg("-no-custom")
            .arg("-markup-rows")
            .arg("-width").arg((-ROFI_WIDTH-2).to_string())

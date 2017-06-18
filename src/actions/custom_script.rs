@@ -153,7 +153,9 @@ impl ScriptItem {
             Some(ItemData::Path(std::path::Path::new(path).to_path_buf()))
         } else if let Some(ref url) = self.data_url {
             Some(ItemData::Text(url.clone()))
-        } else { None } ;
+        } else {
+            Some(ItemData::Text(self.title.clone()))
+        } ;
 
         let mut action: Option<Box<Action>> =
         if let Some(action_callback) = self.action_callback {

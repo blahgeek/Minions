@@ -2,8 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-13
+* @Last Modified time: 2017-06-21
 */
+
+use std::cell::Cell;
 
 use mcore::item::Item;
 use mcore::action::Icon;
@@ -59,13 +61,25 @@ impl MinionsUI {
                     &Icon::File(ref path) => self.icon.set_from_file(&path),
                 }
             } else {
-                self.icon.set_from_icon_name("", -1); // TODO
+                // self.icon.set_from_icon_name("", -1); // TODO
             }
         } else {
             self.textentry.set_text("Minions");
-            self.icon.set_from_icon_name("", -1); // TODO
+            // self.icon.set_from_icon_name("", -1); // TODO
         }
+        self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
+    }
+
+    pub fn set_entry_editable(&self) {
+        self.textentry.set_text("");
+        self.textentry.set_editable(true);
+        self.textentry.set_can_focus(true);
+        self.textentry.grab_focus();
+    }
+
+    pub fn get_entry_text(&self) -> String {
+        self.textentry.get_text().unwrap_or(String::new())
     }
 
     pub fn set_filter_text(&self, text: &str) {
@@ -129,16 +143,17 @@ impl MinionsUI {
     }
 
     pub fn set_highlight_item(&self, idx: i32) {
+        let adj = self.listbox_viewport.get_vadjustment().unwrap();
         let items = self.listbox.get_children();
         let total = items.len();
         if idx < 0 || idx >= (total as i32) {
             self.listbox.select_row(None);
+            adj.set_value(0 as f64);
             return;
         }
         self.listbox.select_row(self.listbox.get_row_at_index(idx).as_ref());
 
         let ref item = items[idx as usize];
-        let adj = self.listbox_viewport.get_vadjustment().unwrap();
         adj.set_value((item.get_allocation().y) as f64);
     }
 }

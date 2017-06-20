@@ -2,8 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-20
 */
+
+use toml;
 
 use std;
 use frontend_gtk::gdk;
@@ -116,16 +118,21 @@ impl MinionsApp {
         }
     }
 
-    pub fn new() -> Rc<RefCell<MinionsApp>> {
+    pub fn new(config: toml::Value, from_clipboard: bool) -> Rc<RefCell<MinionsApp>> {
         let mut app = MinionsApp {
             ui: MinionsUI::new(),
-            ctx: Context::new(),
+            ctx: Context::new(config),
             filter_text: String::new(),
             filter_text_lasttime: std::time::Instant::now(),
             filter_text_should_reset: true,
             filtered_items: Vec::new(),
             highlighting_idx: 0,
         };
+        if from_clipboard {
+            if let Err(error) = app.ctx.quicksend_from_clipboard() {
+                warn!("Unable to get content from clipboard: {}", error);
+            }
+        }
         app.reset_to_ctx();
 
         let app  = Rc::new(RefCell::new(app));

@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["BlahGeek <i@BlahGeek.com>"]
 
 [features]
+default = ["use-gtk"]
 use-gtk = ["gtk", "gdk"]
 
 [lib]
@@ -12,14 +13,8 @@ path = "src/lib.rs"
 doc = false
 
 [[bin]]
-name = "minions_gtk"
-path = "src/bin/minions_gtk.rs"
-required-features = ["use-gtk"]
-doc = false
-
-[[bin]]
-name = "minions_rofi"
-path = "src/bin/minions_rofi.rs"
+name = "minions"
+path = "src/bin/minions.rs"
 
 [dependencies]
 toml = "0.4.1"

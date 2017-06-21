@@ -62,7 +62,7 @@ impl MinionsApp {
                     panic!("exit");
                 }
                 if refresh_items {
-                    self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>());
+                    self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
                 }
                 self.ui.set_highlight_item(-1);
             },
@@ -88,7 +88,7 @@ impl MinionsApp {
                     Some(ref item) => Some(&item),
                 });
                 if refresh_items {
-                    self.ui.set_items(filter_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>());
+                    self.ui.set_items(filter_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
                 }
                 self.ui.set_highlight_item(selected_idx);
             },
@@ -97,7 +97,7 @@ impl MinionsApp {
                 self.ui.set_entry_editable();
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(Some(&item));
-                self.ui.set_items(Vec::new());
+                self.ui.set_items(Vec::new(), &self.ctx);
                 self.ui.set_highlight_item(-1);
             }
         }

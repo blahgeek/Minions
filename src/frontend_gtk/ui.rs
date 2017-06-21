@@ -7,6 +7,7 @@
 
 use mcore::item::Item;
 use mcore::action::Icon;
+use mcore::context::Context;
 
 use frontend_gtk::gtk;
 use frontend_gtk::gtk::prelude::*;
@@ -96,7 +97,7 @@ impl MinionsUI {
         }
     }
 
-    pub fn set_items(&self, items: Vec<&Item>) {
+    pub fn set_items(&self, items: Vec<&Item>, ctx: &Context) {
         for item_ui in self.listbox.get_children().iter() {
             self.listbox.remove(item_ui);
         }
@@ -109,6 +110,7 @@ impl MinionsUI {
             let title = builder.get_object::<gtk::Label>("title").unwrap();
             let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
             let badge = builder.get_object::<gtk::Label>("badge").unwrap();
+            let selectable = builder.get_object::<gtk::Image>("selectable").unwrap();
             let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
             let icon = builder.get_object::<gtk::Image>("icon").unwrap();
 
@@ -134,8 +136,19 @@ impl MinionsUI {
                 Some(ref action) => !action.should_return_items(),
                 None => true,
             } {
-                item_ui.remove(&arrow);
+                arrow.set_from_icon_name("gtk-media-stop", gtk::IconSize::SmallToolbar.into());
+            } else {
+                arrow.set_from_icon_name("gtk-goto-last", gtk::IconSize::SmallToolbar.into());
             }
+
+            if ctx.selectable(&item) {
+                selectable.set_from_icon_name("gtk-apply", gtk::IconSize::SmallToolbar.into());
+            } else if ctx.selectable_with_text(&item) {
+                selectable.set_from_icon_name("gtk-edit", gtk::IconSize::SmallToolbar.into());
+            } else {
+                selectable.set_from_icon_name("gtk-discard", gtk::IconSize::SmallToolbar.into());
+            }
+
             self.listbox.add(&item_ui);
         }
     }

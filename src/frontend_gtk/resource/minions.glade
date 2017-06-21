@@ -6,8 +6,7 @@
     <property name="can_focus">False</property>
     <property name="resizable">False</property>
     <property name="window_position">center</property>
-    <property name="default_width">1280</property>
-    <property name="default_height">400</property>
+    <property name="default_width">800</property>
     <property name="type_hint">dialog</property>
     <property name="decorated">False</property>
     <property name="deletable">False</property>
@@ -52,6 +51,9 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">label</property>
+                    <property name="ellipsize">end</property>
+                    <property name="single_line_mode">True</property>
+                    <property name="max_width_chars">25</property>
                     <attributes>
                       <attribute name="font-desc" value="&lt;Enter Value&gt; 20"/>
                       <attribute name="style" value="normal"/>

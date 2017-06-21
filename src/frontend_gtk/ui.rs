@@ -146,7 +146,7 @@ impl MinionsUI {
             } else if ctx.selectable_with_text(&item) {
                 selectable.set_from_icon_name("gtk-edit", gtk::IconSize::SmallToolbar.into());
             } else {
-                selectable.set_from_icon_name("gtk-discard", gtk::IconSize::SmallToolbar.into());
+                item_ui.remove(&selectable);
             }
 
             self.listbox.add(&item_ui);

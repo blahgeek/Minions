@@ -254,6 +254,38 @@ impl MinionsApp {
         }
     }
 
+    fn process_keyevent_space(&mut self) {
+        debug!("Processing keyevent Space");
+        self.status = match self.status.clone() {
+            Status::FilteringEntering {
+                selected_idx: selected_idx,
+                filter_text: _,
+                filter_text_lasttime: _,
+                filter_items: filter_items
+            } |
+            Status::FilteringMoving {
+                selected_idx: selected_idx,
+                filter_text: _,
+                filter_items: filter_items
+            } => {
+                if selected_idx < 0 {
+                    warn!("No item to select");
+                    self.status.clone()
+                } else {
+                    let item = filter_items[selected_idx as usize].clone();
+                    if self.ctx.selectable_with_text(&item) {
+                        Status::EnteringText(item)
+                    } else {
+                        warn!("Item not selectable with or without text");
+                        self.status.clone()
+                    }
+                }
+            },
+            status @ _ => status,
+        };
+        self.update_ui(true);
+    }
+
     fn process_keyevent_enter(&mut self) {
         debug!("Processing keyevent Enter");
         self.status = match self.status.clone() {
@@ -307,6 +339,9 @@ impl MinionsApp {
         debug!("Key pressed: {:?}", key);
         if key == gdk::enums::key::Return {
             self.process_keyevent_enter();
+            Inhibit(true)
+        } else if key == gdk::enums::key::space {
+            self.process_keyevent_space();
             Inhibit(true)
         } else if key == gdk::enums::key::Escape {
             self.process_keyevent_escape();

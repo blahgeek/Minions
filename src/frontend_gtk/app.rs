@@ -67,15 +67,15 @@ impl MinionsApp {
                 self.ui.set_highlight_item(-1);
             },
             Status::FilteringEntering {
-                selected_idx: selected_idx,
-                filter_text: ref filter_text,
+                selected_idx,
+                ref filter_text,
                 filter_text_lasttime: _,
-                filter_items: ref filter_items
+                ref filter_items
             } |
             Status::FilteringMoving {
-                selected_idx: selected_idx,
-                filter_text: ref filter_text,
-                filter_items: ref filter_items
+                selected_idx,
+                ref filter_text,
+                ref filter_items
             } => {
                 if selected_idx < 0 {
                     self.ui.set_entry(None);
@@ -105,10 +105,10 @@ impl MinionsApp {
 
     fn process_timeout(&mut self) {
         if let Status::FilteringEntering {
-            selected_idx: selected_idx,
-            filter_text: filter_text,
-            filter_text_lasttime: filter_text_lasttime,
-            filter_items: filter_items
+            selected_idx: _,
+            filter_text: _,
+            filter_text_lasttime,
+            filter_items: _
         } = self.status.clone() {
             if filter_text_lasttime.elapsed() > std::time::Duration::new(1, 0) {
                 self.status = Status::FilteringNone;
@@ -141,15 +141,15 @@ impl MinionsApp {
                 }
             },
             Status::FilteringEntering {
-                selected_idx: selected_idx,
-                filter_text: filter_text,
+                selected_idx,
+                filter_text,
                 filter_text_lasttime: _,
-                filter_items: filter_items
+                filter_items
             } |
             Status::FilteringMoving {
-                selected_idx: selected_idx,
-                filter_text: filter_text,
-                filter_items: filter_items
+                selected_idx,
+                filter_text,
+                filter_items
             } => {
                 let mut new_idx = selected_idx + delta;
                 if filter_items.len() == 0 {
@@ -177,15 +177,15 @@ impl MinionsApp {
         debug!("Processing keyevent Tab");
         self.status = match self.status.clone() {
             Status::FilteringEntering {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items: filter_items
+                filter_items
             } |
             Status::FilteringMoving {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
-                filter_items: filter_items
+                filter_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to send");
@@ -232,13 +232,13 @@ impl MinionsApp {
             },
             Status::FilteringEntering {
                 selected_idx: _,
-                filter_text: mut filter_text,
+                mut filter_text,
                 filter_text_lasttime: _,
                 filter_items: _
             } |
             Status::FilteringMoving {
                 selected_idx: _,
-                filter_text: mut filter_text,
+                mut filter_text,
                 filter_items: _,
             } => {
                 filter_text.push(ch);
@@ -258,15 +258,15 @@ impl MinionsApp {
         debug!("Processing keyevent Space");
         self.status = match self.status.clone() {
             Status::FilteringEntering {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items: filter_items
+                filter_items
             } |
             Status::FilteringMoving {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
-                filter_items: filter_items
+                filter_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");
@@ -291,15 +291,15 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             status @ Status::Initial | status @ Status::FilteringNone => status,
             Status::FilteringEntering {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items: filter_items
+                filter_items
             } |
             Status::FilteringMoving {
-                selected_idx: selected_idx,
+                selected_idx,
                 filter_text: _,
-                filter_items: filter_items
+                filter_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");

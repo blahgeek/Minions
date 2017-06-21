@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-06-21
 */
 
 /// Action defined by custom script
@@ -16,7 +16,6 @@ use std;
 use std::rc::Rc;
 use std::path::PathBuf;
 use std::error::Error;
-use std::process;
 use std::process::Command;
 
 use std::fs::File;

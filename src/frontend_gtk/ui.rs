@@ -5,8 +5,6 @@
 * @Last Modified time: 2017-06-21
 */
 
-use std::cell::Cell;
-
 use mcore::item::Item;
 use mcore::action::Icon;
 

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-21
+* @Last Modified time: 2017-06-24
 */
 
 use mcore::item::Item;
@@ -15,7 +15,9 @@ use frontend_gtk::gtk::prelude::*;
 pub struct MinionsUI {
     window_builder: gtk::Builder,
     pub window: gtk::Window,
+    rootbox: gtk::Box,
     listbox: gtk::ListBox,
+    scrolledwindow: gtk::ScrolledWindow,
     listbox_viewport: gtk::Viewport,
     filterlabel: gtk::Label,
     textentry: gtk::Entry,
@@ -28,7 +30,9 @@ impl MinionsUI {
         let window_builder = gtk::Builder::new_from_string(include_str!("resource/minions.glade"));
         let window = window_builder.get_object::<gtk::Window>("root")
                      .expect("Failed to initialize from glade file");
+        let rootbox = window_builder.get_object::<gtk::Box>("rootbox").unwrap();
         let listbox = window_builder.get_object::<gtk::ListBox>("listbox").unwrap();
+        let scrolledwindow = window_builder.get_object::<gtk::ScrolledWindow>("scrolledwindow").unwrap();
         let listbox_viewport = window_builder.get_object::<gtk::Viewport>("listbox_viewport").unwrap();
         let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
         let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
@@ -43,7 +47,9 @@ impl MinionsUI {
         MinionsUI {
             window_builder: window_builder,
             window: window,
+            rootbox: rootbox,
             listbox: listbox,
+            scrolledwindow: scrolledwindow,
             listbox_viewport: listbox_viewport,
             filterlabel: label,
             textentry: entry,
@@ -150,6 +156,12 @@ impl MinionsUI {
             }
 
             self.listbox.add(&item_ui);
+        }
+
+        if items.len() == 0 {
+            self.scrolledwindow.hide();
+        } else {
+            self.scrolledwindow.show();
         }
     }
 

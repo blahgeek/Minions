@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-21
+* @Last Modified time: 2017-06-24
 */
 
 use toml;
@@ -51,7 +51,14 @@ impl MinionsApp {
     fn update_ui(&self, refresh_items: bool) {
         trace!("update ui");
         match self.status {
-            Status::Initial | Status::FilteringNone => {
+            Status::Initial => {
+                self.ui.set_entry(None);
+                self.ui.set_filter_text("");
+                self.ui.set_reference_item(None);
+                self.ui.set_items(Vec::new(), &self.ctx);
+                self.ui.set_highlight_item(-1);
+            },
+            Status::FilteringNone => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(match self.ctx.reference_item {
@@ -133,7 +140,7 @@ impl MinionsApp {
     fn process_keyevent_move(&mut self, delta: i32) {
         debug!("Processing keyevent Move: {}", delta);
         self.status = match self.status.clone() {
-            Status::Initial | Status::FilteringNone => {
+            Status::FilteringNone => {
                 Status::FilteringMoving {
                     selected_idx: 0,
                     filter_text: String::new(),

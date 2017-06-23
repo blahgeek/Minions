@@ -66,7 +66,8 @@ impl MinionsApp {
                     Some(ref item) => Some(&item),
                 });
                 if self.ctx.list_items.len() == 0 {
-                    panic!("exit");
+                    warn!("No more listing items!");
+                    gtk::main_quit();
                 }
                 if refresh_items {
                     self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
@@ -127,7 +128,11 @@ impl MinionsApp {
     fn process_keyevent_escape(&mut self) {
         debug!("Processing keyevent Escape");
         self.status = match self.status {
-            Status::Initial => { panic!("exit") },
+            Status::Initial => {
+                debug!("Quit!");
+                gtk::main_quit();
+                Status::Initial
+            },
             Status::FilteringNone => {
                 self.ctx.reset();
                 Status::Initial

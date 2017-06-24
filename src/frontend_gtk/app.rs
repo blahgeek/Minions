@@ -388,6 +388,8 @@ impl MinionsApp {
         if from_clipboard {
             if let Err(error) = app.ctx.quicksend_from_clipboard() {
                 warn!("Unable to get content from clipboard: {}", error);
+            } else {
+                app.status = Status::FilteringNone;
             }
         }
         app.update_ui(true);

@@ -12,6 +12,7 @@ mod linux_desktop_entry;
 mod search_engine;
 mod file_browser;
 mod custom_script;
+mod youdao;
 
 use toml;
 
@@ -24,6 +25,7 @@ use std::path::{PathBuf, Path};
 #[derive(Debug)]
 enum ActionError {
     FileFormatError(PathBuf),
+    ServiceError(String),
     NotSupported,
     Unknown,
 }
@@ -75,5 +77,7 @@ pub fn get_actions(config: toml::Value) -> Vec<Rc<Box<Action>>> {
             }
         }
     }
+    ret.push(Rc::new(Box::new(youdao::Youdao{})));
+
     ret
 }

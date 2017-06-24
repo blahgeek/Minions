@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-17
+* @Last Modified time: 2017-06-24
 */
 
 extern crate shlex;
@@ -157,15 +157,7 @@ mod tests {
     fn linux_desktop_entry_single_test() {
         let path = PathBuf::from("/usr/share/applications/atom.desktop");
         let action = LinuxDesktopEntry::get(&path).unwrap();
-        assert!(action.name() == "Atom");
-    }
-
-    #[test]
-    fn linux_desktop_entry_test() {
-        let items = LinuxDesktopEntry::get_all();
-        for item in items.into_iter() {
-            println!("{:?}", item);
-        }
+        assert!(action.name == "Atom");
     }
 
 }

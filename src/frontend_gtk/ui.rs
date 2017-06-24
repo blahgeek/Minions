@@ -62,15 +62,15 @@ impl MinionsUI {
             self.textentry.set_text(&item.title);
             if let Some(ref ico) = item.icon {
                 match ico {
-                    &Icon::Name(ref ico_name) => self.icon.set_from_icon_name(&ico_name, -1),
+                    &Icon::Name(ref ico_name) => self.icon.set_from_icon_name(&ico_name, gtk::IconSize::Button.into()),
                     &Icon::File(ref path) => self.icon.set_from_file(&path),
                 }
             } else {
-                // self.icon.set_from_icon_name("", -1); // TODO
+                self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
             }
         } else {
             self.textentry.set_text("Minions");
-            // self.icon.set_from_icon_name("", -1); // TODO
+            self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);

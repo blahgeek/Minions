@@ -2,16 +2,17 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-06-24
 */
 
 use toml;
 
+use std::fmt;
 use std::error::Error;
 use std::rc::Rc;
 use std::io::Write;
 use std::process::{Command, Stdio};
-use mcore::action::{Action, ActionArg};
+use mcore::action::{Action, ActionArg, Icon};
 use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
 use actions;
@@ -193,6 +194,37 @@ impl Context {
                     .collect()
                 },
             };
+            self.list_items.push(Rc::new(match data {
+                &ItemData::Text(ref text) => {
+                    Item {
+                        title: text.clone(),
+                        subtitle: Some(fmt::format(format_args!("Text Data: {} bytes", text.len()))),
+                        icon: Some(Icon::Name("gtk-info".into())),
+                        badge: None,
+                        priority: <i32>::min_value(),
+                        data: None,
+                        search_str: Some("".into()),
+                        action: None,
+                        action_arg: ActionArg::None,
+                    }
+                },
+                &ItemData::Path(ref path) => {
+                    Item {
+                        title: path.to_string_lossy().into(),
+                        subtitle: Some(fmt::format(format_args!("Path Data: {}",
+                                                                if path.is_dir() { "Directory" }
+                                                                else if path.is_file() { "File" }
+                                                                else { "Unknown" }))),
+                        icon: Some(Icon::Name("gtk-info".into())),
+                        badge: None,
+                        priority: <i32>::min_value(),
+                        data: None,
+                        search_str: Some("".into()),
+                        action: None,
+                        action_arg: ActionArg::None,
+                    }
+                },
+            }));
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");

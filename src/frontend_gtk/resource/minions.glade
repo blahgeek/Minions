@@ -55,7 +55,7 @@
                     <property name="single_line_mode">True</property>
                     <property name="max_width_chars">25</property>
                     <attributes>
-                      <attribute name="font-desc" value="&lt;Enter Value&gt; 20"/>
+                      <attribute name="font-desc" value="&lt;Enter Value&gt; 18"/>
                       <attribute name="style" value="normal"/>
                       <attribute name="weight" value="normal"/>
                     </attributes>

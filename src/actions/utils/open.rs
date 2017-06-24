@@ -42,7 +42,7 @@
 //! # }
 //! ```
 use std::io;
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 use std::ffi::OsStr;
 
 #[cfg(not(any(target_os = "windows", target_os = "macos")))]
@@ -50,7 +50,7 @@ pub fn that<T:AsRef<OsStr>+Sized>(path: T) -> io::Result<()> {
     let mut last_err: io::Result<()> = Err(io::Error::from_raw_os_error(0));
     for program in &["xdg-open", "gnome-open", "kde-open"] {
         match Command::new(program).arg(path.as_ref()).spawn() {
-            Ok(mut child) => return Ok(()),
+            Ok(_) => return Ok(()),
             Err(err) => {
                 last_err = Err(err);
                 continue;

@@ -2,11 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-06-24
 */
 
 extern crate url;
-extern crate open;
 
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use toml;
@@ -15,6 +14,7 @@ use std::error::Error;
 
 use mcore::action::Action;
 use mcore::item::Item;
+use actions::utils::open;
 
 pub struct SearchEngine {
     /// Name of the search engine

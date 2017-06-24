@@ -2,10 +2,8 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-06-24
 */
-
-extern crate open;
 
 use toml;
 
@@ -15,6 +13,7 @@ use std::error::Error;
 
 use mcore::item::{Item, ItemData};
 use mcore::action::Action;
+use actions::utils::open;
 
 pub struct FileBrowserEntry {
     name: String,

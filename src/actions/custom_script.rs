@@ -2,12 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-21
+* @Last Modified time: 2017-06-24
 */
 
 /// Action defined by custom script
 
-extern crate open;
 extern crate serde_json;
 
 use toml;
@@ -24,6 +23,7 @@ use std::io::prelude::*;
 use mcore::item::{Item, ItemData};
 use mcore::action::{Action, ActionArg};
 use actions::file_browser::FileBrowserEntry;
+use actions::utils::open;
 
 /// Output item from custom script
 /// Each item consists of:

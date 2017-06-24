@@ -348,7 +348,8 @@ impl MinionsApp {
 
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {
         let key = event.get_keyval();
-        debug!("Key pressed: {:?}", key);
+        let modi = event.get_state();
+        debug!("Key pressed: {:?}/{:?}", key, modi);
         if key == gdk::enums::key::Return {
             self.process_keyevent_enter();
             Inhibit(true)
@@ -360,6 +361,12 @@ impl MinionsApp {
             Inhibit(true)
         } else if key == gdk::enums::key::Tab {
             self.process_keyevent_tab();
+            Inhibit(true)
+        } else if key == 'j' as u32 && modi == gdk::CONTROL_MASK {
+            self.process_keyevent_move(1);
+            Inhibit(true)
+        } else if key == 'k' as u32 && modi == gdk::CONTROL_MASK {
+            self.process_keyevent_move(-1);
             Inhibit(true)
         } else if key == gdk::enums::key::Down {
             self.process_keyevent_move(1);

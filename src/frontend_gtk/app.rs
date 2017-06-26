@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-25
 */
 
 use toml;
@@ -268,6 +268,7 @@ impl MinionsApp {
 
     fn process_keyevent_space(&mut self) {
         debug!("Processing keyevent Space");
+        let mut should_update_ui = false;
         self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
@@ -286,6 +287,7 @@ impl MinionsApp {
                 } else {
                     let item = filter_items[selected_idx as usize].clone();
                     if self.ctx.selectable_with_text(&item) {
+                        should_update_ui = true;
                         Status::EnteringText(item)
                     } else {
                         warn!("Item not selectable with or without text");
@@ -295,7 +297,10 @@ impl MinionsApp {
             },
             status @ _ => status,
         };
-        self.update_ui(true);
+
+        if should_update_ui {
+            self.update_ui(true);
+        }
     }
 
     fn process_keyevent_enter(&mut self) {
@@ -355,7 +360,7 @@ impl MinionsApp {
             Inhibit(true)
         } else if key == gdk::enums::key::space {
             self.process_keyevent_space();
-            Inhibit(true)
+            Inhibit(false)
         } else if key == gdk::enums::key::Escape {
             self.process_keyevent_escape();
             Inhibit(true)

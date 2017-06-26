@@ -2,14 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-26
 */
 
 use toml;
 
 use std::fmt;
 use std::error::Error;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::io::Write;
 use std::process::{Command, Stdio};
 use mcore::action::{Action, ActionArg, Icon};
@@ -20,16 +20,16 @@ use actions;
 
 pub struct Context {
     /// Reference item for quick-send
-    pub reference_item: Option<Rc<Item>>,
+    pub reference_item: Option<Item>,
     /// Candidates items list
-    pub list_items: Vec<Rc<Item>>,
+    pub list_items: Vec<Item>,
 
     /// Stack of history items, init with empty stack
     /// Calling the last item's action would yields list_items
-    history_items: Vec<Rc<Item>>,
+    history_items: Vec<Item>,
 
     /// Cached all actions
-    all_actions: Vec<Rc<Box<Action>>>,
+    all_actions: Vec<Arc<Box<Action>>>,
 }
 
 
@@ -55,7 +55,6 @@ impl Context {
                 action.accept_nothing() || action.accept_text()
             })
             .map(|action| Item::new_action_item(action.clone()))
-            .map(|item| Rc::new(item))
             .collect();
         self.list_items.sort_by_key(|item| item.priority );
         self.history_items = Vec::new();
@@ -67,7 +66,7 @@ impl Context {
         let clip = String::from_utf8(clip.stdout)?;
         if clip.len() > 0 {
             let clip_item = Item::new_text_item(&clip);
-            self.quicksend(Rc::new(clip_item))
+            self.quicksend(clip_item)
         } else {
             Ok(())
         }
@@ -92,7 +91,8 @@ impl Context {
     }
 
     /// Filter list_items using fuzzymatch
-    pub fn filter(&self, pattern: &str) -> Vec<Rc<Item>> {
+    /// return indices of list_items
+    pub fn filter(&self, pattern: &str) -> Vec<usize> {
         trace!("filter: {:?}", pattern);
         let scores = self.list_items.iter().map(|item| {
             let search_str = if let Some(ref search_str) = item.search_str {
@@ -102,13 +102,13 @@ impl Context {
             };
             fuzzymatch(search_str, pattern, false)
         });
-        let mut items_and_scores = self.list_items.clone().into_iter().zip(scores.into_iter())
-            .collect::<Vec<(Rc<Item>, i32)>>();
-        items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
-        items_and_scores.into_iter()
-            .filter(|item_and_score| item_and_score.1 > 0)
-            .map(|item_and_score| item_and_score.0)
-            .collect::<Vec<Rc<Item>>>()
+        let mut indices_and_scores = (0..self.list_items.len()).zip(scores.into_iter())
+            .collect::<Vec<(usize, i32)>>();
+        indices_and_scores.sort_by_key(|index_and_score| -index_and_score.1);
+        indices_and_scores.into_iter()
+            .filter(|index_and_score| index_and_score.1 > 0)
+            .map(|index_and_score| index_and_score.0)
+            .collect::<Vec<usize>>()
     }
 
     pub fn selectable(&self, item: &Item) -> bool {
@@ -127,15 +127,14 @@ impl Context {
         }
     }
 
-    pub fn select(&mut self, item: Rc<Item>) -> Result<(), Box<Error>> {
+    pub fn select(&mut self, item: Item) -> Result<(), Box<Error>> {
         if !self.selectable(&item) {
             panic!("Item {} is not selectable", item);
         }
         if let Some(ref action) = item.action {
             self.list_items = action.run_arg(&item.action_arg)?
                               .into_iter()
-                              .map(|x| Rc::new(x))
-                              .collect::<Vec<Rc<Item>>>();
+                              .collect::<Vec<Item>>();
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
@@ -145,15 +144,14 @@ impl Context {
         Ok(())
     }
 
-    pub fn select_with_text(&mut self, item: Rc<Item>, text: &str) -> Result<(), Box<Error>> {
+    pub fn select_with_text(&mut self, item: Item, text: &str) -> Result<(), Box<Error>> {
         if !self.selectable_with_text(&item) {
             panic!("Item {} is not selectable with text", &item);
         }
         if let Some(ref action) = item.action {
             self.list_items = action.run_text(text)?
                               .into_iter()
-                              .map(|x| Rc::new(x))
-                              .collect::<Vec<Rc<Item>>>();
+                              .collect::<Vec<Item>>();
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
@@ -167,7 +165,7 @@ impl Context {
         self.reference_item.is_none() && item.data.is_some()
     }
 
-    pub fn quicksend(&mut self, item: Rc<Item>) -> Result<(), Box<Error>> {
+    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error>> {
         if !self.quicksend_able(&item) {
             panic!("Item {} is not quicksend_able", item);
         }
@@ -179,7 +177,7 @@ impl Context {
                     .map(|action| {
                         let mut item = Item::new_action_item(action.clone());
                         item.action_arg = ActionArg::Text(text.clone());
-                        Rc::new(item)
+                        item
                     })
                     .collect()
                 },
@@ -189,12 +187,12 @@ impl Context {
                     .map(|action| {
                         let mut item = Item::new_action_item(action.clone());
                         item.action_arg = ActionArg::Path(path.clone());
-                        Rc::new(item)
+                        item
                     })
                     .collect()
                 },
             };
-            self.list_items.push(Rc::new(match data {
+            self.list_items.push(match data {
                 &ItemData::Text(ref text) => {
                     Item {
                         title: text.clone(),
@@ -224,7 +222,7 @@ impl Context {
                         action_arg: ActionArg::None,
                     }
                 },
-            }));
+            });
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");

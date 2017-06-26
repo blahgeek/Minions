@@ -2,19 +2,20 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-15
+* @Last Modified time: 2017-06-26
 */
 
 use std;
 use std::error::Error;
 use mcore::item::Item;
 
+#[derive(Clone)]
 pub enum Icon {
     Name(String),
     File(std::path::PathBuf),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ActionArg {
     None,
     Text(String),

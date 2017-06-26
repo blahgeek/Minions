@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-06-26
 */
 
 use toml;
@@ -21,7 +21,7 @@ use frontend_rofi::utils;
 #[derive(Clone)]
 enum State {
     Filtering(i32, String),
-    EnteringText(Rc<Item>),
+    EnteringText(usize),
     Exiting,
 }
 
@@ -35,7 +35,7 @@ static ROFI_WIDTH: i32 = 120;
 
 impl MinionsApp {
 
-    fn rofi_enter_text(&mut self, item: Rc<Item>) -> Result<State, Box<Error>> {
+    fn rofi_enter_text(&mut self, item: Item) -> Result<State, Box<Error>> {
         let mut cmd = Command::new("rofi");
         let prompt = format!("{}> ", item.title);
         cmd.stdin(Stdio::piped())
@@ -118,16 +118,16 @@ impl MinionsApp {
         let mut stdout_str: Vec<&str> = stdout_str.splitn(2, '|').collect();
 
         let filter_str = stdout_str.pop().unwrap().trim();
-        let selected_idx: i32 = stdout_str.pop().unwrap().parse()?;
-        let selected_item = self.ctx.list_items[selected_idx as usize].clone();
+        let selected_idx: usize = stdout_str.pop().unwrap().parse()?;
+        let selected_item = self.ctx.list_items[selected_idx].clone();
 
         Ok( match status {
             10 => { // space
                 if self.ctx.selectable_with_text(&selected_item) {
-                    State::EnteringText(selected_item)
+                    State::EnteringText(selected_idx)
                 } else {
                     warn!("Item {} not selectable with text", selected_item.title);
-                    State::Filtering(selected_idx, filter_str.into())
+                    State::Filtering(selected_idx as i32, filter_str.into())
                 }
             },
             11 => { // tab
@@ -136,7 +136,7 @@ impl MinionsApp {
                     State::Filtering(-1, String::new())
                 } else {
                     warn!("Item {} not quicksend-able", selected_item.title);
-                    State::Filtering(selected_idx, filter_str.into())
+                    State::Filtering(selected_idx as i32, filter_str.into())
                 }
             },
             12 => { // control-c, copy
@@ -144,17 +144,17 @@ impl MinionsApp {
                 if let Err(error) = copy_ret {
                     warn!("Copy {} to clipboard failed", error);
                 }
-                State::Filtering(selected_idx, filter_str.into())
+                State::Filtering(selected_idx as i32, filter_str.into())
             }
             0 => { // enter
                 if self.ctx.selectable(&selected_item) {
                     self.ctx.select(selected_item)?;
                     State::Filtering(-1, String::new())
                 } else if self.ctx.selectable_with_text(&selected_item) {
-                    State::EnteringText(selected_item)
+                    State::EnteringText(selected_idx)
                 } else {
                     warn!("Item {} not selectable", selected_item.title);
-                    State::Filtering(selected_idx, filter_str.into())
+                    State::Filtering(selected_idx as i32, filter_str.into())
                 }
             },
             _ => {
@@ -175,7 +175,8 @@ impl MinionsApp {
                 State::Filtering(select_idx, ref filter_str) => {
                     self.rofi_filter(select_idx, &filter_str)
                 },
-                State::EnteringText(item) => {
+                State::EnteringText(idx) => {
+                    let item = self.ctx.list_items[idx].clone();
                     self.rofi_enter_text(item)
                 },
                 _ => {

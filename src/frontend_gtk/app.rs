@@ -2,8 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-25
+* @Last Modified time: 2017-06-26
 */
+
+extern crate uuid;
+use self::uuid::Uuid;
 
 use toml;
 
@@ -12,7 +15,9 @@ use frontend_gtk::gdk;
 use frontend_gtk::gtk;
 use frontend_gtk::gtk::prelude::*;
 
+use std::thread;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::ops::Deref;
 use std::cell::RefCell;
 
@@ -20,23 +25,23 @@ use frontend_gtk::ui::MinionsUI;
 use mcore::context::Context;
 use mcore::item::Item;
 
-
 #[derive(Clone)]
 enum Status {
     Initial,
+    // Running(String),  // running in another thread with thread name
     FilteringNone,
     FilteringEntering {
         selected_idx: i32,
         filter_text: String,
         filter_text_lasttime: std::time::Instant,
-        filter_items: Vec<Rc<Item>>,
+        filter_indices: Vec<usize>,
     },
     FilteringMoving {
         selected_idx: i32,
         filter_text: String,
-        filter_items: Vec<Rc<Item>>,
+        filter_indices: Vec<usize>,
     },
-    EnteringText(Rc<Item>), // entering text for item
+    EnteringText(usize), // entering text for item, (index for list_items)
 }
 
 pub struct MinionsApp {
@@ -44,6 +49,7 @@ pub struct MinionsApp {
     ctx: Context,
 
     status: Status,
+    // app: Option<Arc<RefCell<MinionsApp>>>,  // itself
 }
 
 impl MinionsApp {
@@ -70,7 +76,8 @@ impl MinionsApp {
                     gtk::main_quit();
                 }
                 if refresh_items {
-                    self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
+                    // self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
+                    self.ui.set_items(self.ctx.list_items.iter().collect(), &self.ctx);
                 }
                 self.ui.set_highlight_item(-1);
             },
@@ -78,17 +85,17 @@ impl MinionsApp {
                 selected_idx,
                 ref filter_text,
                 filter_text_lasttime: _,
-                ref filter_items
+                ref filter_indices
             } |
             Status::FilteringMoving {
                 selected_idx,
                 ref filter_text,
-                ref filter_items
+                ref filter_indices
             } => {
                 if selected_idx < 0 {
                     self.ui.set_entry(None);
                 } else {
-                    self.ui.set_entry(Some(&filter_items[selected_idx as usize]))
+                    self.ui.set_entry(Some(&self.ctx.list_items[filter_indices[selected_idx as usize]]))
                 }
                 self.ui.set_filter_text(&filter_text);
                 self.ui.set_reference_item(match self.ctx.reference_item {
@@ -96,15 +103,16 @@ impl MinionsApp {
                     Some(ref item) => Some(&item),
                 });
                 if refresh_items {
-                    self.ui.set_items(filter_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
+                    self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
+                                      .collect::<Vec<&Item>>(), &self.ctx);
                 }
                 self.ui.set_highlight_item(selected_idx);
             },
-            Status::EnteringText(ref item) => {
+            Status::EnteringText(idx) => {
                 self.ui.set_entry(None);
                 self.ui.set_entry_editable();
                 self.ui.set_filter_text("");
-                self.ui.set_reference_item(Some(&item));
+                self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
                 self.ui.set_items(Vec::new(), &self.ctx);
                 self.ui.set_highlight_item(-1);
             }
@@ -116,8 +124,8 @@ impl MinionsApp {
             selected_idx: _,
             filter_text: _,
             filter_text_lasttime,
-            filter_items: _
-        } = self.status.clone() {
+            filter_indices: _
+        } = self.status {
             if filter_text_lasttime.elapsed() > std::time::Duration::new(1, 0) {
                 self.status = Status::FilteringNone;
                 self.update_ui(true);
@@ -149,26 +157,26 @@ impl MinionsApp {
                 Status::FilteringMoving {
                     selected_idx: 0,
                     filter_text: String::new(),
-                    filter_items: self.ctx.list_items.clone(),
+                    filter_indices: (0..self.ctx.list_items.len()).collect(),
                 }
             },
             Status::FilteringEntering {
                 selected_idx,
                 filter_text,
                 filter_text_lasttime: _,
-                filter_items
+                filter_indices
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text,
-                filter_items
+                filter_indices
             } => {
                 let mut new_idx = selected_idx + delta;
-                if filter_items.len() == 0 {
+                if filter_indices.len() == 0 {
                     new_idx = -1;
                 } else {
-                    if new_idx >= filter_items.len() as i32 {
-                        new_idx = filter_items.len() as i32 - 1;
+                    if new_idx >= filter_indices.len() as i32 {
+                        new_idx = filter_indices.len() as i32 - 1;
                     }
                     if new_idx < 0 {
                         new_idx = 0;
@@ -177,7 +185,7 @@ impl MinionsApp {
                 Status::FilteringMoving {
                     selected_idx: new_idx,
                     filter_text: filter_text,
-                    filter_items: filter_items
+                    filter_indices: filter_indices
                 }
             },
             status @ _ => status,
@@ -192,18 +200,18 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items
+                filter_indices
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_items
+                filter_indices
             } => {
                 if selected_idx < 0 {
                     warn!("No item to send");
                     self.status.clone()
                 } else {
-                    let item = filter_items[selected_idx as usize].clone();
+                    let item = self.ctx.list_items[filter_indices[selected_idx as usize]].clone();
                     if self.ctx.quicksend_able(&item) {
                         if let Err(error) = self.ctx.quicksend(item) {
                             warn!("Unable to quicksend item: {}", error);
@@ -223,13 +231,13 @@ impl MinionsApp {
     }
 
     fn _make_status_filteringentering(&self, text: String) -> Status {
-        let filter_items = self.ctx.filter(&text);
-        let selected_idx = if filter_items.len() == 0 { -1 } else { 0 };
+        let filter_indices = self.ctx.filter(&text);
+        let selected_idx = if filter_indices.len() == 0 { -1 } else { 0 };
         Status::FilteringEntering {
             selected_idx: selected_idx,
             filter_text: text,
             filter_text_lasttime: std::time::Instant::now(),
-            filter_items: filter_items,
+            filter_indices: filter_indices,
         }
     }
 
@@ -246,12 +254,12 @@ impl MinionsApp {
                 selected_idx: _,
                 mut filter_text,
                 filter_text_lasttime: _,
-                filter_items: _
+                filter_indices: _
             } |
             Status::FilteringMoving {
                 selected_idx: _,
                 mut filter_text,
-                filter_items: _,
+                filter_indices: _,
             } => {
                 filter_text.push(ch);
                 self._make_status_filteringentering(filter_text)
@@ -274,21 +282,22 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items
+                filter_indices
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_items
+                filter_indices
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");
                     self.status.clone()
                 } else {
-                    let item = filter_items[selected_idx as usize].clone();
-                    if self.ctx.selectable_with_text(&item) {
+                    let idx = filter_indices[selected_idx as usize];
+                    let item = &self.ctx.list_items[idx];
+                    if self.ctx.selectable_with_text(item) {
                         should_update_ui = true;
-                        Status::EnteringText(item)
+                        Status::EnteringText(idx)
                     } else {
                         warn!("Item not selectable with or without text");
                         self.status.clone()
@@ -311,18 +320,20 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_items
+                filter_indices
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_items
+                filter_indices
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");
                     self.status.clone()
                 } else {
-                    let item = filter_items[selected_idx as usize].clone();
+                    let idx = filter_indices[selected_idx as usize];
+                    let item = self.ctx.list_items[idx].clone();
+                    // let thread_uuid = Uuid::new_v4().simple().to_string();
                     if self.ctx.selectable(&item) {
                         if let Err(error) = self.ctx.select(item) {
                             warn!("Unable to select item: {}", error);
@@ -331,18 +342,19 @@ impl MinionsApp {
                             Status::FilteringNone
                         }
                     } else if self.ctx.selectable_with_text(&item) {
-                        Status::EnteringText(item)
+                        Status::EnteringText(idx)
                     } else {
                         warn!("Item not selectable with or without text");
                         self.status.clone()
                     }
                 }
             },
-            Status::EnteringText(item) => {
+            Status::EnteringText(idx) => {
                 let text = self.ui.get_entry_text();
-                if let Err(error) = self.ctx.select_with_text(item.clone(), &text) {
+                let item = self.ctx.list_items[idx].clone();
+                if let Err(error) = self.ctx.select_with_text(item, &text) {
                     warn!("Unable to select item with text: {}", error);
-                    Status::EnteringText(item)
+                    Status::EnteringText(idx)
                 } else {
                     Status::FilteringNone
                 }
@@ -391,11 +403,12 @@ impl MinionsApp {
         }
     }
 
-    pub fn new(config: toml::Value, from_clipboard: bool) -> Rc<RefCell<MinionsApp>> {
+    pub fn new(config: toml::Value, from_clipboard: bool) -> Arc<RefCell<MinionsApp>> {
         let mut app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config),
             status: Status::Initial,
+            // app: None,
         };
         if from_clipboard {
             if let Err(error) = app.ctx.quicksend_from_clipboard() {
@@ -406,7 +419,9 @@ impl MinionsApp {
         }
         app.update_ui(true);
 
-        let app  = Rc::new(RefCell::new(app));
+        let app = Arc::new(RefCell::new(app));
+        // app.borrow_mut().app = Some(app.clone());
+
         let app_ = app.clone();
         app.borrow().ui.window.connect_key_press_event(move |_, event| {
             app_.borrow_mut().process_keyevent(event)

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-26
 */
 
 /// Action defined by custom script
@@ -12,7 +12,7 @@ extern crate serde_json;
 use toml;
 
 use std;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::path::PathBuf;
 use std::error::Error;
 use std::process::Command;
@@ -204,7 +204,7 @@ impl ScriptItem {
             data: itemdata,
             search_str: None,
             action: match action {
-                Some(x) => Some(Rc::new(x)),
+                Some(x) => Some(Arc::new(x)),
                 None => None,
             },
             action_arg: ActionArg::None,

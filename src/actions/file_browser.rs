@@ -2,12 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-26
 */
 
 use toml;
 
-use std::rc::Rc;
+use std::sync::Arc;
 use std::path::{PathBuf, Path};
 use std::error::Error;
 
@@ -100,7 +100,7 @@ impl Action for FileBrowserEntry {
                     Ok(entry) => {
                         if let Some(act) = FileBrowserEntry::new(entry.file_name().to_string_lossy().into(), entry.path()) {
                             let mut item = act.get_item();
-                            item.action = Some(Rc::new(Box::new(act)));
+                            item.action = Some(Arc::new(Box::new(act)));
                             ret.push(item);
                         }
                     },
@@ -112,7 +112,7 @@ impl Action for FileBrowserEntry {
             if let Some(parent) = self.path.parent() {
                 if let Some(act) = FileBrowserEntry::new("..".into(), parent.into()) {
                     let mut item = act.get_item();
-                    item.action = Some(Rc::new(Box::new(act)));
+                    item.action = Some(Arc::new(Box::new(act)));
                     item.priority = -100;
                     ret.push(item);
                 }

@@ -5,9 +5,13 @@
 * @Last Modified time: 2017-06-26
 */
 
+extern crate uuid;
+use self::uuid::Uuid;
+
 use toml;
 
 use std::fmt;
+use std::thread;
 use std::error::Error;
 use std::sync::Arc;
 use std::io::Write;
@@ -29,7 +33,7 @@ pub struct Context {
     history_items: Vec<Item>,
 
     /// Cached all actions
-    all_actions: Vec<Arc<Box<Action>>>,
+    all_actions: Vec<Arc<Box<Action + Sync + Send>>>,
 }
 
 
@@ -127,14 +131,53 @@ impl Context {
         }
     }
 
+    pub fn async_select_callback(&mut self, items: Vec<Item>) {
+        self.list_items = items;
+        self.list_items.sort_by_key(|x| x.priority);
+        self.reference_item = None;
+    }
+
+    pub fn async_select<F>(&self, item: Item, callback: F) -> String
+    where F: FnOnce(Result<Vec<Item>, Box<Error>>) + Send + 'static {
+        if !self.selectable(&item) {
+            panic!("Item {} is not selectable", item);
+        }
+        let thread_uuid = Uuid::new_v4().simple().to_string();
+        thread::Builder::new()
+            .name(thread_uuid.clone())
+            .spawn(move || {
+                let action = item.action.unwrap();
+                let items = action.run_arg(&item.action_arg);
+                callback(items);
+            })
+            .unwrap();
+        thread_uuid
+    }
+
+    pub fn async_select_with_text<F>(&self, item: Item, text: &str, callback: F) -> String
+    where F: FnOnce(Result<Vec<Item>, Box<Error>>) + Send + 'static {
+        if !self.selectable_with_text(&item) {
+            panic!("Item {} is not selectable with text", &item);
+        }
+        let text = text.to_string();
+        let thread_uuid = Uuid::new_v4().simple().to_string();
+        thread::Builder::new()
+            .name(thread_uuid.clone())
+            .spawn(move || {
+                let action = item.action.unwrap();
+                let items = action.run_text(&text);
+                callback(items);
+            })
+            .unwrap();
+        thread_uuid
+    }
+
     pub fn select(&mut self, item: Item) -> Result<(), Box<Error>> {
         if !self.selectable(&item) {
             panic!("Item {} is not selectable", item);
         }
         if let Some(ref action) = item.action {
-            self.list_items = action.run_arg(&item.action_arg)?
-                              .into_iter()
-                              .collect::<Vec<Item>>();
+            self.list_items = action.run_arg(&item.action_arg)?;
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");
@@ -149,9 +192,7 @@ impl Context {
             panic!("Item {} is not selectable with text", &item);
         }
         if let Some(ref action) = item.action {
-            self.list_items = action.run_text(text)?
-                              .into_iter()
-                              .collect::<Vec<Item>>();
+            self.list_items = action.run_text(text)?;
             self.list_items.sort_by_key(|item| item.priority );
         } else {
             panic!("Should not reach here");

@@ -43,8 +43,8 @@ impl fmt::Display for ActionError {
 
 use mcore::action::Action;
 
-pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action>>> {
-    let mut ret : Vec<Arc<Box<Action>>> = vec![
+pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
+    let mut ret : Vec<Arc<Box<Action + Sync + Send>>> = vec![
         Arc::new(Box::new(capital::Capital{})),
     ];
     if let Some(opts) = config.get("linux_desktop_entry") {

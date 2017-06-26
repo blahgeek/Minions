@@ -156,7 +156,7 @@ impl ScriptItem {
             Some(ItemData::Text(self.title.clone()))
         } ;
 
-        let mut action: Option<Box<Action>> =
+        let mut action: Option<Box<Action + Sync + Send>> =
         if let Some(action_callback) = self.action_callback {
             if action_callback.len() >= 1 {
                 Some(Box::new(ScriptAction {

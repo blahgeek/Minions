@@ -5,6 +5,8 @@
 * @Last Modified time: 2017-06-27
 */
 
+use std::cmp;
+
 use mcore::item::Item;
 use mcore::action::Icon;
 use mcore::context::Context;
@@ -15,15 +17,14 @@ use frontend_gtk::gtk::prelude::*;
 pub struct MinionsUI {
     window_builder: gtk::Builder,
     pub window: gtk::Window,
-    rootbox: gtk::Box,
     listbox: gtk::ListBox,
-    scrolledwindow: gtk::ScrolledWindow,
-    listbox_viewport: gtk::Viewport,
     filterlabel: gtk::Label,
     textentry: gtk::Entry,
     icon: gtk::Image,
     spinner: gtk::Spinner,
 }
+
+static LISTBOX_NUM: i32 = 5;
 
 impl MinionsUI {
 
@@ -31,10 +32,7 @@ impl MinionsUI {
         let window_builder = gtk::Builder::new_from_string(include_str!("resource/minions.glade"));
         let window = window_builder.get_object::<gtk::Window>("root")
                      .expect("Failed to initialize from glade file");
-        let rootbox = window_builder.get_object::<gtk::Box>("rootbox").unwrap();
         let listbox = window_builder.get_object::<gtk::ListBox>("listbox").unwrap();
-        let scrolledwindow = window_builder.get_object::<gtk::ScrolledWindow>("scrolledwindow").unwrap();
-        let listbox_viewport = window_builder.get_object::<gtk::Viewport>("listbox_viewport").unwrap();
         let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
         let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
         let icon = window_builder.get_object::<gtk::Image>("icon").unwrap();
@@ -50,10 +48,7 @@ impl MinionsUI {
         MinionsUI {
             window_builder: window_builder,
             window: window,
-            rootbox: rootbox,
             listbox: listbox,
-            scrolledwindow: scrolledwindow,
-            listbox_viewport: listbox_viewport,
             filterlabel: label,
             textentry: entry,
             icon: icon,
@@ -112,80 +107,82 @@ impl MinionsUI {
         }
     }
 
-    pub fn set_items(&self, items: Vec<&Item>, ctx: &Context) {
+    fn build_item(item: &Item, ctx: &Context) -> gtk::Box {
+        let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
+        let item_ui = builder.get_object::<gtk::Box>("item_template")
+                      .expect("Failed to get item template from glade file");
+
+        let titlebox = builder.get_object::<gtk::Box>("titlebox").unwrap();
+        let title = builder.get_object::<gtk::Label>("title").unwrap();
+        let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
+        let badge = builder.get_object::<gtk::Label>("badge").unwrap();
+        let selectable = builder.get_object::<gtk::Image>("selectable").unwrap();
+        let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
+        let icon = builder.get_object::<gtk::Image>("icon").unwrap();
+
+        title.set_text(&item.title);
+
+        if let Some(ref ico) = item.icon {
+            match ico {
+                &Icon::Name(ref ico_name) => icon.set_from_icon_name(&ico_name, -1),
+                &Icon::File(ref path) => icon.set_from_file(&path),
+            }
+        }
+
+        match item.subtitle {
+            Some(ref text) => subtitle.set_text(&text),
+            None => titlebox.remove(&subtitle),
+        }
+        match item.badge {
+            Some(ref text) => badge.set_text(&text),
+            None => item_ui.remove(&badge),
+        }
+
+        if match item.action {
+            Some(ref action) => !action.should_return_items(),
+            None => true,
+        } {
+            arrow.set_from_icon_name("gtk-media-stop", gtk::IconSize::SmallToolbar.into());
+        } else {
+            arrow.set_from_icon_name("gtk-goto-last", gtk::IconSize::SmallToolbar.into());
+        }
+
+        if ctx.selectable(&item) {
+            selectable.set_from_icon_name("gtk-apply", gtk::IconSize::SmallToolbar.into());
+        } else if ctx.selectable_with_text(&item) {
+            selectable.set_from_icon_name("gtk-edit", gtk::IconSize::SmallToolbar.into());
+        } else {
+            item_ui.remove(&selectable);
+        }
+
+        item_ui
+    }
+
+    pub fn set_items(&self, items: Vec<&Item>, highlight: i32, ctx: &Context) {
         for item_ui in self.listbox.get_children().iter() {
             self.listbox.remove(item_ui);
         }
-        for item in items.iter() {
-            let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
-            let item_ui = builder.get_object::<gtk::Box>("item_template")
-                          .expect("Failed to get item template from glade file");
 
-            let titlebox = builder.get_object::<gtk::Box>("titlebox").unwrap();
-            let title = builder.get_object::<gtk::Label>("title").unwrap();
-            let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
-            let badge = builder.get_object::<gtk::Label>("badge").unwrap();
-            let selectable = builder.get_object::<gtk::Image>("selectable").unwrap();
-            let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
-            let icon = builder.get_object::<gtk::Image>("icon").unwrap();
+        let mut display_start =
+            if highlight < (LISTBOX_NUM / 2) { 0 }
+            else { highlight - (LISTBOX_NUM / 2) };
+        let display_end = cmp::min(display_start + LISTBOX_NUM, items.len() as i32);
 
-            title.set_text(&item.title);
+        if display_end - display_start < LISTBOX_NUM {
+            display_start = cmp::max(0, display_end - LISTBOX_NUM);
+        }
 
-            if let Some(ref ico) = item.icon {
-                match ico {
-                    &Icon::Name(ref ico_name) => icon.set_from_icon_name(&ico_name, -1),
-                    &Icon::File(ref path) => icon.set_from_file(&path),
-                }
-            }
-
-            match item.subtitle {
-                Some(ref text) => subtitle.set_text(&text),
-                None => titlebox.remove(&subtitle),
-            }
-            match item.badge {
-                Some(ref text) => badge.set_text(&text),
-                None => item_ui.remove(&badge),
-            }
-
-            if match item.action {
-                Some(ref action) => !action.should_return_items(),
-                None => true,
-            } {
-                arrow.set_from_icon_name("gtk-media-stop", gtk::IconSize::SmallToolbar.into());
-            } else {
-                arrow.set_from_icon_name("gtk-goto-last", gtk::IconSize::SmallToolbar.into());
-            }
-
-            if ctx.selectable(&item) {
-                selectable.set_from_icon_name("gtk-apply", gtk::IconSize::SmallToolbar.into());
-            } else if ctx.selectable_with_text(&item) {
-                selectable.set_from_icon_name("gtk-edit", gtk::IconSize::SmallToolbar.into());
-            } else {
-                item_ui.remove(&selectable);
-            }
-
+        trace!("display: {}:{}", display_start, display_end);
+        for i in display_start .. display_end {
+            let item_ui = MinionsUI::build_item(items[i as usize], ctx);
             self.listbox.add(&item_ui);
         }
 
-        if items.len() == 0 {
-            self.scrolledwindow.hide();
-        } else {
-            self.scrolledwindow.show();
-        }
-    }
-
-    pub fn set_highlight_item(&self, idx: i32) {
-        let adj = self.listbox_viewport.get_vadjustment().unwrap();
-        let items = self.listbox.get_children();
-        let total = items.len();
-        if idx < 0 || idx >= (total as i32) {
+        if highlight < 0 {
             self.listbox.select_row(None);
-            adj.set_value(0 as f64);
-            return;
+        } else {
+            self.listbox.select_row(self.listbox.get_row_at_index(highlight - display_start).as_ref());
         }
-        self.listbox.select_row(self.listbox.get_row_at_index(idx).as_ref());
-
-        let ref item = items[idx as usize];
-        adj.set_value((item.get_allocation().y) as f64);
     }
+
 }

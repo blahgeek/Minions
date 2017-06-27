@@ -57,23 +57,21 @@ thread_local! {
 
 impl MinionsApp {
 
-    fn update_ui(&self, refresh_items: bool) {
+    fn update_ui(&self) {
         trace!("update ui");
         match self.status {
             Status::Initial => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(None);
-                self.ui.set_items(Vec::new(), &self.ctx);
-                self.ui.set_highlight_item(-1);
+                self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(false);
             },
             Status::Running(_) => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(None);
-                self.ui.set_items(Vec::new(), &self.ctx);
-                self.ui.set_highlight_item(-1);
+                self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(true);
             },
             Status::FilteringNone => {
@@ -88,11 +86,7 @@ impl MinionsApp {
                     warn!("No more listing items!");
                     gtk::main_quit();
                 }
-                if refresh_items {
-                    // self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect::<Vec<&Item>>(), &self.ctx);
-                    self.ui.set_items(self.ctx.list_items.iter().collect(), &self.ctx);
-                }
-                self.ui.set_highlight_item(-1);
+                self.ui.set_items(self.ctx.list_items.iter().collect(), -1, &self.ctx);
             },
             Status::FilteringEntering {
                 selected_idx,
@@ -116,11 +110,8 @@ impl MinionsApp {
                     None => None,
                     Some(ref item) => Some(&item),
                 });
-                if refresh_items {
-                    self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
-                                      .collect::<Vec<&Item>>(), &self.ctx);
-                }
-                self.ui.set_highlight_item(selected_idx);
+                self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
+                                  .collect::<Vec<&Item>>(), selected_idx, &self.ctx);
             },
             Status::EnteringText(idx) => {
                 self.ui.set_spinning(false);
@@ -128,8 +119,7 @@ impl MinionsApp {
                 self.ui.set_entry_editable();
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
-                self.ui.set_items(Vec::new(), &self.ctx);
-                self.ui.set_highlight_item(-1);
+                self.ui.set_items(Vec::new(), -1, &self.ctx);
             }
         }
     }
@@ -143,7 +133,7 @@ impl MinionsApp {
         } = self.status {
             if filter_text_lasttime.elapsed() > std::time::Duration::new(1, 0) {
                 self.status = Status::FilteringNone;
-                self.update_ui(true);
+                self.update_ui();
             }
         }
     }
@@ -166,7 +156,7 @@ impl MinionsApp {
             }
             _ => Status::FilteringNone,
         };
-        self.update_ui(true);
+        self.update_ui();
     }
 
     fn process_keyevent_move(&mut self, delta: i32) {
@@ -209,7 +199,7 @@ impl MinionsApp {
             },
             status @ _ => status,
         };
-        self.update_ui(false);
+        self.update_ui();
     }
 
     fn process_keyevent_tab(&mut self) {
@@ -246,7 +236,7 @@ impl MinionsApp {
             },
             status @ _ => status,
         };
-        self.update_ui(true);
+        self.update_ui();
     }
 
     fn _make_status_filteringentering(&self, text: String) -> Status {
@@ -289,7 +279,7 @@ impl MinionsApp {
             },
         };
         if should_update_ui {
-            self.update_ui(true);
+            self.update_ui();
         }
     }
 
@@ -327,7 +317,7 @@ impl MinionsApp {
         };
 
         if should_update_ui {
-            self.update_ui(true);
+            self.update_ui();
         }
     }
 
@@ -353,7 +343,7 @@ impl MinionsApp {
                     Status::FilteringNone
                 }
             };
-            self.update_ui(true);
+            self.update_ui();
         } else {
             warn!("No action result");
         }
@@ -421,7 +411,7 @@ impl MinionsApp {
             },
             status @ _ => status,
         };
-        self.update_ui(true);
+        self.update_ui();
     }
 
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {
@@ -477,7 +467,7 @@ impl MinionsApp {
                 app.status = Status::FilteringNone;
             }
         }
-        app.update_ui(true);
+        app.update_ui();
 
         app.ui.window.connect_key_press_event(move |_, event| {
             APP.with(|app| {

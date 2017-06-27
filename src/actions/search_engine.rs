@@ -10,8 +10,6 @@ extern crate url;
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use toml;
 
-use std::error::Error;
-
 use mcore::action::{Action, ActionResult};
 use mcore::item::Item;
 use actions::utils::open;

@@ -5,7 +5,6 @@
 * @Last Modified time: 2017-06-27
 */
 
-use std::error::Error;
 use mcore::action::{Action, ActionResult};
 use mcore::item::Item;
 

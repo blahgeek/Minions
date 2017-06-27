@@ -7,7 +7,6 @@
 
 use toml;
 
-use std::rc::Rc;
 use std::io::Write;
 use std::io::Read;
 use std::error::Error;

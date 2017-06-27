@@ -5,9 +5,6 @@
 * @Last Modified time: 2017-06-27
 */
 
-extern crate uuid;
-use self::uuid::Uuid;
-
 extern crate glib;
 
 use toml;
@@ -19,11 +16,8 @@ use frontend_gtk::gtk::prelude::*;
 
 use std::thread;
 use std::sync::mpsc;
-use std::error::Error;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
-use std::ops::Deref;
 
 use frontend_gtk::ui::MinionsUI;
 use mcore::context::Context;

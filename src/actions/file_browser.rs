@@ -9,7 +9,6 @@ use toml;
 
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
-use std::error::Error;
 
 use mcore::item::{Item, ItemData};
 use mcore::action::{Action, ActionResult};

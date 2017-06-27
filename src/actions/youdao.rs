@@ -13,10 +13,7 @@ extern crate serde_json;
 use self::crypto::digest::Digest;
 use self::url::form_urlencoded;
 
-use std::fmt;
 use std::io::Read;
-use std::error::Error;
-
 use mcore::action::{Action, ActionResult};
 use mcore::item::Item;
 use actions::ActionError;
@@ -33,6 +30,7 @@ struct YoudaoResultBasic {
     explains: Vec<String>,
 }
 
+#[allow(non_snake_case)]
 #[derive(Deserialize, Clone)]
 struct YoudaoResult {
     errorCode: String,

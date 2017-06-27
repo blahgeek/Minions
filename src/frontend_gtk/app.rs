@@ -2,11 +2,13 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 extern crate uuid;
 use self::uuid::Uuid;
+
+extern crate glib;
 
 use toml;
 
@@ -16,19 +18,22 @@ use frontend_gtk::gtk;
 use frontend_gtk::gtk::prelude::*;
 
 use std::thread;
-use std::rc::Rc;
-use std::sync::Arc;
-use std::ops::Deref;
+use std::sync::mpsc;
+use std::error::Error;
 use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
+use std::ops::Deref;
 
 use frontend_gtk::ui::MinionsUI;
 use mcore::context::Context;
+use mcore::action::ActionResult;
 use mcore::item::Item;
 
 #[derive(Clone)]
 enum Status {
     Initial,
-    // Running(String),  // running in another thread with thread name
+    Running(Rc<mpsc::Receiver<ActionResult>>),
     FilteringNone,
     FilteringEntering {
         selected_idx: i32,
@@ -49,7 +54,11 @@ pub struct MinionsApp {
     ctx: Context,
 
     status: Status,
-    // app: Option<Arc<RefCell<MinionsApp>>>,  // itself
+}
+
+
+thread_local! {
+    static APP: RefCell<Option<MinionsApp>> = RefCell::new(None);
 }
 
 impl MinionsApp {
@@ -63,8 +72,18 @@ impl MinionsApp {
                 self.ui.set_reference_item(None);
                 self.ui.set_items(Vec::new(), &self.ctx);
                 self.ui.set_highlight_item(-1);
+                self.ui.set_spinning(false);
+            },
+            Status::Running(_) => {
+                self.ui.set_entry(None);
+                self.ui.set_filter_text("");
+                self.ui.set_reference_item(None);
+                self.ui.set_items(Vec::new(), &self.ctx);
+                self.ui.set_highlight_item(-1);
+                self.ui.set_spinning(true);
             },
             Status::FilteringNone => {
+                self.ui.set_spinning(false);
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
                 self.ui.set_reference_item(match self.ctx.reference_item {
@@ -97,6 +116,7 @@ impl MinionsApp {
                 } else {
                     self.ui.set_entry(Some(&self.ctx.list_items[filter_indices[selected_idx as usize]]))
                 }
+                self.ui.set_spinning(false);
                 self.ui.set_filter_text(&filter_text);
                 self.ui.set_reference_item(match self.ctx.reference_item {
                     None => None,
@@ -109,6 +129,7 @@ impl MinionsApp {
                 self.ui.set_highlight_item(selected_idx);
             },
             Status::EnteringText(idx) => {
+                self.ui.set_spinning(false);
                 self.ui.set_entry(None);
                 self.ui.set_entry_editable();
                 self.ui.set_filter_text("");
@@ -145,6 +166,10 @@ impl MinionsApp {
                 self.ctx.reset();
                 Status::Initial
             },
+            Status::Running(_) => {
+                warn!("Drop thread");
+                Status::FilteringNone
+            }
             _ => Status::FilteringNone,
         };
         self.update_ui(true);
@@ -312,6 +337,34 @@ impl MinionsApp {
         }
     }
 
+    fn process_running_callback(&mut self) {
+        let mut res : Option<ActionResult> = None;
+        if let Status::Running(ref recv_ch) = self.status {
+            if let Ok(res_) = recv_ch.try_recv() {
+                debug!("Received result on callback");
+                res = Some(res_);
+            } else {
+                warn!("Unable to receive from channel");
+            }
+        }
+
+        if let Some(res) = res {
+            self.status = match res {
+                Ok(res) => {
+                    self.ctx.async_select_callback(res);
+                    Status::FilteringNone
+                },
+                Err(error) => {
+                    warn!("Error from channel: {}", error);
+                    Status::FilteringNone
+                }
+            };
+            self.update_ui(true);
+        } else {
+            warn!("No action result");
+        }
+    }
+
     fn process_keyevent_enter(&mut self) {
         debug!("Processing keyevent Enter");
         self.status = match self.status.clone() {
@@ -333,14 +386,20 @@ impl MinionsApp {
                 } else {
                     let idx = filter_indices[selected_idx as usize];
                     let item = self.ctx.list_items[idx].clone();
-                    // let thread_uuid = Uuid::new_v4().simple().to_string();
+
+                    let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
                     if self.ctx.selectable(&item) {
-                        if let Err(error) = self.ctx.select(item) {
-                            warn!("Unable to select item: {}", error);
-                            self.status.clone()
-                        } else {
-                            Status::FilteringNone
-                        }
+                        self.ctx.async_select(item, move |res: ActionResult| {
+                            if let Err(error) = send_ch.send(res) {
+                                warn!("Unable to send to channel: {}", error);
+                            } else {
+                                glib::idle_add( || {
+                                    APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
+                                    Continue(false)
+                                });
+                            }
+                        });
+                        Status::Running(Rc::new(recv_ch))
                     } else if self.ctx.selectable_with_text(&item) {
                         Status::EnteringText(idx)
                     } else {
@@ -352,13 +411,21 @@ impl MinionsApp {
             Status::EnteringText(idx) => {
                 let text = self.ui.get_entry_text();
                 let item = self.ctx.list_items[idx].clone();
-                if let Err(error) = self.ctx.select_with_text(item, &text) {
-                    warn!("Unable to select item with text: {}", error);
-                    Status::EnteringText(idx)
-                } else {
-                    Status::FilteringNone
-                }
+                let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
+
+                self.ctx.async_select_with_text(item, &text, move |res: ActionResult| {
+                    if let Err(error) = send_ch.send(res) {
+                        warn!("Unable to send to channel: {}", error);
+                    } else {
+                        glib::idle_add( || {
+                            APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
+                            Continue(false)
+                        });
+                    }
+                });
+                Status::Running(Rc::new(recv_ch))
             },
+            status @ _ => status,
         };
         self.update_ui(true);
     }
@@ -403,12 +470,11 @@ impl MinionsApp {
         }
     }
 
-    pub fn new(config: toml::Value, from_clipboard: bool) -> Arc<RefCell<MinionsApp>> {
+    pub fn new(config: toml::Value, from_clipboard: bool) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
         let mut app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config),
             status: Status::Initial,
-            // app: None,
         };
         if from_clipboard {
             if let Err(error) = app.ctx.quicksend_from_clipboard() {
@@ -419,20 +485,24 @@ impl MinionsApp {
         }
         app.update_ui(true);
 
-        let app = Arc::new(RefCell::new(app));
-        // app.borrow_mut().app = Some(app.clone());
-
-        let app_ = app.clone();
-        app.borrow().ui.window.connect_key_press_event(move |_, event| {
-            app_.borrow_mut().process_keyevent(event)
+        app.ui.window.connect_key_press_event(move |_, event| {
+            APP.with(|app| {
+                if let Some(ref mut app) = *app.borrow_mut() {
+                    app.process_keyevent(event)
+                } else { Inhibit(false) }
+            })
         });
 
-        let app_ = app.clone();
         gtk::timeout_add(200, move || {
-            app_.borrow_mut().process_timeout();
-            Continue(true)
+            APP.with(|app| {
+                if let Some(ref mut app) = *app.borrow_mut() {
+                    app.process_timeout();
+                }
+                Continue(true)
+            })
         });
 
-        app
+        APP.with(|g_app| *g_app.borrow_mut() = Some(app) );
+        &APP
     }
 }

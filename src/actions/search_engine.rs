@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-27
 */
 
 extern crate url;
@@ -12,7 +12,7 @@ use toml;
 
 use std::error::Error;
 
-use mcore::action::Action;
+use mcore::action::{Action, ActionResult};
 use mcore::item::Item;
 use actions::utils::open;
 
@@ -34,7 +34,7 @@ impl Action for SearchEngine {
 
     fn accept_text(&self) -> bool { true }
 
-    fn run_text(&self, text: &str) -> Result<Vec<Item>, Box<Error>> {
+    fn run_text(&self, text: &str) -> ActionResult {
         let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
         info!("open: {}", url);

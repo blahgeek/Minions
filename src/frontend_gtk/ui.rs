@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-27
 */
 
 use mcore::item::Item;
@@ -22,6 +22,7 @@ pub struct MinionsUI {
     filterlabel: gtk::Label,
     textentry: gtk::Entry,
     icon: gtk::Image,
+    spinner: gtk::Spinner,
 }
 
 impl MinionsUI {
@@ -37,8 +38,10 @@ impl MinionsUI {
         let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
         let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
         let icon = window_builder.get_object::<gtk::Image>("icon").unwrap();
+        let spinner = window_builder.get_object::<gtk::Spinner>("spinner").unwrap();
 
         window.show_all();
+        spinner.hide();
         window.connect_delete_event(|_, _| {
             gtk::main_quit();
             Inhibit(false)
@@ -54,7 +57,13 @@ impl MinionsUI {
             filterlabel: label,
             textentry: entry,
             icon: icon,
+            spinner: spinner,
         }
+    }
+
+    pub fn set_spinning(&self, v: bool) {
+        if v { self.spinner.show(); }
+        else { self.spinner.hide(); }
     }
 
     pub fn set_entry(&self, item: Option<&Item>) {

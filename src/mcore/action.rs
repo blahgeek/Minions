@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 use std;
@@ -30,6 +30,8 @@ impl ActionArg {
         }
     }
 }
+
+pub type ActionResult = Result<Vec<Item>, Box<Error + Send + Sync>>;
 
 /// The general action type
 pub trait Action {
@@ -62,16 +64,16 @@ pub trait Action {
     }
 
     /// Run the action without input
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> { unimplemented!() }
+    fn run(&self) -> ActionResult { unimplemented!() }
 
     /// Run the action with text input
-    fn run_text(&self, &str) -> Result<Vec<Item>, Box<Error>> { unimplemented!() }
+    fn run_text(&self, &str) -> ActionResult { unimplemented!() }
 
     /// Run the action with path input
-    fn run_path(&self, &std::path::Path) -> Result<Vec<Item>, Box<Error>> { unimplemented!() }
+    fn run_path(&self, &std::path::Path) -> ActionResult { unimplemented!() }
 
     /// Run properly function using ActionArg
-    fn run_arg(&self, arg: &ActionArg) -> Result<Vec<Item>, Box<Error>> {
+    fn run_arg(&self, arg: &ActionArg) -> ActionResult {
         match *arg {
             ActionArg::None => self.run(),
             ActionArg::Text(ref text) => self.run_text(&text),

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 extern crate uuid;
@@ -16,7 +16,7 @@ use std::error::Error;
 use std::sync::Arc;
 use std::io::Write;
 use std::process::{Command, Stdio};
-use mcore::action::{Action, ActionArg, Icon};
+use mcore::action::{Action, ActionArg, Icon, ActionResult};
 use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
 use actions;
@@ -65,7 +65,7 @@ impl Context {
     }
 
     /// Initialize quicksend item from clipboard
-    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error>> {
+    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
         let clip = Command::new("xclip").arg("-o").output()?;
         let clip = String::from_utf8(clip.stdout)?;
         if clip.len() > 0 {
@@ -76,7 +76,7 @@ impl Context {
         }
     }
 
-    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error>> {
+    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
         let s : &str = match item.data {
             Some(ItemData::Text(ref text)) => text,
             Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
@@ -138,7 +138,7 @@ impl Context {
     }
 
     pub fn async_select<F>(&self, item: Item, callback: F) -> String
-    where F: FnOnce(Result<Vec<Item>, Box<Error>>) + Send + 'static {
+    where F: FnOnce(ActionResult) + Send + 'static {
         if !self.selectable(&item) {
             panic!("Item {} is not selectable", item);
         }
@@ -148,6 +148,7 @@ impl Context {
             .spawn(move || {
                 let action = item.action.unwrap();
                 let items = action.run_arg(&item.action_arg);
+                debug!("async select complete, calling back");
                 callback(items);
             })
             .unwrap();
@@ -155,7 +156,7 @@ impl Context {
     }
 
     pub fn async_select_with_text<F>(&self, item: Item, text: &str, callback: F) -> String
-    where F: FnOnce(Result<Vec<Item>, Box<Error>>) + Send + 'static {
+    where F: FnOnce(ActionResult) + Send + 'static {
         if !self.selectable_with_text(&item) {
             panic!("Item {} is not selectable with text", &item);
         }
@@ -166,13 +167,14 @@ impl Context {
             .spawn(move || {
                 let action = item.action.unwrap();
                 let items = action.run_text(&text);
+                debug!("async select with text complete, calling back");
                 callback(items);
             })
             .unwrap();
         thread_uuid
     }
 
-    pub fn select(&mut self, item: Item) -> Result<(), Box<Error>> {
+    pub fn select(&mut self, item: Item) -> Result<(), Box<Error + Send + Sync>> {
         if !self.selectable(&item) {
             panic!("Item {} is not selectable", item);
         }
@@ -187,7 +189,7 @@ impl Context {
         Ok(())
     }
 
-    pub fn select_with_text(&mut self, item: Item, text: &str) -> Result<(), Box<Error>> {
+    pub fn select_with_text(&mut self, item: Item, text: &str) -> Result<(), Box<Error + Send + Sync>> {
         if !self.selectable_with_text(&item) {
             panic!("Item {} is not selectable with text", &item);
         }
@@ -206,7 +208,7 @@ impl Context {
         self.reference_item.is_none() && item.data.is_some()
     }
 
-    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error>> {
+    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error + Send + Sync>> {
         if !self.quicksend_able(&item) {
             panic!("Item {} is not quicksend_able", item);
         }
@@ -272,7 +274,7 @@ impl Context {
         Ok(())
     }
 
-    pub fn back(&mut self) -> Result<(), Box<Error>> {
+    pub fn back(&mut self) -> Result<(), Box<Error + Send + Sync>> {
         if let Some(action_item) = self.history_items.pop() {
             self.select(action_item)
         } else {

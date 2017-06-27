@@ -5,7 +5,7 @@ authors = ["BlahGeek <i@BlahGeek.com>"]
 
 [features]
 default = ["use-gtk"]
-use-gtk = ["gtk", "gdk"]
+use-gtk = ["gtk", "gdk", "glib"]
 
 [lib]
 name = "minions"
@@ -32,5 +32,6 @@ shlex = "0.1.1"
 url = "1.5.0"
 reqwest = "^0.6"
 rust-crypto = "^0.2"
+glib = { version = "*", optional = true }
 gdk = { version = "0.5.2", optional = true }
 gtk = { version = "0.1.2", features = ["v3_10"], optional = true }

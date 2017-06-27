@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-27
 */
 
 extern crate url;
@@ -17,7 +17,7 @@ use std::fmt;
 use std::io::Read;
 use std::error::Error;
 
-use mcore::action::Action;
+use mcore::action::{Action, ActionResult};
 use mcore::item::Item;
 use actions::ActionError;
 
@@ -52,7 +52,7 @@ impl Action for Youdao {
 
     fn accept_text(&self) -> bool { true }
 
-    fn run_text(&self, text: &str) -> Result<Vec<Item>, Box<Error>> {
+    fn run_text(&self, text: &str) -> ActionResult {
         let salt = "WTF";
         let mut hash = crypto::md5::Md5::new();
         hash.input(APP_KEY.as_bytes());

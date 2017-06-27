@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-24
+* @Last Modified time: 2017-06-27
 */
 
 extern crate shlex;
@@ -16,7 +16,7 @@ use std::ffi::OsStr;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use mcore::action::Action;
+use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, ItemData};
 use actions::ActionError;
 
@@ -51,11 +51,11 @@ impl Action for LinuxDesktopEntry {
         self.exec.iter().find(|arg| (*arg == "%f" || *arg == "%F")).is_some()
     }
 
-    fn run_path(&self, path: &Path) -> Result<Vec<Item>, Box<Error>> {
+    fn run_path(&self, path: &Path) -> ActionResult {
         self.run_path_or_empty(Some(path))
     }
 
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> {
+    fn run(&self) -> ActionResult {
         self.run_path_or_empty(None)
     }
 
@@ -69,7 +69,7 @@ struct Config {
 
 impl LinuxDesktopEntry {
 
-    fn run_path_or_empty(&self, path: Option<&Path>) -> Result<Vec<Item>, Box<Error>> {
+    fn run_path_or_empty(&self, path: Option<&Path>) -> ActionResult {
         if self.exec.len() <= 0 {
             return Err(Box::new(ActionError::NotSupported));
         }

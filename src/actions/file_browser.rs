@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 use toml;
@@ -12,7 +12,7 @@ use std::path::{PathBuf, Path};
 use std::error::Error;
 
 use mcore::item::{Item, ItemData};
-use mcore::action::Action;
+use mcore::action::{Action, ActionResult};
 use actions::utils::open;
 
 pub struct FileBrowserEntry {
@@ -85,7 +85,7 @@ impl Action for FileBrowserEntry {
 
     fn should_return_items(&self) -> bool { !self.is_file }
 
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> {
+    fn run(&self) -> ActionResult {
         if self.is_file {
             info!("open: {:?}", self.path);
             open::that(&self.path)?;

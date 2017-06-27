@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 /// Action defined by custom script
@@ -21,7 +21,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use mcore::item::{Item, ItemData};
-use mcore::action::{Action, ActionArg};
+use mcore::action::{Action, ActionArg, ActionResult};
 use actions::file_browser::FileBrowserEntry;
 use actions::utils::open;
 
@@ -88,7 +88,7 @@ impl Action for OpenURLAction {
     fn get_item (&self) -> Item { Item::new("unimplemented") } // unused
     fn accept_nothing(&self) -> bool { true }
     fn should_return_items(&self) -> bool { false }
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> {
+    fn run(&self) -> ActionResult {
         open::that(&self.url)?;
         Ok(Vec::new())
     }
@@ -98,14 +98,14 @@ impl Action for PredefinedChildrenAction {
     fn get_item (&self) -> Item { Item::new("unimplemented") } // unused
     fn accept_nothing(&self) -> bool { true }
     fn should_return_items(&self) -> bool { self.children.len() > 0 }
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> {
+    fn run(&self) -> ActionResult {
         Ok(self.children.iter()
            .map(|x| x.clone().into_item(&self.script_dir))
            .collect())
     }
 }
 
-fn output_to_items(output: &[u8], script_dir: &std::path::Path) -> Result<Vec<Item>, Box<Error>> {
+fn output_to_items(output: &[u8], script_dir: &std::path::Path) -> ActionResult {
     let json_output : ScriptOutput = serde_json::from_slice(output)?;
     Ok(json_output.results.into_iter()
        .map(|x| x.into_item(script_dir))
@@ -124,19 +124,19 @@ impl Action for ScriptAction {
     fn accept_text(&self) -> bool { self.accept_text_ }
     fn accept_path(&self) -> bool { self.accept_path_ }
     fn should_return_items(&self) -> bool { self.script_returns }
-    fn run(&self) -> Result<Vec<Item>, Box<Error>> {
+    fn run(&self) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.args(&self.script_args);
         debug!("Running script action: {:?}", cmd);
         output_to_items(&cmd.output()?.stdout, &self.script_dir)
     }
-    fn run_text(&self, text: &str) -> Result<Vec<Item>, Box<Error>> {
+    fn run_text(&self, text: &str) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(text);
         debug!("Running script action (with text): {:?}", cmd);
         output_to_items(&cmd.output()?.stdout, &self.script_dir)
     }
-    fn run_path(&self, p: &std::path::Path) -> Result<Vec<Item>, Box<Error>> {
+    fn run_path(&self, p: &std::path::Path) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(p);
         debug!("Running script action (with path): {:?}", cmd);

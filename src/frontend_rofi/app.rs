@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-27
 */
 
 use toml;
@@ -35,7 +35,7 @@ static ROFI_WIDTH: i32 = 120;
 
 impl MinionsApp {
 
-    fn rofi_enter_text(&mut self, item: Item) -> Result<State, Box<Error>> {
+    fn rofi_enter_text(&mut self, item: Item) -> Result<State, Box<Error + Send + Sync>> {
         let mut cmd = Command::new("rofi");
         let prompt = format!("{}> ", item.title);
         cmd.stdin(Stdio::piped())
@@ -68,7 +68,7 @@ impl MinionsApp {
         })
     }
 
-    fn rofi_filter(&mut self, select_idx: i32, filter_str: &str) -> Result<State, Box<Error>> {
+    fn rofi_filter(&mut self, select_idx: i32, filter_str: &str) -> Result<State, Box<Error + Send + Sync>> {
         let mut cmd = Command::new("rofi");
 
         let prompt = match self.ctx.reference_item {

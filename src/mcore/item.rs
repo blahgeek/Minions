@@ -2,13 +2,19 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-28
 */
 
 use std;
 use std::fmt;
 use std::sync::Arc;
-use mcore::action::{Action, ActionArg, Icon};
+use mcore::action::{Action, ActionArg};
+
+#[derive(Debug, Clone)]
+pub enum Icon {
+    Name(String),
+    File(std::path::PathBuf),
+}
 
 /// Typed data in item
 #[derive(Debug, Clone)]

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-28
 */
 
 extern crate shlex;
@@ -17,7 +17,7 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, ItemData};
+use mcore::item::{Item, ItemData, Icon};
 use actions::ActionError;
 
 #[derive(Debug)]
@@ -42,6 +42,14 @@ impl Action for LinuxDesktopEntry {
         }
         item.subtitle = comment;
         item.badge = Some("Desktop Entry".into());
+
+        if let Some(ref icon_text) = self.icon_text {
+            item.icon = Some( if icon_text.starts_with("/") {
+                Icon::File(Path::new(&icon_text).to_path_buf())
+            } else {
+                Icon::Name(icon_text.clone())
+            })
+        }
         item
     }
 

@@ -2,13 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-28
 */
+
+extern crate gdk_pixbuf;
 
 use std::cmp;
 
-use mcore::item::Item;
-use mcore::action::Icon;
+use mcore::item::{Item, Icon};
 use mcore::context::Context;
 
 use frontend_gtk::gtk;
@@ -25,6 +26,19 @@ pub struct MinionsUI {
 }
 
 static LISTBOX_NUM: i32 = 5;
+static ICON_SIZE: i32 = 45;
+
+fn set_image_icon(image: &gtk::Image, icon: &Icon) {
+    match icon {
+        &Icon::Name(ref ico_name) => {
+            image.set_from_icon_name(&ico_name, gtk::IconSize::Button.into());
+            image.set_pixel_size(ICON_SIZE);
+        },
+        &Icon::File(ref path) => {
+            image.set_from_pixbuf(gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok().as_ref())
+        },
+    }
+}
 
 impl MinionsUI {
 
@@ -65,16 +79,15 @@ impl MinionsUI {
         if let Some(item) = item {
             self.textentry.set_text(&item.title);
             if let Some(ref ico) = item.icon {
-                match ico {
-                    &Icon::Name(ref ico_name) => self.icon.set_from_icon_name(&ico_name, gtk::IconSize::Button.into()),
-                    &Icon::File(ref path) => self.icon.set_from_file(&path),
-                }
+                set_image_icon(&self.icon, ico);
             } else {
                 self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
+                self.icon.set_pixel_size(ICON_SIZE);
             }
         } else {
             self.textentry.set_text("Minions");
             self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
+            self.icon.set_pixel_size(ICON_SIZE);
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
@@ -123,10 +136,10 @@ impl MinionsUI {
         title.set_text(&item.title);
 
         if let Some(ref ico) = item.icon {
-            match ico {
-                &Icon::Name(ref ico_name) => icon.set_from_icon_name(&ico_name, -1),
-                &Icon::File(ref path) => icon.set_from_file(&path),
-            }
+            set_image_icon(&icon, ico);
+        } else {
+            icon.set_from_icon_name("gtk-missing-image", gtk::IconSize::Button.into());
+            icon.set_pixel_size(ICON_SIZE);
         }
 
         match item.subtitle {

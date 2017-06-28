@@ -12,7 +12,7 @@ use mcore::action::{Action, ActionArg};
 
 #[derive(Debug, Clone)]
 pub enum Icon {
-    Name(String),
+    GtkName(String),
     File(std::path::PathBuf),
 }
 

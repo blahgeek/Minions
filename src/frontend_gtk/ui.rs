@@ -30,7 +30,7 @@ static ICON_SIZE: i32 = 45;
 
 fn set_image_icon(image: &gtk::Image, icon: &Icon) {
     match icon {
-        &Icon::Name(ref ico_name) => {
+        &Icon::GtkName(ref ico_name) => {
             image.set_from_icon_name(&ico_name, gtk::IconSize::Button.into());
             image.set_pixel_size(ICON_SIZE);
         },

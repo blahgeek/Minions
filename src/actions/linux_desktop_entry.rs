@@ -47,7 +47,7 @@ impl Action for LinuxDesktopEntry {
             item.icon = Some( if icon_text.starts_with("/") {
                 Icon::File(Path::new(&icon_text).to_path_buf())
             } else {
-                Icon::Name(icon_text.clone())
+                Icon::GtkName(icon_text.clone())
             })
         }
         item

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-29
 */
 
 extern crate url;
@@ -13,9 +13,10 @@ extern crate serde_json;
 use self::crypto::digest::Digest;
 use self::url::form_urlencoded;
 
+use std::char;
 use std::io::Read;
 use mcore::action::{Action, ActionResult};
-use mcore::item::Item;
+use mcore::item::{Item, Icon};
 use actions::ActionError;
 
 pub struct Youdao {}
@@ -45,6 +46,7 @@ impl Action for Youdao {
         let mut item = Item::new("Youdao Translate");
         item.badge = Some("Translate".into());
         item.priority = -5;
+        item.icon = Some(Icon::Character{ch: char::from_u32(0xf02d).unwrap(), font: "FontAwesome".into()});
         item
     }
 

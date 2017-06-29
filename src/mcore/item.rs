@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-28
+* @Last Modified time: 2017-06-29
 */
 
 use std;
@@ -13,6 +13,7 @@ use mcore::action::{Action, ActionArg};
 #[derive(Debug, Clone)]
 pub enum Icon {
     GtkName(String),
+    Character{ch: char, font: String},
     File(std::path::PathBuf),
 }
 

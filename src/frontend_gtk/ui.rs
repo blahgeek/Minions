@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-28
+* @Last Modified time: 2017-06-29
 */
 
 extern crate gdk_pixbuf;
@@ -22,20 +22,31 @@ pub struct MinionsUI {
     filterlabel: gtk::Label,
     textentry: gtk::Entry,
     icon: gtk::Image,
+    icon_text: gtk::Label,
     spinner: gtk::Spinner,
 }
 
 static LISTBOX_NUM: i32 = 5;
 static ICON_SIZE: i32 = 45;
+static ICON_FONT_SIZE: i32 = 28;
 
-fn set_image_icon(image: &gtk::Image, icon: &Icon) {
+fn set_image_icon(w_image: &gtk::Image, w_label: &gtk::Label, icon: &Icon) {
     match icon {
         &Icon::GtkName(ref ico_name) => {
-            image.set_from_icon_name(&ico_name, gtk::IconSize::Button.into());
-            image.set_pixel_size(ICON_SIZE);
+            w_image.set_from_icon_name(&ico_name, gtk::IconSize::Button.into());
+            w_image.set_pixel_size(ICON_SIZE);
+            w_image.show();
+            w_label.hide();
         },
         &Icon::File(ref path) => {
-            image.set_from_pixbuf(gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok().as_ref())
+            w_image.set_from_pixbuf(gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok().as_ref());
+            w_image.show();
+            w_label.hide();
+        },
+        &Icon::Character{ref ch, ref font} => {
+            w_label.set_markup(&format!("<span font_desc=\"{} {}\">{}</span>", font, ICON_FONT_SIZE, ch));
+            w_image.hide();
+            w_label.show();
         },
     }
 }
@@ -50,6 +61,7 @@ impl MinionsUI {
         let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
         let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
         let icon = window_builder.get_object::<gtk::Image>("icon").unwrap();
+        let icon_text = window_builder.get_object::<gtk::Label>("icon_text").unwrap();
         let spinner = window_builder.get_object::<gtk::Spinner>("spinner").unwrap();
 
         window.show_all();
@@ -66,6 +78,7 @@ impl MinionsUI {
             filterlabel: label,
             textentry: entry,
             icon: icon,
+            icon_text: icon_text,
             spinner: spinner,
         }
     }
@@ -79,15 +92,13 @@ impl MinionsUI {
         if let Some(item) = item {
             self.textentry.set_text(&item.title);
             if let Some(ref ico) = item.icon {
-                set_image_icon(&self.icon, ico);
+                set_image_icon(&self.icon, &self.icon_text, ico);
             } else {
-                self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
-                self.icon.set_pixel_size(ICON_SIZE);
+                set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("gtk-home".into()));
             }
         } else {
             self.textentry.set_text("Minions");
-            self.icon.set_from_icon_name("gtk-home", gtk::IconSize::Button.into());
-            self.icon.set_pixel_size(ICON_SIZE);
+            set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("gtk-home".into()));
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
@@ -132,14 +143,14 @@ impl MinionsUI {
         let selectable = builder.get_object::<gtk::Image>("selectable").unwrap();
         let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
         let icon = builder.get_object::<gtk::Image>("icon").unwrap();
+        let icon_text = builder.get_object::<gtk::Label>("icon_text").unwrap();
 
         title.set_text(&item.title);
 
         if let Some(ref ico) = item.icon {
-            set_image_icon(&icon, ico);
+            set_image_icon(&icon, &icon_text, ico);
         } else {
-            icon.set_from_icon_name("gtk-missing-image", gtk::IconSize::Button.into());
-            icon.set_pixel_size(ICON_SIZE);
+            set_image_icon(&icon, &icon_text, &Icon::GtkName("gtk-missing-image".into()));
         }
 
         match item.subtitle {

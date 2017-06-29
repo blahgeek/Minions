@@ -414,19 +414,19 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    fn process_keyevent_copy(&self) {
+    fn process_keyevent_copy(&mut self) {
         debug!("Process keyevent copy");
-        match self.status {
+        self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filter_text_lasttime: _,
-                filter_indices: _,
+                filter_indices,
             } |
             Status::FilteringMoving {
                 selected_idx,
-                filter_text: _,
-                filter_indices: _,
+                filter_text,
+                filter_indices,
             } => {
                 if let Err(error) = self.ctx.copy_content_to_clipboard(
                                             &self.ctx.list_items[selected_idx as usize]) {
@@ -434,8 +434,9 @@ impl MinionsApp {
                 } else {
                     info!("Item copied");
                 }
+                Status::FilteringMoving{selected_idx, filter_text, filter_indices}
             },
-            _ => {},
+            status @ _ => { status },
         };
     }
 

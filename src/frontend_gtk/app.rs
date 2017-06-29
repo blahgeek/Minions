@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-29
 */
 
 extern crate glib;
@@ -414,6 +414,31 @@ impl MinionsApp {
         self.update_ui();
     }
 
+    fn process_keyevent_copy(&self) {
+        debug!("Process keyevent copy");
+        match self.status {
+            Status::FilteringEntering {
+                selected_idx,
+                filter_text: _,
+                filter_text_lasttime: _,
+                filter_indices: _,
+            } |
+            Status::FilteringMoving {
+                selected_idx,
+                filter_text: _,
+                filter_indices: _,
+            } => {
+                if let Err(error) = self.ctx.copy_content_to_clipboard(
+                                            &self.ctx.list_items[selected_idx as usize]) {
+                    warn!("Unable to copy item: {}", error);
+                } else {
+                    info!("Item copied");
+                }
+            },
+            _ => {},
+        };
+    }
+
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {
         let key = event.get_keyval();
         let modi = event.get_state();
@@ -435,6 +460,9 @@ impl MinionsApp {
             Inhibit(true)
         } else if key == 'k' as u32 && modi == gdk::CONTROL_MASK {
             self.process_keyevent_move(-1);
+            Inhibit(true)
+        } else if key == 'c' as u32 && modi == gdk::CONTROL_MASK {
+            self.process_keyevent_copy();
             Inhibit(true)
         } else if key == gdk::enums::key::Down {
             self.process_keyevent_move(1);

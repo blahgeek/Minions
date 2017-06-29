@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-29
 */
 
 /// Action defined by custom script
@@ -13,14 +13,14 @@ use toml;
 
 use std;
 use std::sync::Arc;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::error::Error;
 use std::process::Command;
 
 use std::fs::File;
 use std::io::prelude::*;
 
-use mcore::item::{Item, ItemData};
+use mcore::item::{Item, ItemData, Icon};
 use mcore::action::{Action, ActionArg, ActionResult};
 use actions::file_browser::FileBrowserEntry;
 use actions::utils::open;
@@ -44,6 +44,7 @@ struct ScriptItem {
     title: String,
     subtitle: Option<String>,
     badge: Option<String>,
+    icon: Option<String>,
 
     data_text: Option<String>,
     data_path: Option<String>,
@@ -52,6 +53,31 @@ struct ScriptItem {
     action_callback: Option<Vec<String>>,
     action_callback_returns: Option<bool>,
     action_children: Option<Vec<ScriptItem>>,
+}
+
+fn parse_icon(text: &str) -> Option<Icon> {
+    let parts: Vec<&str> = text.splitn(2, ":").collect();
+    if parts.len() < 2 {
+        None
+    } else if parts[0] == "gtk" {
+        Some(Icon::GtkName(parts[1].into()))
+    } else if parts[0] == "file" {
+        Some(Icon::File(Path::new(parts[1]).to_path_buf()))
+    } else if parts[0] == "character" {
+        let subparts : Vec<&str> = parts[1].splitn(2, ":").collect();
+        if subparts.len() < 2 {
+            None
+        } else {
+            let mut ch : String = subparts[1].into();
+            if let Some(ch) = ch.pop() {
+                Some(Icon::Character{ch: ch, font: subparts[0].into()})
+            } else {
+                None
+            }
+        }
+    } else {
+        None
+    }
 }
 
 #[derive(Deserialize)]
@@ -72,6 +98,7 @@ struct PredefinedChildrenAction {
 pub struct ScriptAction {
     name: String,
     description: String,
+    icon: Option<String>,
 
     script_dir: PathBuf,
 
@@ -118,6 +145,10 @@ impl Action for ScriptAction {
         item.subtitle = Some(self.description.clone());
         item.badge = Some("Script".into());
         item.priority = -50;
+        item.icon = match self.icon {
+            Some(ref text) => parse_icon(&text),
+            None => None,
+        };
         item
     }
     fn accept_nothing(&self) -> bool { self.accept_nothing_ }
@@ -162,6 +193,7 @@ impl ScriptItem {
                 Some(Box::new(ScriptAction {
                     name: "unimplemented".into(), // unused
                     description: "unimplemented".into(), //unused,
+                    icon: None,
                     script_dir: script_dir.to_path_buf(),
                     accept_nothing_: true,
                     accept_text_: false,
@@ -198,13 +230,16 @@ impl ScriptItem {
         Item {
             title: self.title,
             subtitle: self.subtitle,
-            icon: None,
             badge: self.badge,
             priority: 0,
             data: itemdata,
             search_str: None,
             action: match action {
                 Some(x) => Some(Arc::new(x)),
+                None => None,
+            },
+            icon: match self.icon {
+                Some(text) => parse_icon(&text),
                 None => None,
             },
             action_arg: ActionArg::None,
@@ -216,6 +251,7 @@ impl ScriptItem {
 struct ScriptMetadata {
     name: String,
     description: String,
+    icon: Option<String>,
 
     script: String,
     script_returns: bool,
@@ -240,6 +276,7 @@ impl ScriptAction {
         Ok (ScriptAction {
             name: metadata.name,
             description: metadata.description,
+            icon: metadata.icon,
             script_dir: script_dir.to_path_buf(),
             accept_nothing_: metadata.accept_nothing,
             accept_text_: metadata.accept_text,

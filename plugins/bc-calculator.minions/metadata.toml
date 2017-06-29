@@ -1,5 +1,6 @@
 name = "Calculator"
 description = "Math calculator using bc command"
+icon = "character::+"
 script = "run.sh"
 script_returns = true
 accept_nothing = false

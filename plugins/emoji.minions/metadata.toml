@@ -1,5 +1,6 @@
 name = "Emojis"
 description = "Find emojis by keywords"
+icon = "character::😂"
 script = "run.py"
 script_returns = true
 accept_nothing = true

@@ -3,7 +3,7 @@
 # @Author: BlahGeek
 # @Date:   2017-06-18
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-06-18
+# @Last Modified time: 2017-06-29
 
 from __future__ import print_function
 from os import path
@@ -12,7 +12,8 @@ import json
 
 data = json.load(open(path.join(path.dirname(__file__), 'emojis.json')))
 data = [{
-            'title': props['char'] + ' ' + name,
+            'title': name,
+            'icon': 'character::{}'.format(props['char']),
             'subtitle': ' '.join(props['keywords']),
             'badge': props['category'],
             'data_text': props['char'],

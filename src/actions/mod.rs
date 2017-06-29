@@ -2,12 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-26
+* @Last Modified time: 2017-06-29
 */
 
 mod utils;
 
-mod capital;
 mod linux_desktop_entry;
 mod search_engine;
 mod file_browser;
@@ -44,9 +43,7 @@ impl fmt::Display for ActionError {
 use mcore::action::Action;
 
 pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
-    let mut ret : Vec<Arc<Box<Action + Sync + Send>>> = vec![
-        Arc::new(Box::new(capital::Capital{})),
-    ];
+    let mut ret : Vec<Arc<Box<Action + Sync + Send>>> = vec![];
     if let Some(opts) = config.get("linux_desktop_entry") {
         for desktop_entry in linux_desktop_entry::LinuxDesktopEntry::get_all(opts.clone()) {
             ret.push(Arc::new(Box::new(desktop_entry)));

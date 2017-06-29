@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-29
 */
 
 use toml;
@@ -10,7 +10,7 @@ use toml;
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 
-use mcore::item::{Item, ItemData};
+use mcore::item::{Item, ItemData, Icon};
 use mcore::action::{Action, ActionResult};
 use actions::utils::open;
 
@@ -75,6 +75,11 @@ impl Action for FileBrowserEntry {
         } else {
             Some("Directory".into())
         };
+        ret.icon = Some(if self.is_file {
+            Icon::GtkName("gtk-file".into())
+        } else {
+            Icon::GtkName("gtk-directory".into())
+        });
         ret.data = Some(ItemData::Path(self.path.clone()));
         ret.priority = -10;
         ret

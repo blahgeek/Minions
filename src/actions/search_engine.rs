@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-06-29
 */
 
 extern crate url;
@@ -11,7 +11,7 @@ use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
 use toml;
 
 use mcore::action::{Action, ActionResult};
-use mcore::item::Item;
+use mcore::item::{Item, Icon};
 use actions::utils::open;
 
 pub struct SearchEngine {
@@ -27,6 +27,7 @@ impl Action for SearchEngine {
         let mut item = Item::new(&self.name);
         item.badge = Some("Search Engine".into());
         item.priority = -10;
+        item.icon = Some(Icon::GtkName("gtk-find".into()));
         item
     }
 

@@ -24,3 +24,12 @@ Still in alpha, but usable. Feedback and contribution are welcome.
 - Extensive
     - Use any script to define custom actions
 - Simple, elegant, and most important - do it right in the Unix way
+
+## How-to
+
+- `cargo build --release`
+- Run `./target/release/minions`
+- (recommended) Use your WM to assign shortcuts, e.g. in i3:
+    - `bindsym Control+space exec .../minions`
+    - `bindsym Control+Shift+space exec .../minions -f`
+

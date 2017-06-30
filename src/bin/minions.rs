@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-20
+* @Last Modified time: 2017-06-30
 */
 
 extern crate minions;
@@ -41,9 +41,9 @@ fn main() {
 
     let args = clap::App::new("Minions (rofi frontend)")
                         .author("BlahGeek <i@blahgeek.com>")
-                        .arg(clap::Arg::with_name("gtk")
-                                      .long("gtk")
-                                      .help("Use GTK frontend (experiment)"))
+                        .arg(clap::Arg::with_name("rofi")
+                                      .long("rofi")
+                                      .help("Use rofi frontend"))
                         .arg(clap::Arg::with_name("config")
                                       .short("c")
                                       .long("config")
@@ -72,9 +72,9 @@ fn main() {
     let config = configcontent.parse::<toml::Value>().expect("Invalid config file");
     let from_clipboard = args.is_present("from_clipboard");
 
-    if args.is_present("gtk") {
-        run_gtk_app(config, from_clipboard)
-    } else {
+    if args.is_present("rofi") {
         run_rofi_app(config, from_clipboard)
+    } else {
+        run_gtk_app(config, from_clipboard)
     }
 }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-01
 */
 
 extern crate glib;
@@ -20,6 +20,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use frontend_gtk::ui::MinionsUI;
+use frontend_gtk::xbindkey;
 use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
@@ -84,7 +85,7 @@ impl MinionsApp {
                 });
                 if self.ctx.list_items.len() == 0 {
                     warn!("No more listing items!");
-                    gtk::main_quit();
+                    self.ui.window.hide();
                 }
                 self.ui.set_items(self.ctx.list_items.iter().collect(), -1, &self.ctx);
             },
@@ -143,7 +144,7 @@ impl MinionsApp {
         self.status = match self.status {
             Status::Initial => {
                 debug!("Quit!");
-                gtk::main_quit();
+                self.ui.window.hide();
                 Status::Initial
             },
             Status::FilteringNone => {
@@ -483,20 +484,29 @@ impl MinionsApp {
         }
     }
 
-    pub fn new(config: toml::Value, from_clipboard: bool) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
-        let mut app = MinionsApp {
+    fn reset_window(&mut self, send_clipboard: bool) {
+        debug!("Resetting window: {}", send_clipboard);
+        self.ctx.reset();
+        self.status = Status::Initial;
+        if send_clipboard {
+            if let Err(error) = self.ctx.quicksend_from_clipboard() {
+                warn!("Unable to get content from clipboard: {}", error);
+            } else {
+                self.status = Status::FilteringNone;
+            }
+        }
+        self.update_ui();
+        self.ui.window.show();
+    }
+
+    pub fn new(config: toml::Value) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+        let app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config),
             status: Status::Initial,
         };
-        if from_clipboard {
-            if let Err(error) = app.ctx.quicksend_from_clipboard() {
-                warn!("Unable to get content from clipboard: {}", error);
-            } else {
-                app.status = Status::FilteringNone;
-            }
-        }
         app.update_ui();
+        app.ui.window.hide();
 
         app.ui.window.connect_key_press_event(move |_, event| {
             APP.with(|app| {
@@ -513,6 +523,18 @@ impl MinionsApp {
                 }
                 Continue(true)
             })
+        });
+
+        xbindkey::bindkeys(move |send_clipboard: bool| {
+            glib::idle_add( move || {
+                APP.with(|app| {
+                    if let Some(ref mut app) = *app.borrow_mut() {
+                        app.reset_window(send_clipboard);
+                    }
+                });
+                Continue(false)
+            });
+            true
         });
 
         APP.with(|g_app| *g_app.borrow_mut() = Some(app) );

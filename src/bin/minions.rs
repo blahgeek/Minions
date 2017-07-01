@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-30
+* @Last Modified time: 2017-07-01
 */
 
 extern crate minions;
@@ -25,9 +25,9 @@ fn run_rofi_app(config: toml::Value, from_clipboard: bool) {
 }
 
 #[cfg(feature="use-gtk")]
-fn run_gtk_app(config: toml::Value, from_clipboard: bool) {
+fn run_gtk_app(config: toml::Value) {
     gtk::init().expect("Failed to initialize GTK");
-    let _ = minions::frontend_gtk::app::MinionsApp::new(config, from_clipboard);
+    let _ = minions::frontend_gtk::app::MinionsApp::new(config);
     gtk::main();
 }
 
@@ -75,6 +75,6 @@ fn main() {
     if args.is_present("rofi") {
         run_rofi_app(config, from_clipboard)
     } else {
-        run_gtk_app(config, from_clipboard)
+        run_gtk_app(config)
     }
 }

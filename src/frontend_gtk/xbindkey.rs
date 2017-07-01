@@ -8,17 +8,14 @@
 extern crate nix;
 
 use std;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::fs::File;
 use std::thread;
-use std::sync::{Mutex, Arc};
-use std::process::{Command, Stdio};
-use std::sync::mpsc::{Sender, Receiver};
+use std::process::{Command, Stdio, Child};
 
 
-// fn bindkeys<F>(callback: F, exit_ch: Receiver<()>, exited_ch: Sender<()>)
-pub fn bindkeys<F>(callback: F)
-    where F: Send + 'static + FnMut(bool) -> bool {
+pub fn bindkeys<F>(callback: F) -> Child
+    where F: Send + 'static + FnMut(bool) {
 
     let mut config = std::env::temp_dir();
     config.push("minions-xbindkeysrc");
@@ -29,15 +26,6 @@ pub fn bindkeys<F>(callback: F)
         let s = s.replace("{}", &format!("{}", nix::unistd::getpid()));
         config.write_all(s.as_bytes()).expect("Unable to write to tmp file");
     }
-
-    let child = Command::new("xbindkeys")
-                            .arg("-n")
-                            .arg("-f").arg(&config)
-                            .stdout(Stdio::piped())
-                            .spawn()
-                            .expect("Unable to spawn xbindkeys");
-    // let child = Arc::new(Mutex::new(child));
-    info!("Subprocess xbindkeys started");
 
     thread::spawn(move || {
         let mut callback = callback;
@@ -65,5 +53,12 @@ pub fn bindkeys<F>(callback: F)
             }
         }
     });
+
+    Command::new("xbindkeys")
+            .arg("-n")
+            .arg("-f").arg(&config)
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap()
 
 }

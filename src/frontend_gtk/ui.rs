@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-01
 */
 
 extern crate gdk_pixbuf;
@@ -66,10 +66,6 @@ impl MinionsUI {
 
         window.show_all();
         spinner.hide();
-        window.connect_delete_event(|_, _| {
-            gtk::main_quit();
-            Inhibit(false)
-        });
 
         MinionsUI {
             window_builder: window_builder,

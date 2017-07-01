@@ -525,7 +525,7 @@ impl MinionsApp {
             })
         });
 
-        xbindkey::bindkeys(move |send_clipboard: bool| {
+        let bind_child = xbindkey::bindkeys(move |send_clipboard: bool| {
             glib::idle_add( move || {
                 APP.with(|app| {
                     if let Some(ref mut app) = *app.borrow_mut() {
@@ -534,7 +534,14 @@ impl MinionsApp {
                 });
                 Continue(false)
             });
-            true
+        });
+        let bind_child = RefCell::new(bind_child);
+
+        app.ui.window.connect_delete_event(move |_, _| {
+            warn!("Deleting window, kill child process first");
+            bind_child.borrow_mut().kill().unwrap();
+            gtk::main_quit();
+            Inhibit(false)
         });
 
         APP.with(|g_app| *g_app.borrow_mut() = Some(app) );

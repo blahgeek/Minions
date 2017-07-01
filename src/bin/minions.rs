@@ -9,6 +9,7 @@ extern crate minions;
 extern crate env_logger;
 extern crate toml;
 extern crate clap;
+extern crate nix;
 
 #[macro_use]
 extern crate log;
@@ -26,6 +27,13 @@ fn run_rofi_app(config: toml::Value, from_clipboard: bool) {
 
 #[cfg(feature="use-gtk")]
 fn run_gtk_app(config: toml::Value) {
+
+    // block USR1 and USR2, used for window trigger
+    let mut sigmask = nix::sys::signal::SigSet::empty();
+    sigmask.add(nix::sys::signal::Signal::SIGUSR1);
+    sigmask.add(nix::sys::signal::Signal::SIGUSR2);
+    sigmask.thread_block().expect("Error block signals");
+
     gtk::init().expect("Failed to initialize GTK");
     let _ = minions::frontend_gtk::app::MinionsApp::new(config);
     gtk::main();

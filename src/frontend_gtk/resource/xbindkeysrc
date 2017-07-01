@@ -1,4 +1,4 @@
-"echo S"
+"kill -USR1 {}"
   control + space
-"echo P"
+"kill -USR2 {}"
   control + shift + space

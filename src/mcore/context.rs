@@ -2,8 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-28
+* @Last Modified time: 2017-07-02
 */
+
+#[cfg(feature="use-gtk")]
+extern crate gtk;
+
+#[cfg(feature="use-gtk")]
+extern crate gdk;
 
 extern crate uuid;
 use self::uuid::Uuid;
@@ -65,6 +71,7 @@ impl Context {
     }
 
     /// Initialize quicksend item from clipboard
+    #[cfg(not(feature="use-gtk"))]
     pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
         let clip = Command::new("xclip").arg("-o").output()?;
         let clip = String::from_utf8(clip.stdout)?;
@@ -76,6 +83,18 @@ impl Context {
         }
     }
 
+    #[cfg(feature="use-gtk")]
+    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
+        let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("PRIMARY"));
+        let content = clipboard.wait_for_text();
+        trace!("Clipboard content: {:?}", content);
+        match content {
+            Some(text) => self.quicksend(Item::new_text_item(&text)),
+            None => Ok(()),
+        }
+    }
+
+    #[cfg(not(feature="use-gtk"))]
     pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
         let s : &str = match item.data {
             Some(ItemData::Text(ref text)) => text,
@@ -91,6 +110,18 @@ impl Context {
             stdin.write(s.as_bytes())?;
         }
         child.wait()?;
+        Ok(())
+    }
+
+    #[cfg(feature="use-gtk")]
+    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
+        let s : &str = match item.data {
+            Some(ItemData::Text(ref text)) => text,
+            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
+            _ => &item.title,
+        };
+        let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
+        clipboard.set_text(s);
         Ok(())
     }
 

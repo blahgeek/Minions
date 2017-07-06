@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-28
+* @Last Modified time: 2017-07-07
 */
 
 extern crate shlex;
@@ -15,10 +15,10 @@ use toml;
 use std::ffi::OsStr;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, ItemData, Icon};
 use actions::ActionError;
+use actions::utils::subprocess;
 
 #[derive(Debug)]
 pub struct LinuxDesktopEntry {
@@ -81,19 +81,24 @@ impl LinuxDesktopEntry {
         if self.exec.len() <= 0 {
             return Err(Box::new(ActionError::NotSupported));
         }
-        let mut cmd = Command::new(&self.exec[0]);
+
+        let cmd = &self.exec[0];
+        let mut args : Vec<String> = Vec::new();
+
         for arg in self.exec.iter().skip(1) {
             if *arg == "%f" || *arg == "%F" {
                 if let Some(p) = path {
-                    cmd.arg(p.as_os_str());
+                    args.push(p.to_string_lossy().into());
                 }
             } else if *arg == "%u" || *arg == "%U" {
                 // nop
             } else {
-                cmd.arg(arg);
+                args.push(arg.clone());
             }
         }
-        cmd.spawn()?;
+        let args = args.iter().map(|x| x.as_str()).collect::<Vec<&str>>();
+
+        subprocess::spawn(cmd.as_str(), &args)?;
         Ok(Vec::new())
     }
 

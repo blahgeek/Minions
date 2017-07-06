@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-07
 */
 
 use toml;
@@ -92,7 +92,7 @@ impl Action for FileBrowserEntry {
     fn run(&self) -> ActionResult {
         if self.is_file {
             info!("open: {:?}", self.path);
-            open::that(&self.path)?;
+            open::that(&self.path.to_string_lossy())?;
             Ok(Vec::new())
         } else {
             let mut ret = Vec::new();

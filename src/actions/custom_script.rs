@@ -24,6 +24,7 @@ use mcore::item::{Item, ItemData, Icon};
 use mcore::action::{Action, ActionArg, ActionResult};
 use actions::file_browser::FileBrowserEntry;
 use actions::utils::open;
+use actions::ActionError;
 
 /// Output item from custom script
 /// Each item consists of:
@@ -136,7 +137,14 @@ impl Action for PredefinedChildrenAction {
     }
 }
 
-fn output_to_items(output: &[u8], script_dir: &std::path::Path) -> ActionResult {
+fn output_to_items(output: std::process::Output, script_dir: &std::path::Path, expect_return: bool) -> ActionResult {
+    if !output.status.success() {
+        return Err(Box::new(ActionError::Unknown)); // FIXME
+    }
+    if !expect_return {
+        return Ok(Vec::new())
+    }
+    let output = &output.stdout;
     let json_output : ScriptOutput = serde_json::from_slice(output)?;
     Ok(json_output.results.into_iter()
        .map(|x| x.into_item(script_dir))
@@ -163,19 +171,19 @@ impl Action for ScriptAction {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.args(&self.script_args);
         debug!("Running script action: {:?}", cmd);
-        output_to_items(&cmd.output()?.stdout, &self.script_dir)
+        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }
     fn run_text(&self, text: &str) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(text);
         debug!("Running script action (with text): {:?}", cmd);
-        output_to_items(&cmd.output()?.stdout, &self.script_dir)
+        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }
     fn run_path(&self, p: &std::path::Path) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(p);
         debug!("Running script action (with path): {:?}", cmd);
-        output_to_items(&cmd.output()?.stdout, &self.script_dir)
+        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }
 }
 

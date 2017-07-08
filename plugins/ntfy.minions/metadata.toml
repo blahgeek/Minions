@@ -1,0 +1,8 @@
+name = "Push Notification"
+description = "Push notification using ntfy command"
+icon = "character::"
+script = "run.sh"
+script_returns = false
+accept_nothing = false
+accept_text = true
+accept_path = false

@@ -150,7 +150,11 @@ impl MinionsUI {
         }
 
         match item.subtitle {
-            Some(ref text) => subtitle.set_text(&text),
+            Some(ref text) => if text.len() > 0 {
+                subtitle.set_text(&text)
+            } else {
+                titlebox.remove(&subtitle)
+            },
             None => titlebox.remove(&subtitle),
         }
         match item.badge {

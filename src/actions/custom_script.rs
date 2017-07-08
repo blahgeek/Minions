@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-08
 */
 
 /// Action defined by custom script
@@ -55,14 +55,18 @@ struct ScriptItem {
     action_children: Option<Vec<ScriptItem>>,
 }
 
-fn parse_icon(text: &str) -> Option<Icon> {
+fn parse_icon(text: &str, script_dir: &std::path::Path) -> Option<Icon> {
     let parts: Vec<&str> = text.splitn(2, ":").collect();
     if parts.len() < 2 {
         None
     } else if parts[0] == "gtk" {
         Some(Icon::GtkName(parts[1].into()))
     } else if parts[0] == "file" {
-        Some(Icon::File(Path::new(parts[1]).to_path_buf()))
+        if parts[1].starts_with('/') {
+            Some(Icon::File(Path::new(parts[1]).to_path_buf()))
+        } else {
+            Some(Icon::File(script_dir.join(Path::new(parts[1]))))
+        }
     } else if parts[0] == "character" {
         let subparts : Vec<&str> = parts[1].splitn(2, ":").collect();
         if subparts.len() < 2 {
@@ -146,7 +150,7 @@ impl Action for ScriptAction {
         item.badge = Some("Script".into());
         item.priority = -50;
         item.icon = match self.icon {
-            Some(ref text) => parse_icon(&text),
+            Some(ref text) => parse_icon(&text, &self.script_dir),
             None => None,
         };
         item
@@ -239,7 +243,7 @@ impl ScriptItem {
                 None => None,
             },
             icon: match self.icon {
-                Some(text) => parse_icon(&text),
+                Some(text) => parse_icon(&text, script_dir),
                 None => None,
             },
             action_arg: ActionArg::None,

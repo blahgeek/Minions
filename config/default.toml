@@ -1,4 +1,4 @@
-# example config for minions app
+# default config for minions app
 plugin_directories = [
     "/home/blahgeek/Documents/projects/Minions/plugins/",
 ]

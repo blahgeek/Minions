@@ -15,7 +15,7 @@ use std;
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 use std::error::Error;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -102,7 +102,7 @@ struct PredefinedChildrenAction {
 
 pub struct ScriptAction {
     name: String,
-    description: String,
+    description: Option<String>,
     icon: Option<String>,
 
     script_dir: PathBuf,
@@ -154,7 +154,7 @@ fn output_to_items(output: std::process::Output, script_dir: &std::path::Path, e
 impl Action for ScriptAction {
     fn get_item (&self) -> Item {
         let mut item = Item::new(&self.name);
-        item.subtitle = Some(self.description.clone());
+        item.subtitle = self.description.clone();
         item.badge = Some("Script".into());
         item.priority = -50;
         item.icon = match self.icon {
@@ -204,7 +204,7 @@ impl ScriptItem {
             if action_callback.len() >= 1 {
                 Some(Box::new(ScriptAction {
                     name: "unimplemented".into(), // unused
-                    description: "unimplemented".into(), //unused,
+                    description: None,
                     icon: None,
                     script_dir: script_dir.to_path_buf(),
                     accept_nothing_: true,
@@ -262,7 +262,7 @@ impl ScriptItem {
 #[derive(Deserialize)]
 struct ScriptMetadata {
     name: String,
-    description: String,
+    description: Option<String>,
     icon: Option<String>,
 
     script: String,
@@ -271,6 +271,38 @@ struct ScriptMetadata {
     accept_nothing: bool,
     accept_text: bool,
     accept_path: bool,
+
+    requirements: Option<Vec<String>>,
+}
+
+
+fn check_requirement(req: &str) -> bool {
+    let mut parts: Vec<&str> = req.splitn(2, ":").collect();
+    if parts.len() < 2 {
+        warn!("Invalid requirement string {}", req);
+        return true;
+    }
+
+    let arg = parts.pop().unwrap();
+    let name = parts.pop().unwrap();
+
+    if name == "exe" {
+        match Command::new("which").arg(arg).stdout(Stdio::null()).status() {
+            Err(error) => {
+                warn!("Error running which {}: {}", arg, error);
+                false
+            },
+            Ok(status) =>
+                if status.success() { true }
+                else {
+                    debug!("Executable {} not found", arg);
+                    false
+                },
+        }
+    } else {
+        warn!("Invalid requirement string {}", req);
+        true
+    }
 }
 
 
@@ -284,6 +316,12 @@ impl ScriptAction {
             metafile.read_to_string(&mut metadata)?;
         }
         let metadata : ScriptMetadata = toml::from_str(&metadata)?;
+
+        if let Some(requirements) = metadata.requirements {
+            if !requirements.iter().all(|x| check_requirement(x)) {
+                return Err(Box::new(ActionError::NotSupported));
+            }
+        }
 
         Ok (ScriptAction {
             name: metadata.name,

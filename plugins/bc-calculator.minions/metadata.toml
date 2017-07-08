@@ -6,3 +6,4 @@ script_returns = true
 accept_nothing = false
 accept_text = true
 accept_path = false
+requirements = ["exe:bc",]

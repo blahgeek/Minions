@@ -6,3 +6,4 @@ script_returns = false
 accept_nothing = false
 accept_text = true
 accept_path = false
+requirements = ["exe:ntfy"]

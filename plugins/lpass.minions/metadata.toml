@@ -1,0 +1,8 @@
+name = "Lastpass"
+description = "Find all lastpass items"
+icon = "file:logo.png"
+script = "run.sh"
+script_returns = true
+accept_nothing = true
+accept_text = false
+accept_path = false

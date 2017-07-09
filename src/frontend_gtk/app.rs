@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-01
+* @Last Modified time: 2017-07-09
 */
 
 extern crate glib;
@@ -429,8 +429,9 @@ impl MinionsApp {
                 filter_text,
                 filter_indices,
             } => {
+                let idx = filter_indices[selected_idx as usize];
                 if let Err(error) = self.ctx.copy_content_to_clipboard(
-                                            &self.ctx.list_items[selected_idx as usize]) {
+                                            &self.ctx.list_items[idx]) {
                     warn!("Unable to copy item: {}", error);
                 } else {
                     info!("Item copied");

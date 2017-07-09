@@ -4,11 +4,13 @@ A LaunchBar (or, somewhat Alfred) replacement for linux, written in rust.
 
 [![Build Status](https://travis-ci.org/blahgeek/Minions.svg?branch=master)](https://travis-ci.org/blahgeek/Minions)
 
-## Download
+## Usage
 
-Download AppImage package from [Release page](https://github.com/blahgeek/Minions/releases). Requires gtk 3.10+ installed.
+Download AppImage package from [Release page](https://github.com/blahgeek/Minions/releases).
 
 *Note*: In the first running, the application would needs to build font cache, which could take several minutes.
+
+Hit `ctrl+space` to open Minions.
 
 ## Status
 
@@ -36,8 +38,5 @@ Still in alpha, but usable. Feedback and contribution are welcome.
 ## How-to build
 
 - `cargo build --release`
-- Run `./target/release/minions`
-- (recommended) Use your WM to assign shortcuts, e.g. in i3:
-    - `bindsym Control+space exec .../minions`
-    - `bindsym Control+Shift+space exec .../minions -f`
+- or `./build_appimage.sh`
 

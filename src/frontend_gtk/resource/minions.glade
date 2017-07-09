@@ -5,6 +5,7 @@
   <object class="GtkWindow" id="root">
     <property name="can_focus">False</property>
     <property name="resizable">False</property>
+    <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="default_width">800</property>
     <property name="type_hint">dialog</property>
@@ -177,7 +178,7 @@
         </child>
       </object>
     </child>
-    <child type="titlebar">
+    <child>
       <placeholder/>
     </child>
   </object>

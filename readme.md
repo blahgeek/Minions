@@ -2,6 +2,12 @@
 
 A LaunchBar (or, somewhat Alfred) replacement for linux, written in rust.
 
+[![Build Status](https://travis-ci.org/blahgeek/Minions.svg?branch=master)](https://travis-ci.org/blahgeek/Minions)
+
+## Download
+
+Download AppImage package from [Release page](https://github.com/blahgeek/Minions/releases). Requires gtk 3.10+ installed.
+
 ## Status
 
 Still in alpha, but usable. Feedback and contribution are welcome.
@@ -25,7 +31,7 @@ Still in alpha, but usable. Feedback and contribution are welcome.
     - Use any script to define custom actions
 - Simple, elegant, and most important - do it right in the Unix way
 
-## How-to
+## How-to build
 
 - `cargo build --release`
 - Run `./target/release/minions`

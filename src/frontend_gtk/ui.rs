@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-01
+* @Last Modified time: 2017-07-09
 */
 
 extern crate gdk_pixbuf;
@@ -90,11 +90,11 @@ impl MinionsUI {
             if let Some(ref ico) = item.icon {
                 set_image_icon(&self.icon, &self.icon_text, ico);
             } else {
-                set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("gtk-home".into()));
+                set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
             }
         } else {
             self.textentry.set_text("Minions");
-            set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("gtk-home".into()));
+            set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
@@ -136,8 +136,8 @@ impl MinionsUI {
         let title = builder.get_object::<gtk::Label>("title").unwrap();
         let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
         let badge = builder.get_object::<gtk::Label>("badge").unwrap();
-        let selectable = builder.get_object::<gtk::Image>("selectable").unwrap();
-        let arrow = builder.get_object::<gtk::Image>("arrow").unwrap();
+        let selectable = builder.get_object::<gtk::Label>("selectable").unwrap();
+        let arrow = builder.get_object::<gtk::Label>("arrow").unwrap();
         let icon = builder.get_object::<gtk::Image>("icon").unwrap();
         let icon_text = builder.get_object::<gtk::Label>("icon_text").unwrap();
 
@@ -166,17 +166,17 @@ impl MinionsUI {
             Some(ref action) => !action.should_return_items(),
             None => true,
         } {
-            arrow.set_from_icon_name("gtk-media-stop", gtk::IconSize::SmallToolbar.into());
+            arrow.set_text("");
         } else {
-            arrow.set_from_icon_name("gtk-goto-last", gtk::IconSize::SmallToolbar.into());
+            arrow.set_text("");
         }
 
         if ctx.selectable(&item) {
-            selectable.set_from_icon_name("gtk-apply", gtk::IconSize::SmallToolbar.into());
+            selectable.set_text("");
         } else if ctx.selectable_with_text(&item) {
-            selectable.set_from_icon_name("gtk-edit", gtk::IconSize::SmallToolbar.into());
+            selectable.set_text("");
         } else {
-            item_ui.remove(&selectable);
+            selectable.set_text(" ");
         }
 
         item_ui

@@ -269,7 +269,7 @@ impl Context {
                     Item {
                         title: text.clone(),
                         subtitle: Some(fmt::format(format_args!("Text Data: {} bytes", text.len()))),
-                        icon: Some(Icon::GtkName("gtk-info".into())),
+                        icon: Some(Icon::Character{ch: '', font: "FontAwesome".into()}),
                         badge: None,
                         priority: <i32>::min_value(),
                         data: None,
@@ -285,7 +285,7 @@ impl Context {
                                                                 if path.is_dir() { "Directory" }
                                                                 else if path.is_file() { "File" }
                                                                 else { "Unknown" }))),
-                        icon: Some(Icon::GtkName("gtk-info".into())),
+                        icon: Some(Icon::Character{ch: '', font: "FontAwesome".into()}),
                         badge: None,
                         priority: <i32>::min_value(),
                         data: None,

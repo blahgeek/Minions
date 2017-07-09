@@ -86,12 +86,15 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkImage" id="reference_arrow">
+                  <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="margin_left">4</property>
-                    <property name="margin_right">4</property>
-                    <property name="stock">gtk-go-forward</property>
+                    <property name="margin_right">2</property>
+                    <property name="label" translatable="yes"></property>
+                    <attributes>
+                      <attribute name="font-desc" value="&lt;Enter Value&gt; 18"/>
+                    </attributes>
                   </object>
                   <packing>
                     <property name="expand">False</property>

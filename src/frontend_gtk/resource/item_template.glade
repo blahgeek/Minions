@@ -119,28 +119,32 @@
       </packing>
     </child>
     <child>
-      <object class="GtkImage" id="selectable">
+      <object class="GtkLabel" id="selectable">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_left">1</property>
         <property name="margin_right">1</property>
-        <property name="stock">gtk-jump-to</property>
-        <property name="icon_size">2</property>
+        <property name="label" translatable="yes">B</property>
+        <attributes>
+          <attribute name="font-desc" value="FontAwesome 12"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">False</property>
+        <property name="fill">True</property>
         <property name="position">4</property>
       </packing>
     </child>
     <child>
-      <object class="GtkImage" id="arrow">
+      <object class="GtkLabel" id="arrow">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_left">1</property>
         <property name="margin_right">2</property>
-        <property name="stock">gtk-go-forward</property>
-        <property name="icon_size">2</property>
+        <property name="label" translatable="yes">A</property>
+        <attributes>
+          <attribute name="font-desc" value="FontAwesome 12"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>

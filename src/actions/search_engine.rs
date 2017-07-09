@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-09
 */
 
 extern crate url;
@@ -27,7 +27,7 @@ impl Action for SearchEngine {
         let mut item = Item::new(&self.name);
         item.badge = Some("Search Engine".into());
         item.priority = -10;
-        item.icon = Some(Icon::GtkName("gtk-find".into()));
+        item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
         item
     }
 

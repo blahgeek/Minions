@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-07
+* @Last Modified time: 2017-07-09
 */
 
 use toml;
@@ -76,9 +76,9 @@ impl Action for FileBrowserEntry {
             Some("Directory".into())
         };
         ret.icon = Some(if self.is_file {
-            Icon::GtkName("gtk-file".into())
+            Icon::Character{ch: '', font: "FontAwesome".into()}
         } else {
-            Icon::GtkName("gtk-directory".into())
+            Icon::Character{ch: '', font: "FontAwesome".into()}
         });
         ret.data = Some(ItemData::Path(self.path.clone()));
         ret.priority = -10;

@@ -52,6 +52,8 @@ cp $(which xbindkeys) ./usr/bin/
 
 copy_deps
 delete_blacklisted
+find ./usr/lib/ -name 'libharfbuzz.*' | xargs -i rm {}
+
 get_apprun
 
 # do not copy libraries

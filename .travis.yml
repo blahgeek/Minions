@@ -20,3 +20,4 @@ deploy:
   file_glob: true
   on:
     tags: true
+    rust: stable

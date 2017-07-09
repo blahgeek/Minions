@@ -46,14 +46,25 @@ APP=Minions
 rm -rf build/$APP/$APP.AppDir
 mkdir -p build/$APP/$APP.AppDir/usr/bin/
 mkdir -p build/$APP/$APP.AppDir/usr/share/
+mkdir -p build/$APP/$APP.AppDir/etc/
 
 cp minions.desktop build/$APP/$APP.AppDir
 cp minions.png build/$APP/$APP.AppDir
 cp target/release/minions build/$APP/$APP.AppDir/usr/bin/minions
 cp -r plugins build/$APP/$APP.AppDir/usr/share/minions-plugins
+cp config/fonts.conf build/$APP/$APP.AppDir/etc/fonts.conf
+cp -r fonts build/$APP/$APP.AppDir/fonts
 
 cat > build/$APP/$APP.AppDir/usr/bin/minions.wrapper << EOF
 #!/bin/sh
+cd "\$(dirname "\$0")"
+cd ../../
+
+echo "Building font cache..."
+mkdir -p ~/.minions/fontconfig/
+export FONTCONFIG_FILE="\$(pwd)/etc/fonts.conf"
+fc-cache
+
 unset XDG_DATA_DIRS
 minions "\$@"
 EOF

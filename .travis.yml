@@ -11,8 +11,9 @@ rust:
 - beta
 - nightly
 script:
-- bash -ex build_appimage.sh
+- if [ -z ${TRAVIS_TAG+x} ]; then bash -ex build_appimage.sh; else cargo build --verbose; fi
 deploy:
+  skip_cleanup: true
   provider: releases
   api_key:
     secure: 002o+aZFiGZP+BMOjLAw+ze7Lm6qbatIpBUUL28mAniMGRH6eZLH9kC0Cp904VbAM0JCvIoUsyrZHMquclFPVDzNz95T5ySZeHLInmQI1wiyC86JJJk+LkT9EslTaPUSI5Izmk4GS4voEPxK4qKs4DpppHLsoMah2/Lq6lgsF3betIxXhM0R2Tnf0OaHXAr6T55ZIdMlZod6JF5P8ZCyV3zm987b7Hut0ogPYo1eiD0asIkK79HIfavQRloDEqaAgVbKs/vJU1vH16lXRduPaNu8QqajuZAMe5JzK3+AIgzAiGV44GX8cQRcFj9zXMeVZZPx5iAUIgR1Lh94IUsFHCiWN+SFQdLASEgU/Gz0ZLACrknaCvOQcJfuJjezMtkOwx6qg2vlVbRrr5Mi/SbiIBGQEzHJjil777wfHAQHIB+8b/pLUGVszlLeSSFi2ZwkIYz3tsl7b7FvVr5G2Rsld0SMEa0KJkWu+JgbG8Bi0nfzjxLDNVo4t0VXMi0u/OoK7gNlSoSKdDNYsbGYHZOG1DcXUG21uNP5QxhtdtFgAGUYk6MySuLAOR4/mKxAPg+YleCaAV0N3g9Eewe1trKKifutXChUcBJnFkwwxBt+TxzgUos68ET3Yjdpr0ktXZY4NmSIq4ZNfyZ/adDfuvFp2bO/QYuB/0aBmFd1RRxdKrk=

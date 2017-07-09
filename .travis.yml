@@ -1,3 +1,9 @@
+dist: trusty
+addons:
+  apt:
+    packages:
+    - libgtk-3-dev
+
 language: rust
 rust:
   - stable

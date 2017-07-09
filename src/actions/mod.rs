@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-09
 */
 
 mod utils;
@@ -59,18 +59,35 @@ pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
             ret.push(Arc::new(Box::new(x)));
         }
     }
-    if let Some(opts) = config.get("plugin_directories") {
+
+    ret.push(Arc::new(Box::new(youdao::Youdao{})));
+
+    let mut plugin_dirs : Vec<PathBuf> = vec![
+        Path::new("./plugins/").to_path_buf(),
+        Path::new("./usr/share/minions-plugins/").to_path_buf(),
+        Path::new("/usr/share/minions-plugins/").to_path_buf(),
+    ];
+    if let Some(opts) = config.get("extra_plugin_directories") {
         if let Some(opts) = opts.as_array() {
             for dir in opts {
                 if let Some(dir) = dir.as_str() {
-                    for x in custom_script::ScriptAction::get_all(Path::new(dir)) {
-                        ret.push(Arc::new(Box::new(x)));
-                    }
+                    plugin_dirs.push(Path::new(dir).to_path_buf());
                 }
             }
         }
     }
-    ret.push(Arc::new(Box::new(youdao::Youdao{})));
+    plugin_dirs.dedup();
+
+    if plugin_dirs.len() == 0 {
+        warn!("No plugin directory defined");
+    }
+
+    for plugin_dir in plugin_dirs.iter() {
+        info!("Loading plugins from {:?}", plugin_dir);
+        for x in custom_script::ScriptAction::get_all(&plugin_dir) {
+            ret.push(Arc::new(Box::new(x)));
+        }
+    }
 
     ret
 }

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Minions
+Exec=minions
+Icon=minions
+Terminal=false
+StartupNotify=false
+Categories=System;

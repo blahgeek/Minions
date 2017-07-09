@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-07
+* @Last Modified time: 2017-07-09
 */
 
 extern crate shlex;
@@ -160,17 +160,3 @@ impl LinuxDesktopEntry {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use mcore::action::Action;
-    use std::path::PathBuf;
-    use actions::linux_desktop_entry::LinuxDesktopEntry;
-
-    #[test]
-    fn linux_desktop_entry_single_test() {
-        let path = PathBuf::from("/usr/share/applications/atom.desktop");
-        let action = LinuxDesktopEntry::get(&path).unwrap();
-        assert!(action.name == "Atom");
-    }
-
-}

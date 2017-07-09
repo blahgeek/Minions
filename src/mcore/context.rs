@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-02
+* @Last Modified time: 2017-07-09
 */
 
 #[cfg(feature="use-gtk")]
@@ -20,8 +20,6 @@ use std::fmt;
 use std::thread;
 use std::error::Error;
 use std::sync::Arc;
-use std::io::Write;
-use std::process::{Command, Stdio};
 use mcore::action::{Action, ActionArg, ActionResult};
 use mcore::item::{Item, ItemData, Icon};
 use mcore::fuzzymatch::fuzzymatch;

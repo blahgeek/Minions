@@ -1,7 +1,4 @@
-use std::io;
 use std::error::Error;
-use std::process::Command;
-use std::ffi::OsStr;
 
 use actions::utils::subprocess;
 

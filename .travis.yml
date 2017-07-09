@@ -1,8 +1,10 @@
 dist: trusty
+sudo: required
 addons:
   apt:
     packages:
     - libgtk-3-dev
+    - xbindkeys
 
 language: rust
 rust:

@@ -37,7 +37,7 @@ esac
 ARCH=${SYSTEM_ARCH}
 
 cd "$(dirname "$0")"
-cargo build --release
+cargo build --release --verbose
 
 VERSION=$(cat Cargo.toml | grep version | head -n 1 | sed -e 's/version = //; s/"//g')
 

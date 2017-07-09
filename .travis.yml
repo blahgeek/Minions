@@ -10,3 +10,5 @@ rust:
   - beta
   - nightly
 
+script:
+  - bash -ex build_appimage.sh

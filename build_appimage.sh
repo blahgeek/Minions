@@ -2,7 +2,7 @@
 # @Author: BlahGeek
 # @Date:   2017-07-09
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-07-09
+# @Last Modified time: 2017-07-10
 
 cd "$(dirname "$0")"
 cargo build --release --verbose
@@ -46,9 +46,6 @@ wget -q https://github.com/probonopd/AppImages/raw/master/functions.sh -O ./func
 . ./functions.sh
 
 cd $APP.AppDir
-
-# bundle xbindkeys
-cp $(which xbindkeys) ./usr/bin/
 
 copy_deps
 delete_blacklisted

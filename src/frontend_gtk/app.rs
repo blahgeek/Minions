@@ -2,14 +2,17 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2017-07-10
 */
 
 extern crate glib;
+extern crate libc;
+extern crate glib_sys;
 
 use toml;
 
 use std;
+use std::ffi;
 use frontend_gtk::gdk;
 use frontend_gtk::gtk;
 use frontend_gtk::gtk::prelude::*;
@@ -20,7 +23,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use frontend_gtk::ui::MinionsUI;
-use frontend_gtk::xbindkey;
 use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
@@ -54,6 +56,40 @@ pub struct MinionsApp {
 
 thread_local! {
     static APP: RefCell<Option<MinionsApp>> = RefCell::new(None);
+}
+
+
+#[link(name="keybinder-3.0")]
+extern {
+    fn keybinder_init();
+    fn keybinder_supported() -> glib_sys::gboolean;
+    fn keybinder_bind(keystring: *const libc::c_char,
+                      handler: extern fn(*const libc::c_char, *mut libc::c_void),
+                      user_data: *mut libc::c_void) -> glib_sys::gboolean;
+}
+
+extern fn keybinder_callback_show(_: *const libc::c_char, _: *mut libc::c_void) {
+    info!("keybinder callback: show");
+    glib::idle_add( move || {
+        APP.with(|app| {
+            if let Some(ref mut app) = *app.borrow_mut() {
+                app.reset_window(false);
+            }
+        });
+        Continue(false)
+    });
+}
+
+extern fn keybinder_callback_show_clipboard(_: *const libc::c_char, _: *mut libc::c_void) {
+    info!("keybinder callback: show with clipboard");
+    glib::idle_add( move || {
+        APP.with(|app| {
+            if let Some(ref mut app) = *app.borrow_mut() {
+                app.reset_window(true);
+            }
+        });
+        Continue(false)
+    });
 }
 
 impl MinionsApp {
@@ -526,21 +562,22 @@ impl MinionsApp {
             })
         });
 
-        let bind_child = xbindkey::bindkeys(move |send_clipboard: bool| {
-            glib::idle_add( move || {
-                APP.with(|app| {
-                    if let Some(ref mut app) = *app.borrow_mut() {
-                        app.reset_window(send_clipboard);
-                    }
-                });
-                Continue(false)
-            });
-        });
-        let bind_child = RefCell::new(bind_child);
+        unsafe {
+            keybinder_init();
+            if keybinder_supported() == 0 {
+                panic!("Keybinder not supported");
+            }
+            {
+                let s = ffi::CString::new("<Ctrl>space").unwrap();
+                keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
+            }
+            {
+                let s = ffi::CString::new("<Ctrl><Shift>space").unwrap();
+                keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());
+            }
+        }
 
         app.ui.window.connect_delete_event(move |_, _| {
-            warn!("Deleting window, kill child process first");
-            bind_child.borrow_mut().kill().unwrap();
             gtk::main_quit();
             Inhibit(false)
         });

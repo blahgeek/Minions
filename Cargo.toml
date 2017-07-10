@@ -33,6 +33,8 @@ url = "1.5.0"
 reqwest = "^0.6"
 rust-crypto = "^0.2"
 nix = "^0.8"
+libc = "^0.2"
+glib-sys = "0.3.4"
 
 glib = { version = "0.1.3", optional = true }
 gdk = { version = "0.5.3", optional = true }

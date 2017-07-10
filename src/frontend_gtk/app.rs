@@ -62,7 +62,6 @@ thread_local! {
 #[link(name="keybinder-3.0")]
 extern {
     fn keybinder_init();
-    fn keybinder_supported() -> glib_sys::gboolean;
     fn keybinder_bind(keystring: *const libc::c_char,
                       handler: extern fn(*const libc::c_char, *mut libc::c_void),
                       user_data: *mut libc::c_void) -> glib_sys::gboolean;
@@ -564,9 +563,6 @@ impl MinionsApp {
 
         unsafe {
             keybinder_init();
-            if keybinder_supported() == 0 {
-                panic!("Keybinder not supported");
-            }
             {
                 let s = ffi::CString::new("<Ctrl>space").unwrap();
                 keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());

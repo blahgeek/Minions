@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-10
+* @Last Modified time: 2017-07-13
 */
 
 extern crate minions;
@@ -63,7 +63,7 @@ fn main() {
 
     let configfile = match args.value_of("config") {
         Some(filename) => Path::new(&filename).to_path_buf(),
-        None => env::home_dir().unwrap().join(".minions.toml"),
+        None => env::home_dir().unwrap().join(".minions/config.toml"),
     };
     let mut configcontent = String::new();
 

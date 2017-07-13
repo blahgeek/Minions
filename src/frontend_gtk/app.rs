@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-10
+* @Last Modified time: 2017-07-14
 */
 
 extern crate glib;
@@ -26,6 +26,8 @@ use frontend_gtk::ui::MinionsUI;
 use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
+
+const FILTER_TEXT_CLEAR_TIME: u32 = 1;
 
 #[derive(Clone)]
 enum Status {
@@ -167,7 +169,7 @@ impl MinionsApp {
             filter_text_lasttime,
             filter_indices: _
         } = self.status {
-            if filter_text_lasttime.elapsed() > std::time::Duration::new(1, 0) {
+            if filter_text_lasttime.elapsed() >= std::time::Duration::new(FILTER_TEXT_CLEAR_TIME as u64, 0) {
                 self.status = Status::FilteringNone;
                 self.update_ui();
             }
@@ -278,6 +280,16 @@ impl MinionsApp {
     fn _make_status_filteringentering(&self, text: String) -> Status {
         let filter_indices = self.ctx.filter(&text);
         let selected_idx = if filter_indices.len() == 0 { -1 } else { 0 };
+
+        gtk::timeout_add_seconds(FILTER_TEXT_CLEAR_TIME, move || {
+            APP.with(|app| {
+                if let Some(ref mut app) = *app.borrow_mut() {
+                    app.process_timeout();
+                }
+                Continue(false)
+            })
+        });
+
         Status::FilteringEntering {
             selected_idx: selected_idx,
             filter_text: text,
@@ -549,15 +561,6 @@ impl MinionsApp {
                 if let Some(ref mut app) = *app.borrow_mut() {
                     app.process_keyevent(event)
                 } else { Inhibit(false) }
-            })
-        });
-
-        gtk::timeout_add(200, move || {
-            APP.with(|app| {
-                if let Some(ref mut app) = *app.borrow_mut() {
-                    app.process_timeout();
-                }
-                Continue(true)
             })
         });
 

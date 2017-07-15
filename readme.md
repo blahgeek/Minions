@@ -10,11 +10,25 @@ Download AppImage package from [Release page](https://github.com/blahgeek/Minion
 
 *Note*: In the first running, the application would needs to build font cache, which could take several minutes.
 
-Hit `ctrl+space` to open Minions.
+Keyboard shortcuts:
+
+- `ctrl+space`: show minions window
+- `ctrl+shift+space`: show minions window with selected text
+
+- `Up/Down/ctrl+k/ctrl+j`: move up/down
+- `[a-z]`: filter items
+- `enter`: confirm selection (if valid)
+- `space`: enter text for this action (if valid)
+- `tab`: open this item with another action
+- `ctrl-c`: copy item text
+- `esc`: Escape/close
+
+Minions would use `~/.minions/config.toml` for custom config. See `./config/default.toml` for default config.
+Note that custom config is not required. The default config would be used if the custom config or certain config section is missing.
 
 ## Status
 
-Still in alpha, but usable. Feedback and contribution are welcome.
+Still in beta, but usable. Feedback and contribution are welcome.
 
 ## Preview
 

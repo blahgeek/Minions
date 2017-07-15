@@ -211,7 +211,7 @@ impl MinionsApp {
     fn process_keyevent_move(&mut self, delta: i32) {
         trace!("Processing keyevent Move: {}", delta);
         self.status = match self.status.clone() {
-            Status::FilteringNone => {
+            Status::FilteringNone | Status::Initial => {
                 Status::FilteringMoving {
                     selected_idx: 0,
                     filter_text: String::new(),

@@ -26,6 +26,7 @@ pub struct LinuxDesktopEntry {
     comment: Option<String>,
     exec: Vec<String>,
     icon_text: Option<String>,
+    terminal: bool,
 }
 
 impl Action for LinuxDesktopEntry {
@@ -82,28 +83,34 @@ impl LinuxDesktopEntry {
             return Err(Box::new(ActionError::new("Executable path is empty")));
         }
 
-        let cmd = &self.exec[0];
-        let mut args : Vec<String> = Vec::new();
+        let mut cmd : Vec<String> = Vec::new();
+        if self.terminal {
+            cmd.push("sh".into());
+            cmd.push("-c".into());
+            cmd.push(include_str!("./utils/sensible-terminal.sh").into());
+            cmd.push("sensible-terminal.sh".into());
+            cmd.push("-e".into());
+        }
+
+        cmd.push(self.exec[0].clone());
 
         for arg in self.exec.iter().skip(1) {
             if *arg == "%f" || *arg == "%F" {
                 if let Some(p) = path {
-                    args.push(p.to_string_lossy().into());
+                    cmd.push(p.to_string_lossy().into());
                 }
             } else if *arg == "%u" || *arg == "%U" {
                 // nop
             } else {
-                args.push(arg.clone());
+                cmd.push(arg.clone());
             }
         }
-        let args = args.iter().map(|x| x.as_str()).collect::<Vec<&str>>();
 
-        subprocess::spawn(cmd.as_str(), &args)?;
+        subprocess::spawn(&cmd[0], &cmd.iter().skip(1).map(|x| x.as_str()).collect::<Vec<&str>>())?;
         Ok(Vec::new())
     }
 
 
-    // TODO: translate, icon, path, is_terminal
     fn get(filepath: &Path) -> Result<LinuxDesktopEntry, Box<Error>> {
         let config = Ini::load_from_file(filepath)?;
         let typ = config.get_from_or(Some("Desktop Entry"), "Type", "");
@@ -117,12 +124,13 @@ impl LinuxDesktopEntry {
 
         Ok(LinuxDesktopEntry {
             name: config.get_from(Some("Desktop Entry"), "Name").ok_or(err.clone())?.into(),
-            comment: Some(config.get_from(Some("Desktop Entry"), "Comment").ok_or(err.clone())?.into()),
+            comment: Some(config.get_from_or(Some("Desktop Entry"), "Comment", "").into()),
             exec: shlex::split(exec_str).ok_or(err.clone())?,
             icon_text: match config.get_from(Some("Desktop Entry"), "Icon") {
                 Some(s) => Some(s.into()),
                 None => None,
             },
+            terminal: config.get_from_or(Some("Desktop Entry"), "Terminal", "false") == "true",
         })
     }
 

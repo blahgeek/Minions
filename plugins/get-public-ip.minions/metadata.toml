@@ -1,0 +1,9 @@
+name = "Public IP Address"
+description = "Get public IP Address via akamai.com"
+icon = "character:FontAwesome:"
+script = "run.sh"
+script_returns = true
+accept_nothing = true
+accept_text = false
+accept_path = false
+requirements = ["exe:curl"]

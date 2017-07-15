@@ -83,30 +83,30 @@ impl LinuxDesktopEntry {
             return Err(Box::new(ActionError::new("Executable path is empty")));
         }
 
-        let mut cmd : Vec<String> = Vec::new();
+        let mut cmd : Vec<&str> = Vec::new();
         if self.terminal {
-            cmd.push("sh".into());
-            cmd.push("-c".into());
-            cmd.push(include_str!("./utils/sensible-terminal.sh").into());
-            cmd.push("sensible-terminal.sh".into());
-            cmd.push("-e".into());
+            cmd.push("sh");
+            cmd.push("-c");
+            cmd.push(include_str!("./utils/sensible-terminal.sh"));
+            cmd.push("sensible-terminal.sh");
+            cmd.push("-e");
         }
 
-        cmd.push(self.exec[0].clone());
-
-        for arg in self.exec.iter().skip(1) {
+        for arg in self.exec.iter() {
             if *arg == "%f" || *arg == "%F" {
                 if let Some(p) = path {
-                    cmd.push(p.to_string_lossy().into());
+                    if let Some(p) = p.to_str() {
+                        cmd.push(p);
+                    }
                 }
             } else if *arg == "%u" || *arg == "%U" {
                 // nop
             } else {
-                cmd.push(arg.clone());
+                cmd.push(&arg);
             }
         }
 
-        subprocess::spawn(&cmd[0], &cmd.iter().skip(1).map(|x| x.as_str()).collect::<Vec<&str>>())?;
+        subprocess::spawn(cmd[0], &cmd[1..])?;
         Ok(Vec::new())
     }
 

@@ -70,11 +70,6 @@ impl MinionsApp {
     fn rofi_filter(&mut self, select_idx: i32, filter_str: &str) -> Result<State, Box<Error + Send + Sync>> {
         let mut cmd = Command::new("rofi");
 
-        let prompt : String = match self.ctx.reference {
-            None => "Minions: ".into(),
-            Some(_) => "Open With: ".into(),
-        };
-
         cmd.stdin(Stdio::piped())
            .stdout(Stdio::piped())
            .arg("-dmenu")
@@ -83,7 +78,7 @@ impl MinionsApp {
            .arg("-no-custom")
            .arg("-markup-rows")
            .arg("-width").arg((-ROFI_WIDTH-2).to_string())
-           .arg("-p").arg(&prompt)
+           .arg("-p").arg("Minions: ")
            .arg("-format").arg("i|f")
            .arg("-selected-row").arg(select_idx.to_string())
            .arg("-filter").arg(filter_str.to_string())
@@ -91,10 +86,10 @@ impl MinionsApp {
            .arg("-kb-row-tab").arg("") // disable default Tab
            .arg("-kb-custom-2").arg("Tab")
            .arg("-kb-custom-3").arg("Control+c");
-        // if let Some(ref item) = self.ctx.reference_item {
-        //     let msg = utils::format_reference_info(item, ROFI_WIDTH);
-        //     cmd.arg("-mesg").arg(&msg);
-        // }
+        if let Some(ref data) = self.ctx.reference {
+            let msg = utils::format_reference_info(data, ROFI_WIDTH);
+            cmd.arg("-mesg").arg(&msg);
+        }
         debug!("Executing: {:?}", cmd);
 
         let mut child = cmd.spawn()?;

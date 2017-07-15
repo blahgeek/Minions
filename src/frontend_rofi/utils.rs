@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-15
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-18
+* @Last Modified time: 2017-07-15
 */
 
 extern crate htmlescape;
@@ -94,35 +94,23 @@ pub fn format_item(ctx: &Context, item: &Item, line_width: i32) -> String {
     ret
 }
 
-pub fn format_reference_info(item: &Item, line_width: i32) -> String {
+pub fn format_reference_info(data: &ItemData, line_width: i32) -> String {
     let mut ret = String::from("<u>QuickSend:</u>\n");
-    ret += "<b>";
-    let (title_str, _) = format_fit_to_line(&item.title, line_width * 2);
-    ret += &encode_minimal(&title_str);
-    ret += "</b>";
-    ret.push(' ');
-    if let Some(ref subtitle) = item.subtitle {
-        ret += "<i>";
-        let (subtitle_str, _) = format_fit_to_line(subtitle, line_width * 2);
-        ret += &encode_minimal(&subtitle_str);
-        ret += "</i>";
-    }
     ret.push('\n');
 
     ret += "<small>";
-    match item.data {
-        Some(ItemData::Text(ref text)) => {
+    match data {
+        &ItemData::Text(ref text) => {
             ret += "Text = ";
             let (text_str, _) = format_fit_to_line(text, line_width * 5);
             ret += &encode_minimal(&text_str);
         },
-        Some(ItemData::Path(ref path)) => {
+        &ItemData::Path(ref path) => {
             if let Some(path_str) = path.to_str() {
                 ret += "Path = ";
                 ret += &encode_minimal(path_str);
             }
         },
-        _ => {}
     }
     ret += "</small>";
 

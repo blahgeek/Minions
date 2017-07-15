@@ -27,8 +27,8 @@ use actions;
 
 
 pub struct Context {
-    /// Reference item for quick-send
-    pub reference_item: Option<Item>,
+    /// Reference data for quick-send
+    pub reference: Option<ItemData>,
     /// Candidates items list
     pub list_items: Vec<Item>,
 
@@ -46,7 +46,7 @@ impl Context {
     /// Create context with initial items
     pub fn new(config: toml::Value) -> Context {
         let mut ctx = Context {
-            reference_item: None,
+            reference: None,
             list_items: Vec::new(),
             history_items: Vec::new(),
             all_actions: actions::get_actions(config),
@@ -57,7 +57,7 @@ impl Context {
 
     /// Reset context to initial state
     pub fn reset(&mut self) {
-        self.reference_item = None;
+        self.reference = None;
         self.list_items = self.all_actions.iter()
             .filter(|action| {
                 action.accept_nothing() || action.accept_text()
@@ -166,7 +166,7 @@ impl Context {
     pub fn async_select_callback(&mut self, items: Vec<Item>) {
         self.list_items = items;
         self.list_items.sort_by_key(|x| x.priority);
-        self.reference_item = None;
+        self.reference = None;
     }
 
     pub fn async_select<F>(&self, item: Item, callback: F) -> String
@@ -217,7 +217,7 @@ impl Context {
             panic!("Should not reach here");
         }
         self.history_items.push(item);
-        self.reference_item = None;
+        self.reference = None;
         Ok(())
     }
 
@@ -232,12 +232,12 @@ impl Context {
             panic!("Should not reach here");
         }
         self.history_items.push(item);
-        self.reference_item = None;
+        self.reference = None;
         Ok(())
     }
 
     pub fn quicksend_able(&self, item: &Item) -> bool {
-        self.reference_item.is_none() && item.data.is_some()
+        self.reference.is_none() && item.data.is_some()
     }
 
     pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error + Send + Sync>> {
@@ -267,42 +267,11 @@ impl Context {
                     .collect()
                 },
             };
-            self.list_items.push(match data {
-                &ItemData::Text(ref text) => {
-                    Item {
-                        title: text.clone(),
-                        subtitle: Some(fmt::format(format_args!("Text Data: {} bytes", text.len()))),
-                        icon: Some(Icon::Character{ch: '', font: "FontAwesome".into()}),
-                        badge: None,
-                        priority: <i32>::min_value(),
-                        data: None,
-                        search_str: Some("".into()),
-                        action: None,
-                        action_arg: ActionArg::None,
-                    }
-                },
-                &ItemData::Path(ref path) => {
-                    Item {
-                        title: path.to_string_lossy().into(),
-                        subtitle: Some(fmt::format(format_args!("Path Data: {}",
-                                                                if path.is_dir() { "Directory" }
-                                                                else if path.is_file() { "File" }
-                                                                else { "Unknown" }))),
-                        icon: Some(Icon::Character{ch: '', font: "FontAwesome".into()}),
-                        badge: None,
-                        priority: <i32>::min_value(),
-                        data: None,
-                        search_str: Some("".into()),
-                        action: None,
-                        action_arg: ActionArg::None,
-                    }
-                },
-            });
             self.list_items.sort_by_key(|item| item.priority );
+            self.reference = Some(data.clone());
         } else {
             panic!("Should not reach here");
         }
-        self.reference_item = Some(item);
         Ok(())
     }
 

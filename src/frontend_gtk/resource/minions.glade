@@ -59,7 +59,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="reference">
+              <object class="GtkBox" id="action_box">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="margin_left">5</property>
@@ -67,7 +67,7 @@
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <child>
-                  <object class="GtkLabel" id="reference_name">
+                  <object class="GtkLabel" id="action_name">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">label</property>
@@ -87,11 +87,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="reference_item_arrow">
+                  <object class="GtkLabel" id="action_arrow">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">4</property>
-                    <property name="margin_right">2</property>
+                    <property name="margin_left">6</property>
+                    <property name="margin_right">4</property>
                     <property name="label" translatable="yes"></property>
                     <attributes>
                       <attribute name="font-desc" value="&lt;Enter Value&gt; 18"/>
@@ -169,6 +169,89 @@
           </packing>
         </child>
         <child>
+          <object class="GtkBox" id="refinfo_box">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="refinfo_icon">
+                <property name="width_request">50</property>
+                <property name="height_request">50</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
+                <property name="label" translatable="yes">
+</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="refinfo_text_box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkLabel" id="refinfo_text_title">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">4</property>
+                    <property name="margin_bottom">4</property>
+                    <property name="label" translatable="yes">label label label label label label label label label label label label label label label </property>
+                    <property name="ellipsize">middle</property>
+                    <property name="single_line_mode">True</property>
+                    <property name="max_width_chars">64</property>
+                    <attributes>
+                      <attribute name="font-desc" value="&lt;Enter Value&gt; 18"/>
+                      <attribute name="underline" value="True"/>
+                    </attributes>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="refinfo_text_subtitle">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_bottom">4</property>
+                    <property name="label" translatable="yes">label label label label label label label label label label label label label label label label label label label label label label label </property>
+                    <property name="ellipsize">end</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkListBox" id="listbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -177,12 +260,12 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
     </child>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
   </object>

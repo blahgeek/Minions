@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-13
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-27
+* @Last Modified time: 2017-07-15
 */
 
 use toml;
@@ -70,10 +70,11 @@ impl MinionsApp {
     fn rofi_filter(&mut self, select_idx: i32, filter_str: &str) -> Result<State, Box<Error + Send + Sync>> {
         let mut cmd = Command::new("rofi");
 
-        let prompt = match self.ctx.reference_item {
+        let prompt : String = match self.ctx.reference {
             None => "Minions: ".into(),
-            Some(ref item) => utils::format_fit_to_line(&item.title, ROFI_WIDTH / 3).0 + " >",
+            Some(_) => "Open With: ".into(),
         };
+
         cmd.stdin(Stdio::piped())
            .stdout(Stdio::piped())
            .arg("-dmenu")
@@ -90,10 +91,10 @@ impl MinionsApp {
            .arg("-kb-row-tab").arg("") // disable default Tab
            .arg("-kb-custom-2").arg("Tab")
            .arg("-kb-custom-3").arg("Control+c");
-        if let Some(ref item) = self.ctx.reference_item {
-            let msg = utils::format_reference_info(item, ROFI_WIDTH);
-            cmd.arg("-mesg").arg(&msg);
-        }
+        // if let Some(ref item) = self.ctx.reference_item {
+        //     let msg = utils::format_reference_info(item, ROFI_WIDTH);
+        //     cmd.arg("-mesg").arg(&msg);
+        // }
         debug!("Executing: {:?}", cmd);
 
         let mut child = cmd.spawn()?;

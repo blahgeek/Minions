@@ -2,14 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2017-07-15
 */
 
 extern crate gdk_pixbuf;
 
 use std::cmp;
 
-use mcore::item::{Item, Icon};
+use mcore::item::{Item, Icon, ItemData};
 use mcore::context::Context;
 
 use frontend_gtk::gtk;
@@ -115,15 +115,38 @@ impl MinionsUI {
         self.filterlabel.set_text(text);
     }
 
-    pub fn set_reference_item(&self, item: Option<&Item>) {
-        let reference = self.window_builder.get_object::<gtk::Box>("reference").unwrap();
-        let reference_name = self.window_builder.get_object::<gtk::Label>("reference_name").unwrap();
-        match item {
-            None => reference.hide(),
-            Some(ref reference_item) => {
-                reference.show();
-                reference_name.set_text(&reference_item.title);
+    pub fn set_reference(&self, reference: Option<&ItemData>) {
+        let refinfo_box = self.window_builder.get_object::<gtk::Box>("refinfo_box").unwrap();
+        let refinfo_title = self.window_builder.get_object::<gtk::Label>("refinfo_text_title").unwrap();
+        let refinfo_subtitle = self.window_builder.get_object::<gtk::Label>("refinfo_text_subtitle").unwrap();
+
+        if let Some(data) = reference {
+            match data {
+                &ItemData::Text(ref text) => {
+                    refinfo_title.set_text(&text);
+                    refinfo_subtitle.set_text(&format!("Text data: {} bytes", text.len()));
+                    self.set_action_name(Some("Open Text with"));
+                },
+                &ItemData::Path(ref path) => {
+                    refinfo_title.set_text(&path.to_string_lossy());
+                    refinfo_subtitle.set_text("Path data");
+                    self.set_action_name(Some("Open Path with"));
+                }
             }
+            refinfo_box.show();
+        } else {
+            refinfo_box.hide();
+        }
+    }
+
+    pub fn set_action_name(&self, name: Option<&str>) {
+        let action_box = self.window_builder.get_object::<gtk::Box>("action_box").unwrap();
+        let action_name = self.window_builder.get_object::<gtk::Label>("action_name").unwrap();
+        if let Some(name) = name {
+            action_name.set_text(name);
+            action_box.show();
+        } else {
+            action_box.hide();
         }
     }
 

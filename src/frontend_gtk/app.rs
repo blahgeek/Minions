@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-14
+* @Last Modified time: 2017-07-15
 */
 
 extern crate glib;
@@ -101,14 +101,16 @@ impl MinionsApp {
             Status::Initial => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_reference_item(None);
+                self.ui.set_action_name(None);
+                self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(false);
             },
             Status::Running(_) => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_reference_item(None);
+                self.ui.set_action_name(None);
+                self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(true);
             },
@@ -116,10 +118,8 @@ impl MinionsApp {
                 self.ui.set_spinning(false);
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_reference_item(match self.ctx.reference_item {
-                    None => None,
-                    Some(ref item) => Some(&item),
-                });
+                self.ui.set_action_name(None);
+                self.ui.set_reference(self.ctx.reference.as_ref());
                 if self.ctx.list_items.len() == 0 {
                     warn!("No more listing items!");
                     self.ui.window.hide();
@@ -144,10 +144,8 @@ impl MinionsApp {
                 }
                 self.ui.set_spinning(false);
                 self.ui.set_filter_text(&filter_text);
-                self.ui.set_reference_item(match self.ctx.reference_item {
-                    None => None,
-                    Some(ref item) => Some(&item),
-                });
+                self.ui.set_action_name(None);
+                self.ui.set_reference(self.ctx.reference.as_ref());
                 self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
                                   .collect::<Vec<&Item>>(), selected_idx, &self.ctx);
             },
@@ -156,7 +154,9 @@ impl MinionsApp {
                 self.ui.set_entry(None);
                 self.ui.set_entry_editable();
                 self.ui.set_filter_text("");
-                self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
+                // self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
+                self.ui.set_action_name(Some(&self.ctx.list_items[idx].title));
+                self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
             }
         }
@@ -543,8 +543,8 @@ impl MinionsApp {
                 self.status = Status::FilteringNone;
             }
         }
-        self.update_ui();
         self.ui.window.show();
+        self.update_ui();
     }
 
     pub fn new(config: toml::Value) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {

@@ -268,9 +268,9 @@ struct ScriptMetadata {
     script: String,
     script_returns: bool,
 
-    accept_nothing: bool,
-    accept_text: bool,
-    accept_path: bool,
+    accept_nothing: Option<bool>,
+    accept_text: Option<bool>,
+    accept_path: Option<bool>,
 
     requirements: Option<Vec<String>>,
 }
@@ -328,9 +328,9 @@ impl ScriptAction {
             description: metadata.description,
             icon: metadata.icon,
             script_dir: script_dir.to_path_buf(),
-            accept_nothing_: metadata.accept_nothing,
-            accept_text_: metadata.accept_text,
-            accept_path_: metadata.accept_path,
+            accept_nothing_: metadata.accept_nothing.unwrap_or(false),
+            accept_text_: metadata.accept_text.unwrap_or(false),
+            accept_path_: metadata.accept_path.unwrap_or(false),
             script: metadata.script,
             script_args: Vec::new(),
             script_returns: metadata.script_returns,

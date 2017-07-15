@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2017-07-15
 */
 
 #[cfg(feature="use-gtk")]
@@ -83,13 +83,16 @@ impl Context {
 
     #[cfg(feature="use-gtk")]
     pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
-        let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("PRIMARY"));
-        let content = clipboard.wait_for_text();
-        trace!("Clipboard content: {:?}", content);
-        match content {
-            Some(text) => self.quicksend(Item::new_text_item(&text)),
-            None => Ok(()),
+        for clipboard in vec!["PRIMARY", "CLIPBOARD"] {
+            let clipboard = gtk::Clipboard::get(&gdk::Atom::intern(&clipboard));
+            let content = clipboard.wait_for_text();
+
+            if let Some(text) = content {
+                trace!("Clipboard content from: {:?}", text);
+                return self.quicksend(Item::new_text_item(&text));
+            }
         }
+        Ok(())
     }
 
     #[cfg(not(feature="use-gtk"))]

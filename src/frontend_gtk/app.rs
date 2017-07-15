@@ -188,7 +188,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_escape(&mut self) {
-        debug!("Processing keyevent Escape");
+        trace!("Processing keyevent Escape");
         self.status = match self.status {
             Status::Initial => {
                 debug!("Quit!");
@@ -209,7 +209,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_move(&mut self, delta: i32) {
-        debug!("Processing keyevent Move: {}", delta);
+        trace!("Processing keyevent Move: {}", delta);
         self.status = match self.status.clone() {
             Status::FilteringNone => {
                 Status::FilteringMoving {
@@ -252,7 +252,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_tab(&mut self) {
-        debug!("Processing keyevent Tab");
+        trace!("Processing keyevent Tab");
         self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
@@ -310,7 +310,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_char(&mut self, ch: char) {
-        debug!("Processing keyevent Char: {}", ch);
+        trace!("Processing keyevent Char: {}", ch);
         let mut should_update_ui = true;
         self.status = match self.status.clone() {
             Status::Initial | Status::FilteringNone => {
@@ -343,7 +343,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_space(&mut self) {
-        debug!("Processing keyevent Space");
+        trace!("Processing keyevent Space");
         let mut should_update_ui = false;
         self.status = match self.status.clone() {
             Status::FilteringEntering {
@@ -384,7 +384,7 @@ impl MinionsApp {
         let mut res : Option<ActionResult> = None;
         if let Status::Running(ref recv_ch) = self.status {
             if let Ok(res_) = recv_ch.try_recv() {
-                debug!("Received result on callback");
+                trace!("Received result on callback");
                 res = Some(res_);
             } else {
                 warn!("Unable to receive from channel");
@@ -409,7 +409,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_enter(&mut self) {
-        debug!("Processing keyevent Enter");
+        trace!("Processing keyevent Enter");
         self.status = match self.status.clone() {
             status @ Status::Initial | status @ Status::FilteringNone => status,
             Status::FilteringEntering {
@@ -474,7 +474,7 @@ impl MinionsApp {
     }
 
     fn process_keyevent_copy(&mut self) {
-        debug!("Process keyevent copy");
+        trace!("Process keyevent copy");
         self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
@@ -503,7 +503,7 @@ impl MinionsApp {
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {
         let key = event.get_keyval();
         let modi = event.get_state();
-        debug!("Key pressed: {:?}/{:?}", key, modi);
+        trace!("Key pressed: {:?}/{:?}", key, modi);
         if key == gdk::enums::key::Return {
             self.process_keyevent_enter();
             Inhibit(true)
@@ -535,7 +535,7 @@ impl MinionsApp {
             if ch.is_alphabetic() {
                 self.process_keyevent_char(ch);
             } else {
-                debug!("Ignore char: {}", ch);
+                trace!("Ignore char: {}", ch);
             }
             Inhibit(false)
         } else {
@@ -544,7 +544,7 @@ impl MinionsApp {
     }
 
     fn reset_window(&mut self, send_clipboard: bool) {
-        debug!("Resetting window: {}", send_clipboard);
+        trace!("Resetting window: {}", send_clipboard);
         self.ctx.reset();
         self.status = Status::Initial;
         if send_clipboard {

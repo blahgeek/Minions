@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-15
 */
 
 extern crate url;
@@ -76,7 +76,7 @@ impl Action for Youdao {
 
         let result : YoudaoResult = serde_json::from_str(&result)?;
         if result.errorCode != "0" || result.translation.len() == 0 {
-            return Err(Box::new(ActionError::ServiceError(result.errorCode)));
+            return Err(Box::new(ActionError::new(&format!("Invalid API return code {}", result.errorCode))));
         }
 
         let mut main_text = String::new();

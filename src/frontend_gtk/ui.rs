@@ -8,6 +8,7 @@
 extern crate gdk_pixbuf;
 
 use std::cmp;
+use std::error::Error;
 
 use mcore::item::{Item, Icon, ItemData};
 use mcore::context::Context;
@@ -113,6 +114,16 @@ impl MinionsUI {
 
     pub fn set_filter_text(&self, text: &str) {
         self.filterlabel.set_text(text);
+    }
+
+    pub fn set_error(&self, error: &Box<Error>) {
+        let refinfo_box = self.window_builder.get_object::<gtk::Box>("refinfo_box").unwrap();
+        let refinfo_title = self.window_builder.get_object::<gtk::Label>("refinfo_text_title").unwrap();
+        let refinfo_subtitle = self.window_builder.get_object::<gtk::Label>("refinfo_text_subtitle").unwrap();
+
+        refinfo_title.set_text("Error occured during execution");
+        refinfo_subtitle.set_text(error.description());
+        refinfo_box.show();
     }
 
     pub fn set_reference(&self, reference: Option<&ItemData>) {

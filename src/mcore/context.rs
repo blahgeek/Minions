@@ -16,12 +16,11 @@ use self::uuid::Uuid;
 
 use toml;
 
-use std::fmt;
 use std::thread;
 use std::error::Error;
 use std::sync::Arc;
 use mcore::action::{Action, ActionArg, ActionResult};
-use mcore::item::{Item, ItemData, Icon};
+use mcore::item::{Item, ItemData};
 use mcore::fuzzymatch::fuzzymatch;
 use actions;
 

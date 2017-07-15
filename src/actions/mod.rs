@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2017-07-15
 */
 
 mod utils;
@@ -22,21 +22,24 @@ use std::path::{PathBuf, Path};
 
 #[derive(Clone)]
 #[derive(Debug)]
-enum ActionError {
-    FileFormatError(PathBuf),
-    ServiceError(String),
-    NotSupported,
-    Unknown,
+struct ActionError {
+    reason: String,
+}
+
+impl ActionError {
+    fn new(reason: &str) -> ActionError {
+        ActionError { reason: reason.into() }
+    }
 }
 
 impl Error for ActionError {
     fn description(&self) -> &str {
-        "Error generation action"
+        &self.reason
     }
 }
 impl fmt::Display for ActionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", self.reason)
     }
 }
 

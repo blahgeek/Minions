@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2017-07-15
 */
 
 extern crate shlex;
@@ -79,7 +79,7 @@ impl LinuxDesktopEntry {
 
     fn run_path_or_empty(&self, path: Option<&Path>) -> ActionResult {
         if self.exec.len() <= 0 {
-            return Err(Box::new(ActionError::NotSupported));
+            return Err(Box::new(ActionError::new("Executable path is empty")));
         }
 
         let cmd = &self.exec[0];
@@ -108,10 +108,10 @@ impl LinuxDesktopEntry {
         let config = Ini::load_from_file(filepath)?;
         let typ = config.get_from_or(Some("Desktop Entry"), "Type", "");
         if typ != "Application" {
-            return Err(Box::new(ActionError::NotSupported));
+            return Err(Box::new(ActionError::new("Unsupported desktop entry type")));
         }
 
-        let err = ActionError::FileFormatError(filepath.into());
+        let err = ActionError::new("No exec key found in desktop entry");
 
         let exec_str = config.get_from(Some("Desktop Entry"), "Exec").ok_or(err.clone())?;
 

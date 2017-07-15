@@ -13,6 +13,7 @@ use toml;
 
 use std;
 use std::ffi;
+use std::error::Error;
 use frontend_gtk::gdk;
 use frontend_gtk::gtk;
 use frontend_gtk::gtk::prelude::*;
@@ -33,6 +34,7 @@ const FILTER_TEXT_CLEAR_TIME: u32 = 1;
 enum Status {
     Initial,
     Running(Rc<mpsc::Receiver<ActionResult>>),
+    Error(Rc<Box<Error>>), // Rc is for Clone
     FilteringNone,
     FilteringEntering {
         selected_idx: i32,
@@ -113,6 +115,15 @@ impl MinionsApp {
                 self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(true);
+            },
+            Status::Error(ref error) => {
+                self.ui.set_entry(None);
+                self.ui.set_filter_text("");
+                self.ui.set_action_name(None);
+                self.ui.set_reference(None);
+                self.ui.set_items(Vec::new(), -1, &self.ctx);
+                self.ui.set_spinning(false);
+                self.ui.set_error(&error);
             },
             Status::FilteringNone => {
                 self.ui.set_spinning(false);
@@ -262,7 +273,7 @@ impl MinionsApp {
                     if self.ctx.quicksend_able(&item) {
                         if let Err(error) = self.ctx.quicksend(item) {
                             warn!("Unable to quicksend item: {}", error);
-                            self.status.clone()
+                            Status::Error(Rc::new(error))
                         } else {
                             Status::FilteringNone
                         }
@@ -388,7 +399,7 @@ impl MinionsApp {
                 },
                 Err(error) => {
                     warn!("Error from channel: {}", error);
-                    Status::FilteringNone
+                    Status::Error(Rc::new(error))
                 }
             };
             self.update_ui();

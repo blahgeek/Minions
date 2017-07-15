@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-08
+* @Last Modified time: 2017-07-15
 */
 
 /// Action defined by custom script
@@ -139,7 +139,7 @@ impl Action for PredefinedChildrenAction {
 
 fn output_to_items(output: std::process::Output, script_dir: &std::path::Path, expect_return: bool) -> ActionResult {
     if !output.status.success() {
-        return Err(Box::new(ActionError::Unknown)); // FIXME
+        return Err(Box::new(ActionError::new("Action execution failed")));
     }
     if !expect_return {
         return Ok(Vec::new())
@@ -319,7 +319,7 @@ impl ScriptAction {
 
         if let Some(requirements) = metadata.requirements {
             if !requirements.iter().all(|x| check_requirement(x)) {
-                return Err(Box::new(ActionError::NotSupported));
+                return Err(Box::new(ActionError::new("requirements not met")));
             }
         }
 

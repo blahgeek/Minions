@@ -15,12 +15,11 @@ extern crate chrono;
 use self::glib::signal::connect;
 use self::glib::translate::*;
 use self::gtk::Clipboard;
-use self::chrono::{Local, DateTime, TimeZone};
+use self::chrono::{Local, DateTime};
 
 use std::sync::{Arc, Mutex};
 use std::mem::transmute;
 use std::collections::VecDeque;
-use std::time::SystemTime;
 
 use actions::ActionError;
 use mcore::action::{Action, ActionResult};

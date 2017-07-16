@@ -562,7 +562,7 @@ impl MinionsApp {
     pub fn new(config: toml::Value) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
         let app = MinionsApp {
             ui: MinionsUI::new(),
-            ctx: Context::new(config),
+            ctx: Context::new(config.clone()),
             status: Status::Initial,
         };
         app.update_ui();
@@ -576,16 +576,26 @@ impl MinionsApp {
             })
         });
 
-        unsafe {
-            keybinder_init();
-            {
-                let s = ffi::CString::new("<Ctrl>space").unwrap();
-                keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
+        if let Some(opts) = config.get("global_shortcuts") {
+            unsafe {
+                keybinder_init();
+                if let Some(keys) = opts["show"].as_str() {
+                    info!("Binding shortcut for show: {}", keys);
+                    let s = ffi::CString::new(keys).unwrap();
+                    keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
+                } else {
+                    warn!("No shortcut defined for show");
+                }
+                if let Some(keys) = opts["show_quicksend"].as_str() {
+                    info!("Binding shortcut for show_quicksend: {}", keys);
+                    let s = ffi::CString::new(keys).unwrap();
+                    keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());
+                } else {
+                    warn!("No shortcut defined for show_quicksend");
+                }
             }
-            {
-                let s = ffi::CString::new("<Ctrl><Shift>space").unwrap();
-                keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());
-            }
+        } else {
+            panic!("No shortcut defined in config");
         }
 
         app.ui.window.connect_delete_event(move |_, _| {

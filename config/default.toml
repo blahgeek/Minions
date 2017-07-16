@@ -1,6 +1,11 @@
 # default config for minions app
+
 extra_plugin_directories = [
 ]
+
+[global_shortcuts]
+show = "<Ctrl>space"
+show_quicksend = "<Ctrl><Shift>space"
 
 # list of search engines
 [search_engine]

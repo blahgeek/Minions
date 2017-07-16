@@ -30,3 +30,6 @@ directories = [
     [[file_browser.entries]]
     name = "Root Directory"
     path = "/"
+
+[clipboard_history]
+max_entries = 64

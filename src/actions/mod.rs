@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-07-16
 */
 
 mod utils;
@@ -12,6 +12,9 @@ mod search_engine;
 mod file_browser;
 mod custom_script;
 mod youdao;
+
+#[cfg(feature="use-gtk")]
+mod clipboard;
 
 use toml;
 
@@ -64,6 +67,15 @@ pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
     }
 
     ret.push(Arc::new(Box::new(youdao::Youdao{})));
+
+    if cfg!(feature="use-gtk") {
+        if let Some(opts) = config.get("clipboard_history") {
+            if let Some(max_len) = opts["max_entries"].as_integer() {
+                let action = clipboard::ClipboardHistoryAction::new(max_len as usize);
+                ret.push(Arc::new(Box::new(action)));
+            }
+        }
+    }
 
     let mut plugin_dirs : Vec<PathBuf> = vec![
         Path::new("./plugins/").to_path_buf(),

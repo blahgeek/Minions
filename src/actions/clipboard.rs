@@ -10,14 +10,17 @@ extern crate glib;
 extern crate gdk;
 extern crate gtk_sys;
 extern crate libc;
+extern crate chrono;
 
 use self::glib::signal::connect;
 use self::glib::translate::*;
 use self::gtk::Clipboard;
+use self::chrono::{Local, DateTime, TimeZone};
 
 use std::sync::{Arc, Mutex};
 use std::mem::transmute;
 use std::collections::VecDeque;
+use std::time::SystemTime;
 
 use actions::ActionError;
 use mcore::action::{Action, ActionResult};
@@ -43,7 +46,7 @@ where F: Fn(&Clipboard) + 'static {
 
 pub struct ClipboardHistoryAction {
     history_max_len: usize,
-    history: Arc<Mutex<VecDeque<String>>>,
+    history: Arc<Mutex<VecDeque<(String, DateTime<Local>)>>>,
 }
 
 impl Action for ClipboardHistoryAction {
@@ -62,7 +65,14 @@ impl Action for ClipboardHistoryAction {
             if history.len() == 0 {
                 Err(Box::new(ActionError::new("No clipboard history available")))
             } else {
-                Ok(history.iter().map(|x| Item::new_text_item(&x)).collect())
+                Ok(history.iter().map(|x| {
+                    let mut item = Item::new_text_item(&x.0);
+                    item.subtitle = Some(format!("{}, {} bytes",
+                                                 x.1.format("%T %b %e").to_string(),
+                                                 x.0.len()));
+                    item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+                    item
+                }).collect())
             }
         } else {
             Err(Box::new(ActionError::new("Unable to unlock history")))
@@ -85,14 +95,14 @@ impl ClipboardHistoryAction {
                 trace!("New clipboard text: {:?}", text);
                 if let Ok(mut history) = history.lock() {
                     let is_dup = if let Some(front) = history.front() {
-                        text == front.as_str()
+                        text == front.0.as_str()
                     } else {
                         false
                     };
                     if is_dup {
                         debug!("Duplicate, do not push to history");
                     } else {
-                        history.push_front(text.into());
+                        history.push_front((text.into(), Local::now()));
                     }
                     while history.len() > history_max_len {
                         history.pop_back().unwrap();

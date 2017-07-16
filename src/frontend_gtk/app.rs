@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-07-16
 */
 
 extern crate glib;
@@ -498,6 +498,7 @@ impl MinionsApp {
             },
             status @ _ => { status },
         };
+        self.ui.window.hide();
     }
 
     fn process_keyevent(&mut self, event: &gdk::EventKey) -> Inhibit {

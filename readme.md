@@ -1,53 +1,37 @@
 # Minions
 
-A LaunchBar (or, somewhat Alfred) replacement for linux, written in rust.
-
 [![Build Status](https://travis-ci.org/blahgeek/Minions.svg?branch=master)](https://travis-ci.org/blahgeek/Minions)
 
-## Usage
+Minions is a productive tool to help your daily works, e.g.
 
-Download AppImage package from [Release page](https://github.com/blahgeek/Minions/releases).
+- Quickly search on google without switching to browser first
+- Quickly get the translation of selected text in a web page
+- Quickly launch a desktop entry
+- Quickly ...
 
-*Note*: In the first running, the application would needs to build font cache, which could take several minutes.
+It's like a launcher, but more than that. It's simple, elegant, and yet powerful and extensive.
 
-Keyboard shortcuts:
+# Get Started
 
-- `ctrl+space`: show minions window
-- `ctrl+shift+space`: show minions window with selected text
+Download latest AppImage from [Release](https://github.com/blahgeek/Minions/releases) page, `chmod +x` it, then run. Or if you have rust installed, simply clone this project and compile with `cargo`.
 
-- `Up/Down/ctrl+k/ctrl+j`: move up/down
-- `[a-z]`: filter items
-- `enter`: confirm selection (if valid)
-- `space`: enter text for this action (if valid)
-- `tab`: open this item with another action
-- `ctrl-c`: copy item text
-- `esc`: Escape/close
+Check [Quick Start](./doc/quickstart.md) for usage tips and **screenshots**.
 
-Minions would use `~/.minions/config.toml` for custom config. See `./config/default.toml` for default config.
-Note that custom config is not required. The default config would be used if the custom config or certain config section is missing.
+Check [Action List](./doc/actions.md) to see full list of actions in Minions (and their requirements).
+
+Check [Configuration](./doc/config.md) to customize your Minions.
+
+Check [Plugin Documentation](./doc/plugin.md) if you want to write your own plugin (it's really easy!)
 
 ## Status
 
-Still in beta, but usable. Feedback and contribution are welcome.
-
-## Preview
-
-![](./images/preview.gif)
+Minions is in beta, but usable. Feedback and contribution are welcome.
 
 ## Why
 
 - I miss LaunchBar in OS X after switching to Linux
 - I want to learn rust by writing some projects
 - I do not want to use [cerebro](https://cerebroapp.com/) (it's un-unix-y and [it uses javascript](https://dorey.github.io/JavaScript-Equality-Table/) and [it uses electron](https://josephg.com/blog/electron-is-flash-for-the-desktop/))
-
-## Features
-
-- Multiple frontend
-    - GTK - currently main frontend
-    - Rofi - Once used for debugging, fast and lightweight
-- Extensive
-    - Use any script to define custom actions
-- Simple, elegant, and most important - do it right in the Unix way
 
 ## How-to build
 

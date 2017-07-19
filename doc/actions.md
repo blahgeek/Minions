@@ -18,5 +18,3 @@ And:
 - **File Browser**: Browse filesystem. See corresponding section in [Configuration](./config.md).
 - **Search Engine**: Like Google and Duckduckgo. See corresponding section in [Configuration](./config.md).
 - **Linux Desktop Entry**: Desktop entries (*.desktop files).
-
-TODO

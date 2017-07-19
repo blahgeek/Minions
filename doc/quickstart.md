@@ -70,7 +70,7 @@ Note: some of the actions in the following examples requires additional commands
 ---
 
 - You read some words, say, "Avada Kedavra", you select it and hit `<ctrl><shift>space` to *send* it to Minions.
-- Type "trans" to select "Youdao Translate" and hit "<enter>" to run.
+- Type "trans" to select "Youdao Translate" and hit `<enter>` to run.
 
 ![](../images/example-2-0.png)
 

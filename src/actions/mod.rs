@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-16
+* @Last Modified time: 2017-07-20
 */
 
 mod utils;
@@ -11,6 +11,7 @@ mod linux_desktop_entry;
 mod search_engine;
 mod file_browser;
 mod custom_script;
+mod save_txt;
 mod youdao;
 
 #[cfg(feature="use-gtk")]
@@ -67,6 +68,7 @@ pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
     }
 
     ret.push(Arc::new(Box::new(youdao::Youdao{})));
+    ret.push(Arc::new(Box::new(save_txt::SaveTxtAction::new())));
 
     if cfg!(feature="use-gtk") {
         if let Some(opts) = config.get("clipboard_history") {

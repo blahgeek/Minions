@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-29
+* @Last Modified time: 2017-07-20
 */
 
 use std;
@@ -79,6 +79,13 @@ impl Item {
             action: None,
             action_arg: ActionArg::None,
         }
+    }
+
+    pub fn new_path_item(path: &std::path::Path) -> Item {
+        let mut item = Item::new(&path.to_string_lossy());
+        item.data = Some(ItemData::Path(path.into()));
+        item.icon = Some(Icon::Character{ch: '', font: "FontAwsome".into()});
+        item
     }
 
     pub fn new_text_item(text: &str) -> Item {

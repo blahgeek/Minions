@@ -12,6 +12,7 @@ Some actions requires additional command to run that does not come with Minions.
 - **Push Notification**: Send push notification (to your phone). Requires *[ntfy](https://github.com/dschep/ntfy) (properly configured)*
 - **Clipboard History**: View clipboard history.
 - **Youdao Translate**: Translate.
+- **Save as TXT**: Save text as .txt file in temp dir.
 
 And:
 

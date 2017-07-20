@@ -2,12 +2,11 @@
 * @Author: BlahGeek
 * @Date:   2017-07-07
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-07
+* @Last Modified time: 2017-07-20
 */
 
 extern crate nix;
 
-use std;
 use std::error::Error;
 use std::ffi::CString;
 
@@ -28,15 +27,9 @@ pub fn spawn(cmd: &str, args: &[&str]) -> Result<(), Box<Error + Sync + Send>> {
             nix::sys::wait::waitpid(child, None).unwrap();
         },
         nix::unistd::ForkResult::Child => {
-            // fork again
-            match nix::unistd::fork().expect("Fork failed") {
-                nix::unistd::ForkResult::Child => {
-                    let _ = nix::unistd::execvp(&execv_filename, &execv_args);
-                },
-                nix::unistd::ForkResult::Parent {..} => {
-                    std::process::exit(0);
-                }
-            };
+            // daemonize (fork again and setsid)
+            nix::unistd::daemon(false, false).expect("Daemonize failed");
+            let _ = nix::unistd::execvp(&execv_filename, &execv_args);
         },
     }
 

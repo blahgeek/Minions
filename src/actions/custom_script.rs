@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-07-20
 */
 
 /// Action defined by custom script
@@ -176,12 +176,14 @@ impl Action for ScriptAction {
     fn run_text(&self, text: &str) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(text);
+        cmd.env("MINIONS_ARG_TYPE", "text");
         debug!("Running script action (with text): {:?}", cmd);
         output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }
     fn run_path(&self, p: &std::path::Path) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(p);
+        cmd.env("MINIONS_ARG_TYPE", "path");
         debug!("Running script action (with path): {:?}", cmd);
         output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }

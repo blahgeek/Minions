@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-16
+* @Last Modified time: 2017-07-20
 */
 
 extern crate glib;
@@ -163,7 +163,20 @@ impl MinionsApp {
             Status::EnteringText(idx) => {
                 self.ui.set_spinning(false);
                 self.ui.set_entry(None);
-                self.ui.set_entry_editable();
+
+                // defer set_entry_editable to prevent a leading space to be inserted
+                glib::timeout_add(50, move || {
+                    APP.with(|app| {
+                        if let Some(ref app) = *app.borrow() {
+                            if let Status::EnteringText(_) = app.status {
+                                app.ui.set_entry_editable();
+                            }
+                        }
+                    });
+                    Continue(false)
+                });
+                // self.ui.set_entry_editable();
+
                 self.ui.set_filter_text("");
                 // self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
                 self.ui.set_action_name(Some(&self.ctx.list_items[idx].title));

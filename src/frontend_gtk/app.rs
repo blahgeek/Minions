@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2017-07-22
 */
 
 extern crate glib;
@@ -103,7 +103,7 @@ impl MinionsApp {
             Status::Initial => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_action_name(None);
+                self.ui.set_action(None);
                 self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(false);
@@ -111,7 +111,7 @@ impl MinionsApp {
             Status::Running(_) => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_action_name(None);
+                self.ui.set_action(None);
                 self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(true);
@@ -119,7 +119,7 @@ impl MinionsApp {
             Status::Error(ref error) => {
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_action_name(None);
+                self.ui.set_action(None);
                 self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
                 self.ui.set_spinning(false);
@@ -129,7 +129,7 @@ impl MinionsApp {
                 self.ui.set_spinning(false);
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
-                self.ui.set_action_name(None);
+                self.ui.set_action(None);
                 self.ui.set_reference(self.ctx.reference.as_ref());
                 if self.ctx.list_items.len() == 0 {
                     warn!("No more listing items!");
@@ -155,7 +155,7 @@ impl MinionsApp {
                 }
                 self.ui.set_spinning(false);
                 self.ui.set_filter_text(&filter_text);
-                self.ui.set_action_name(None);
+                self.ui.set_action(None);
                 self.ui.set_reference(self.ctx.reference.as_ref());
                 self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
                                   .collect::<Vec<&Item>>(), selected_idx, &self.ctx);
@@ -179,7 +179,7 @@ impl MinionsApp {
 
                 self.ui.set_filter_text("");
                 // self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
-                self.ui.set_action_name(Some(&self.ctx.list_items[idx].title));
+                self.ui.set_action(Some(&self.ctx.list_items[idx]));
                 self.ui.set_reference(None);
                 self.ui.set_items(Vec::new(), -1, &self.ctx);
             }

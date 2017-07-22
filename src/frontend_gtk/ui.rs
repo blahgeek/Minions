@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-07-22
 */
 
 extern crate gdk_pixbuf;
@@ -150,7 +150,7 @@ impl MinionsUI {
         }
     }
 
-    pub fn set_action_name(&self, name: Option<&str>) {
+    fn set_action_name(&self, name: Option<&str>) {
         let action_box = self.window_builder.get_object::<gtk::Box>("action_box").unwrap();
         let action_name = self.window_builder.get_object::<gtk::Label>("action_name").unwrap();
         if let Some(name) = name {
@@ -158,6 +158,17 @@ impl MinionsUI {
             action_box.show();
         } else {
             action_box.hide();
+        }
+    }
+
+    pub fn set_action(&self, item: Option<&Item>) {
+        if let Some(item) = item {
+            if let Some(ref ico) = item.icon {
+                set_image_icon(&self.icon, &self.icon_text, ico);
+            }
+            self.set_action_name(Some(&item.title));
+        } else {
+            self.set_action_name(None)
         }
     }
 

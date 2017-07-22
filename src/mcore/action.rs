@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-06-28
+* @Last Modified time: 2017-07-22
 */
 
 use std;
@@ -39,6 +39,8 @@ pub trait Action {
     fn accept_text(&self) -> bool { false }
     /// Whether this action accepts path input
     fn accept_path(&self) -> bool { false }
+    /// Whether this action accepts realtime text input
+    fn accept_text_realtime(&self) -> bool { false }
 
     /// Whether this action accepts some arg
     fn accept_arg(&self, arg: &ActionArg) -> bool {
@@ -52,10 +54,8 @@ pub trait Action {
     /// Whether this action is supposed to return items
     fn should_return_items(&self) -> bool { true }
 
-    /// Auto-complete (suggest) input test
-    fn complete_text(&self, &str) -> Result<Vec<String>, Box<Error>> {
-        Ok(Vec::new())
-    }
+    /// Realtime text input (auto-complete)
+    fn run_text_realtime(&self, &str) -> ActionResult { unimplemented!() }
 
     /// Run the action without input
     fn run(&self) -> ActionResult { unimplemented!() }

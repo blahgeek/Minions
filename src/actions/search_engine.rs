@@ -72,6 +72,7 @@ impl Action for SearchEngine {
             .map(|(a, b)| {
                 let mut item = Item::new_text_item(a.as_str().unwrap());
                 item.subtitle = Some(b.as_str().unwrap().into());
+                item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
                 item.action = Some(Arc::new(Box::new(self.clone())));
                 item.action_arg = ActionArg::Text(item.title.clone());
                 item

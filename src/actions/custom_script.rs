@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2017-08-06
 */
 
 /// Action defined by custom script
@@ -110,6 +110,7 @@ pub struct ScriptAction {
     accept_nothing_: bool,
     accept_text_: bool,
     accept_path_: bool,
+    accept_text_realtime_: bool,
 
     script: String,
     script_args: Vec<String>,
@@ -165,6 +166,7 @@ impl Action for ScriptAction {
     }
     fn accept_nothing(&self) -> bool { self.accept_nothing_ }
     fn accept_text(&self) -> bool { self.accept_text_ }
+    fn accept_text_realtime(&self) -> bool { self.accept_text_realtime_ }
     fn accept_path(&self) -> bool { self.accept_path_ }
     fn should_return_items(&self) -> bool { self.script_returns }
     fn run(&self) -> ActionResult {
@@ -178,6 +180,13 @@ impl Action for ScriptAction {
         cmd.arg(text);
         cmd.env("MINIONS_ARG_TYPE", "text");
         debug!("Running script action (with text): {:?}", cmd);
+        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
+    }
+    fn run_text_realtime(&self, text: &str) -> ActionResult {
+        let mut cmd = Command::new(&self.script_dir.join(&self.script));
+        cmd.arg(text);
+        cmd.env("MINIONS_ARG_TYPE", "text_realtime");
+        debug!("Running script action (with text realtime): {:?}", cmd);
         output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
     }
     fn run_path(&self, p: &std::path::Path) -> ActionResult {
@@ -211,6 +220,7 @@ impl ScriptItem {
                     script_dir: script_dir.to_path_buf(),
                     accept_nothing_: true,
                     accept_text_: false,
+                    accept_text_realtime_: false,
                     accept_path_: false,
                     script: action_callback[0].clone(),
                     script_args: action_callback.into_iter().skip(1).collect(),
@@ -272,6 +282,7 @@ struct ScriptMetadata {
 
     accept_nothing: Option<bool>,
     accept_text: Option<bool>,
+    accept_text_realtime: Option<bool>,
     accept_path: Option<bool>,
 
     requirements: Option<Vec<String>>,
@@ -332,6 +343,7 @@ impl ScriptAction {
             script_dir: script_dir.to_path_buf(),
             accept_nothing_: metadata.accept_nothing.unwrap_or(false),
             accept_text_: metadata.accept_text.unwrap_or(false),
+            accept_text_realtime_: metadata.accept_text_realtime.unwrap_or(false),
             accept_path_: metadata.accept_path.unwrap_or(false),
             script: metadata.script,
             script_args: Vec::new(),

@@ -47,7 +47,12 @@ enum Status {
         filter_text: String,
         filter_indices: Vec<usize>,
     },
-    EnteringText(usize), // entering text for item, (index for list_items)
+    EnteringText{
+        item: usize, // entering text for item (index of list_items)
+        suggestions: Rc<Vec<Item>>, // suggestion items
+        receiver: Option<Rc<mpsc::Receiver<ActionResult>>>, // receiver for running suggestion
+    },
+    // EnteringText(usize), // entering text for item, (index for list_items)
 }
 
 pub struct MinionsApp {
@@ -160,28 +165,30 @@ impl MinionsApp {
                 self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
                                   .collect::<Vec<&Item>>(), selected_idx, &self.ctx);
             },
-            Status::EnteringText(idx) => {
+            Status::EnteringText {
+                item,
+                ref suggestions,
+                receiver: _
+            } => {
                 self.ui.set_spinning(false);
-                self.ui.set_entry(None);
+                // self.ui.set_entry(None);
 
                 // defer set_entry_editable to prevent a leading space to be inserted
                 glib::timeout_add(50, move || {
                     APP.with(|app| {
                         if let Some(ref app) = *app.borrow() {
-                            if let Status::EnteringText(_) = app.status {
+                            if let Status::EnteringText{..} = app.status {
                                 app.ui.set_entry_editable();
                             }
                         }
                     });
                     Continue(false)
                 });
-                // self.ui.set_entry_editable();
 
                 self.ui.set_filter_text("");
-                // self.ui.set_reference_item(Some(&self.ctx.list_items[idx]));
-                self.ui.set_action(Some(&self.ctx.list_items[idx]));
+                self.ui.set_action(Some(&self.ctx.list_items[item]));
                 self.ui.set_reference(None);
-                self.ui.set_items(Vec::new(), -1, &self.ctx);
+                self.ui.set_items(suggestions.iter().collect(), -1, &self.ctx);
             }
         }
     }
@@ -378,7 +385,11 @@ impl MinionsApp {
                     let item = &self.ctx.list_items[idx];
                     if self.ctx.selectable_with_text(item) {
                         should_update_ui = true;
-                        Status::EnteringText(idx)
+                        Status::EnteringText{
+                            item: idx,
+                            suggestions: Rc::new(Vec::new()),
+                            receiver: None,
+                        }
                     } else {
                         warn!("Item not selectable with or without text");
                         self.status.clone()
@@ -391,6 +402,65 @@ impl MinionsApp {
         if should_update_ui {
             self.update_ui();
         }
+    }
+
+    fn process_entry_text_changed(&mut self) {
+        // only match if receiver is None
+        if let Status::EnteringText{item: idx, suggestions, receiver: None} = self.status.clone() {
+            let entry_text = self.ui.textentry.get_text().unwrap();
+            trace!("Entry text changed: {}", &entry_text);
+
+            let item = &self.ctx.list_items[idx];
+            if entry_text.len() > 0 && self.ctx.runnable_with_text_realtime(item) {
+                let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
+                self.ctx.async_run_with_text_realtime(item.clone(), &entry_text, move |res: ActionResult| {
+                    if let Err(error) = send_ch.send(res) {
+                        warn!("Unable to send to channel: {}", error);
+                    } else {
+                        glib::idle_add(|| {
+                            APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_text_realtime_callback());
+                            Continue(false)
+                        });
+                    }
+                });
+                self.status = Status::EnteringText {
+                    item: idx,
+                    suggestions: suggestions,
+                    receiver: Some(Rc::new(recv_ch)),
+                };
+            }
+        }
+    }
+
+    fn process_running_text_realtime_callback(&mut self) {
+        if let Status::EnteringText{item: idx, suggestions, receiver: Some(receiver)} = self.status.clone() {
+            if let Ok(res) = receiver.try_recv() {
+                trace!("Received realtime text result on callback");
+                self.status = match res {
+                    Ok(res) => {
+                        Status::EnteringText {
+                            item: idx,
+                            suggestions: Rc::new(res),
+                            receiver: None
+                        }
+                    },
+                    Err(error) => {
+                        warn!("Error running realtime text: {}", error);
+                        Status::EnteringText {
+                            item: idx,
+                            suggestions: suggestions,
+                            receiver: None,
+                        }
+                    }
+                };
+                self.update_ui();
+            } else {
+                warn!("Unable to receive realtime text result from channel");
+            }
+        } else {
+            warn!("Invalid status on realtime text callback");
+        }
+
     }
 
     fn process_running_callback(&mut self) {
@@ -457,14 +527,18 @@ impl MinionsApp {
                         });
                         Status::Running(Rc::new(recv_ch))
                     } else if self.ctx.selectable_with_text(&item) {
-                        Status::EnteringText(idx)
+                        Status::EnteringText{
+                            item: idx,
+                            suggestions: Rc::new(Vec::new()),
+                            receiver: None,
+                        }
                     } else {
                         warn!("Item not selectable with or without text");
                         self.status.clone()
                     }
                 }
             },
-            Status::EnteringText(idx) => {
+            Status::EnteringText{item: idx, ..} => {
                 let text = self.ui.get_entry_text();
                 let item = self.ctx.list_items[idx].clone();
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
@@ -587,6 +661,17 @@ impl MinionsApp {
                     app.process_keyevent(event)
                 } else { Inhibit(false) }
             })
+        });
+
+        app.ui.textentry.connect_changed(move |_| {
+            glib::idle_add(move || {
+                APP.with(|app| {
+                    if let Some(ref mut app) = *app.borrow_mut() {
+                        app.process_entry_text_changed()
+                    }
+                });
+                Continue(false)
+            });
         });
 
         if let Some(opts) = config.get("global_shortcuts") {

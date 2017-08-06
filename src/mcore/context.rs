@@ -115,6 +115,14 @@ impl Context {
         }
     }
 
+    pub fn runnable_with_text_realtime(&self, item: &Item) -> bool {
+        if let Some(ref action) = item.action {
+            action.accept_text_realtime()
+        } else {
+            false
+        }
+    }
+
     pub fn async_select_callback(&mut self, items: Vec<Item>) {
         self.list_items = items;
         self.list_items.sort_by_key(|x| x.priority);
@@ -152,6 +160,25 @@ impl Context {
                 let action = item.action.unwrap();
                 let items = action.run_text(&text);
                 debug!("async select with text complete, calling back");
+                callback(items);
+            })
+            .unwrap();
+        thread_uuid
+    }
+
+    pub fn async_run_with_text_realtime<F>(&self, item: Item, text: &str, callback: F) -> String
+    where F: FnOnce(ActionResult) + Send + 'static {
+        if !self.runnable_with_text_realtime(&item) {
+            panic!("Item {} is not runnable with realtime text", &item);
+        }
+        let text = text.to_string();
+        let thread_uuid = Uuid::new_v4().simple().to_string();
+        thread::Builder::new()
+            .name(thread_uuid.clone())
+            .spawn(move || {
+                let action = item.action.unwrap();
+                let items = action.run_text_realtime(&text);
+                debug!("async run with realtime text complete, calling back");
                 callback(items);
             })
             .unwrap();

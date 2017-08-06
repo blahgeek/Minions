@@ -21,7 +21,7 @@ pub struct MinionsUI {
     pub window: gtk::Window,
     listbox: gtk::ListBox,
     filterlabel: gtk::Label,
-    textentry: gtk::Entry,
+    pub textentry: gtk::Entry,
     icon: gtk::Image,
     icon_text: gtk::Label,
     spinner: gtk::Spinner,
@@ -102,10 +102,12 @@ impl MinionsUI {
     }
 
     pub fn set_entry_editable(&self) {
-        self.textentry.set_text("");
-        self.textentry.set_editable(true);
-        self.textentry.set_can_focus(true);
-        self.textentry.grab_focus();
+        if !self.textentry.get_editable() {
+            self.textentry.set_text("");
+            self.textentry.set_editable(true);
+            self.textentry.set_can_focus(true);
+            self.textentry.grab_focus();
+        }
     }
 
     pub fn get_entry_text(&self) -> String {

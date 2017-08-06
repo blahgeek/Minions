@@ -78,13 +78,8 @@ impl Context {
     }
 
     pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
-        let s : &str = match item.data {
-            Some(ItemData::Text(ref text)) => text,
-            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
-            _ => &item.title,
-        };
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
-        clipboard.set_text(s);
+        clipboard.set_text(item.get_copy_str());
         Ok(())
     }
 
@@ -93,12 +88,7 @@ impl Context {
     pub fn filter(&self, pattern: &str) -> Vec<usize> {
         trace!("filter: {:?}", pattern);
         let scores = self.list_items.iter().map(|item| {
-            let search_str = if let Some(ref search_str) = item.search_str {
-                search_str
-            } else {
-                &item.title
-            };
-            fuzzymatch(search_str, pattern, false)
+            fuzzymatch(item.get_search_str(), pattern, false)
         });
         let mut indices_and_scores = (0..self.list_items.len()).zip(scores.into_iter())
             .collect::<Vec<(usize, i32)>>();

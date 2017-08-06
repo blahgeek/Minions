@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2017-08-06
 */
 
 use std;
@@ -98,6 +98,25 @@ impl Item {
         let mut item = action.get_item();
         item.action = Some(action);
         item
+    }
+
+    /// Get searchable str reference
+    /// aka `search_str` or `title`
+    pub fn get_search_str(&self) -> &str {
+        if let Some(ref search_str) = self.search_str {
+            &search_str
+        } else {
+            &self.title
+        }
+    }
+
+    /// Get data for copy
+    pub fn get_copy_str(&self) -> &str {
+        match self.data {
+            Some(ItemData::Text(ref text)) => text,
+            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
+            _ => &self.title,
+        }
     }
 
 }

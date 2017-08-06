@@ -474,12 +474,13 @@ impl MinionsApp {
             let item = &self.ctx.list_items[idx];
             if entry_text.len() > 0 && self.ctx.runnable_with_text_realtime(item) {
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
+                let entry_text_ = entry_text.clone();
                 self.ctx.async_run_with_text_realtime(item.clone(), &entry_text, move |res: ActionResult| {
                     if let Err(error) = send_ch.send(res) {
                         warn!("Unable to send to channel: {}", error);
                     } else {
-                        glib::idle_add(|| {
-                            APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_text_realtime_callback());
+                        glib::idle_add(move || {
+                            APP.with(|app| app.borrow_mut().as_mut().unwrap().process_running_text_realtime_callback(&entry_text_));
                             Continue(false)
                         });
                     }
@@ -493,7 +494,7 @@ impl MinionsApp {
         }
     }
 
-    fn process_running_text_realtime_callback(&mut self) {
+    fn process_running_text_realtime_callback(&mut self, text: &str) {
         if let Status::EnteringText{item: idx, suggestions, receiver: Some(receiver)} = self.status.clone() {
             if let Ok(res) = receiver.try_recv() {
                 trace!("Received realtime text result on callback");
@@ -515,6 +516,11 @@ impl MinionsApp {
                     }
                 };
                 self.update_ui();
+
+                if text != self.ui.textentry.get_text().unwrap() {
+                    self.process_entry_text_changed()
+                }
+
             } else {
                 warn!("Unable to receive realtime text result from channel");
             }

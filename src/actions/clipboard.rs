@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-16
+* @Last Modified time: 2017-08-06
 */
 
 extern crate gtk;
@@ -16,6 +16,8 @@ use self::glib::signal::connect;
 use self::glib::translate::*;
 use self::gtk::Clipboard;
 use self::chrono::{Local, DateTime};
+
+use toml;
 
 use std::sync::{Arc, Mutex};
 use std::mem::transmute;
@@ -79,8 +81,19 @@ impl Action for ClipboardHistoryAction {
     }
 }
 
+#[derive(Deserialize)]
+struct Config {
+    max_entries: usize,
+    ignore_single_byte: Option<bool>,
+}
+
 impl ClipboardHistoryAction {
-    pub fn new(history_max_len: usize) -> ClipboardHistoryAction {
+    pub fn new(config: toml::Value) -> ClipboardHistoryAction {
+        let config = config.try_into::<Config>().expect("Invalid config");
+
+        let history_max_len = config.max_entries;
+        let ignore_single_byte = config.ignore_single_byte.unwrap_or(false);
+
         let action = ClipboardHistoryAction {
             history_max_len: history_max_len,
             history: Arc::new(Mutex::new(VecDeque::new())),
@@ -100,6 +113,8 @@ impl ClipboardHistoryAction {
                     };
                     if is_dup {
                         debug!("Duplicate, do not push to history");
+                    } else if ignore_single_byte && text.len() <= 1 {
+                        debug!("Single byte, do not push to history");
                     } else {
                         history.push_front((text.into(), Local::now()));
                     }

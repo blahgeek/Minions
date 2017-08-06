@@ -69,10 +69,7 @@ pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
     ret.push(Arc::new(Box::new(save_txt::SaveTxtAction::new())));
 
     if let Some(opts) = config.get("clipboard_history") {
-        if let Some(max_len) = opts["max_entries"].as_integer() {
-            let action = clipboard::ClipboardHistoryAction::new(max_len as usize);
-            ret.push(Arc::new(Box::new(action)));
-        }
+        ret.push(Arc::new(Box::new(clipboard::ClipboardHistoryAction::new(opts.clone()))));
     }
 
     let mut plugin_dirs : Vec<PathBuf> = vec![

@@ -45,3 +45,4 @@ directories = [
 
 [clipboard_history]
 max_entries = 64
+ignore_single_byte = true

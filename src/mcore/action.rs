@@ -2,12 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-22
+* @Last Modified time: 2017-08-06
 */
 
 use std;
 use std::error::Error;
-use mcore::item::Item;
+use mcore::item::{Item, ItemData};
 
 #[derive(Debug, Clone)]
 pub enum ActionArg {
@@ -21,6 +21,16 @@ impl ActionArg {
         match self {
             &ActionArg::None => { true },
             _ => { false }
+        }
+    }
+}
+
+impl From<Option<ItemData>> for ActionArg {
+    fn from(data: Option<ItemData>) -> ActionArg {
+        match data {
+            None => ActionArg::None,
+            Some(ItemData::Text(text)) => ActionArg::Text(text),
+            Some(ItemData::Path(path)) => ActionArg::Path(path),
         }
     }
 }

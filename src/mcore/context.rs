@@ -207,28 +207,15 @@ impl Context {
             panic!("Item {} is not quicksend_able", item);
         }
         if let Some(ref data) = item.data {
-            self.list_items = match data {
-                &ItemData::Text(ref text) => {
-                    self.all_actions.iter()
-                    .filter(|action| action.accept_text())
-                    .map(|action| {
-                        let mut item = Item::new_action_item(action.clone());
-                        item.action_arg = ActionArg::Text(text.clone());
-                        item
-                    })
-                    .collect()
-                },
-                &ItemData::Path(ref path) => {
-                    self.all_actions.iter()
-                    .filter(|action| action.accept_path())
-                    .map(|action| {
-                        let mut item = Item::new_action_item(action.clone());
-                        item.action_arg = ActionArg::Path(path.clone());
-                        item
-                    })
-                    .collect()
-                },
-            };
+            let action_arg : ActionArg = item.data.clone().into();
+            self.list_items = self.all_actions.iter()
+                              .filter(|action| action.accept_arg(&action_arg))
+                              .map(|action| {
+                                  let mut item = Item::new_action_item(action.clone());
+                                  item.action_arg = action_arg.clone();
+                                  item
+                              })
+                              .collect();
             self.list_items.sort_by_key(|item| item.priority );
             self.reference = Some(data.clone());
         } else {

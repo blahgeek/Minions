@@ -51,7 +51,8 @@ impl Action for SearchEngine {
     }
 
     fn run_text_realtime(&self, text: &str) -> ActionResult {
-        let url = self.suggestion_url.as_ref().unwrap().replace("%s", text);
+        let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
+        let url = self.suggestion_url.as_ref().unwrap().replace("%s", &text);
 
         let mut result = String::new();
         reqwest::get(&url)?.read_to_string(&mut result)?;

@@ -47,12 +47,16 @@ enum Status {
         filter_text: String,
         filter_indices: Vec<usize>,
     },
-    EnteringText{
+    EnteringText {
         item: usize, // entering text for item (index of list_items)
         suggestions: Rc<Vec<Item>>, // suggestion items
         receiver: Option<Rc<mpsc::Receiver<ActionResult>>>, // receiver for running suggestion
     },
-    // EnteringText(usize), // entering text for item, (index for list_items)
+    EnteringTextMoving {
+        item: usize,
+        suggestions: Rc<Vec<Item>>,
+        selected_idx: i32,
+    },
 }
 
 pub struct MinionsApp {
@@ -171,8 +175,6 @@ impl MinionsApp {
                 receiver: _
             } => {
                 self.ui.set_spinning(false);
-                // self.ui.set_entry(None);
-
                 // defer set_entry_editable to prevent a leading space to be inserted
                 glib::timeout_add(50, move || {
                     APP.with(|app| {
@@ -189,6 +191,17 @@ impl MinionsApp {
                 self.ui.set_action(Some(&self.ctx.list_items[item]));
                 self.ui.set_reference(None);
                 self.ui.set_items(suggestions.iter().collect(), -1, &self.ctx);
+            },
+            Status::EnteringTextMoving {
+                item,
+                ref suggestions,
+                selected_idx
+            } => {
+                self.ui.set_spinning(false);
+                self.ui.set_filter_text("");
+                self.ui.set_action(Some(&self.ctx.list_items[item]));
+                self.ui.set_reference(None);
+                self.ui.set_items(suggestions.iter().collect(), selected_idx, &self.ctx);
             }
         }
     }
@@ -222,7 +235,14 @@ impl MinionsApp {
             Status::Running(_) => {
                 warn!("Drop thread");
                 Status::FilteringNone
-            }
+            },
+            Status::EnteringTextMoving { item, ..} => {
+                Status::EnteringText {
+                    item: item,
+                    suggestions: Rc::new(Vec::new()),
+                    receiver: None
+                }
+            },
             _ => Status::FilteringNone,
         };
         self.update_ui();
@@ -264,6 +284,37 @@ impl MinionsApp {
                     selected_idx: new_idx,
                     filter_text: filter_text,
                     filter_indices: filter_indices
+                }
+            },
+            Status::EnteringText {
+                item,
+                suggestions,
+                receiver
+            } => {
+                if suggestions.len() == 0 {
+                    Status::EnteringText { item: item, suggestions: suggestions, receiver: receiver }
+                } else {
+                    Status::EnteringTextMoving {
+                        item: item,
+                        selected_idx: if delta > 0 { 0 } else { suggestions.len() as i32 - 1 },
+                        suggestions: suggestions,
+                    }
+                }
+            },
+            Status::EnteringTextMoving {
+                item, suggestions, selected_idx
+            } => {
+                let mut new_idx = selected_idx + delta;
+                if new_idx >= suggestions.len() as i32 {
+                    new_idx = suggestions.len() as i32 - 1;
+                }
+                if new_idx < 0 {
+                    new_idx = 0;
+                }
+                Status::EnteringTextMoving {
+                    item: item,
+                    suggestions: suggestions,
+                    selected_idx: new_idx
                 }
             },
             status @ _ => status,
@@ -405,6 +456,16 @@ impl MinionsApp {
     }
 
     fn process_entry_text_changed(&mut self) {
+
+        if let Status::EnteringTextMoving{item, suggestions, ..} = self.status.clone() {
+            // go back to entering
+            self.status = Status::EnteringText {
+                item: item,
+                suggestions: suggestions,
+                receiver: None
+            }
+        }
+
         // only match if receiver is None
         if let Status::EnteringText{item: idx, suggestions, receiver: None} = self.status.clone() {
             let entry_text = self.ui.textentry.get_text().unwrap();
@@ -554,6 +615,31 @@ impl MinionsApp {
                     }
                 });
                 Status::Running(Rc::new(recv_ch))
+            },
+            Status::EnteringTextMoving{item: _, suggestions, selected_idx} => {
+                if selected_idx < 0 {
+                    warn!("No item to select");
+                    self.status.clone()
+                } else {
+                    let item = suggestions[selected_idx as usize].clone();
+                    if self.ctx.selectable(&item) {
+                        let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
+                        self.ctx.async_select(item, move |res: ActionResult| {
+                            if let Err(error) = send_ch.send(res) {
+                                warn!("Unable to send to channel: {}", error);
+                            } else {
+                                glib::idle_add( || {
+                                    APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
+                                    Continue(false)
+                                });
+                            }
+                        });
+                        Status::Running(Rc::new(recv_ch))
+                    } else {
+                        warn!("Item not selectable with nothing");
+                        self.status.clone()
+                    }
+                }
             },
             status @ _ => status,
         };

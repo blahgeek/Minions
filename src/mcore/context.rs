@@ -2,13 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-08-06
 */
 
-#[cfg(feature="use-gtk")]
 extern crate gtk;
-
-#[cfg(feature="use-gtk")]
 extern crate gdk;
 
 extern crate uuid;
@@ -67,20 +64,6 @@ impl Context {
         self.history_items = Vec::new();
     }
 
-    /// Initialize quicksend item from clipboard
-    #[cfg(not(feature="use-gtk"))]
-    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
-        let clip = Command::new("xclip").arg("-o").output()?;
-        let clip = String::from_utf8(clip.stdout)?;
-        if clip.len() > 0 {
-            let clip_item = Item::new_text_item(&clip);
-            self.quicksend(clip_item)
-        } else {
-            Ok(())
-        }
-    }
-
-    #[cfg(feature="use-gtk")]
     pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
         for clipboard in vec!["PRIMARY", "CLIPBOARD"] {
             let clipboard = gtk::Clipboard::get(&gdk::Atom::intern(&clipboard));
@@ -94,26 +77,6 @@ impl Context {
         Ok(())
     }
 
-    #[cfg(not(feature="use-gtk"))]
-    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
-        let s : &str = match item.data {
-            Some(ItemData::Text(ref text)) => text,
-            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
-            _ => &item.title,
-        };
-        let mut cmd = Command::new("xclip");
-        cmd.stdin(Stdio::piped());
-        cmd.arg("-selection").arg("clipboard");
-        let mut child = cmd.spawn()?;
-
-        if let Some(ref mut stdin) = child.stdin {
-            stdin.write(s.as_bytes())?;
-        }
-        child.wait()?;
-        Ok(())
-    }
-
-    #[cfg(feature="use-gtk")]
     pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
         let s : &str = match item.data {
             Some(ItemData::Text(ref text)) => text,

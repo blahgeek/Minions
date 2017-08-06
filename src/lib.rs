@@ -8,7 +8,4 @@ extern crate log;
 extern crate serde_derive;
 extern crate toml;
 
-#[cfg(feature="use-gtk")]
-pub mod frontend_gtk;
-
-pub mod frontend_rofi;
+pub mod frontend;

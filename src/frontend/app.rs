@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-22
+* @Last Modified time: 2017-08-06
 */
 
 extern crate glib;
@@ -14,16 +14,16 @@ use toml;
 use std;
 use std::ffi;
 use std::error::Error;
-use frontend_gtk::gdk;
-use frontend_gtk::gtk;
-use frontend_gtk::gtk::prelude::*;
+use frontend::gdk;
+use frontend::gtk;
+use frontend::gtk::prelude::*;
 
 use std::thread;
 use std::sync::mpsc;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use frontend_gtk::ui::MinionsUI;
+use frontend::ui::MinionsUI;
 use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;

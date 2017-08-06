@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2017-08-06
 */
 
 mod utils;
@@ -13,8 +13,6 @@ mod file_browser;
 mod custom_script;
 mod save_txt;
 mod youdao;
-
-#[cfg(feature="use-gtk")]
 mod clipboard;
 
 use toml;
@@ -70,12 +68,10 @@ pub fn get_actions(config: toml::Value) -> Vec<Arc<Box<Action + Sync + Send>>> {
     ret.push(Arc::new(Box::new(youdao::Youdao{})));
     ret.push(Arc::new(Box::new(save_txt::SaveTxtAction::new())));
 
-    if cfg!(feature="use-gtk") {
-        if let Some(opts) = config.get("clipboard_history") {
-            if let Some(max_len) = opts["max_entries"].as_integer() {
-                let action = clipboard::ClipboardHistoryAction::new(max_len as usize);
-                ret.push(Arc::new(Box::new(action)));
-            }
+    if let Some(opts) = config.get("clipboard_history") {
+        if let Some(max_len) = opts["max_entries"].as_integer() {
+            let action = clipboard::ClipboardHistoryAction::new(max_len as usize);
+            ret.push(Arc::new(Box::new(action)));
         }
     }
 

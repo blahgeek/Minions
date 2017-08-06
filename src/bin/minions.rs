@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-13
+* @Last Modified time: 2017-08-06
 */
 
 extern crate minions;
@@ -10,34 +10,16 @@ extern crate env_logger;
 extern crate toml;
 extern crate clap;
 extern crate nix;
+extern crate gtk;
 
 #[macro_use]
 extern crate log;
-
-#[cfg(feature="use-gtk")]
-extern crate gtk;
 
 use std::env;
 use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 
-fn run_rofi_app(config: toml::Value, from_clipboard: bool) {
-    let mut app = minions::frontend_rofi::app::MinionsApp::new(config, from_clipboard);
-    app.run_loop();
-}
-
-#[cfg(feature="use-gtk")]
-fn run_gtk_app(config: toml::Value) {
-    gtk::init().expect("Failed to initialize GTK");
-    let _ = minions::frontend_gtk::app::MinionsApp::new(config);
-    gtk::main();
-}
-
-#[cfg(not(feature="use-gtk"))]
-fn run_gtk_app(_: toml::Value, _: bool) {
-    panic!("GTK frontend unavailable");
-}
 
 fn main() {
     env_logger::init().unwrap();
@@ -52,10 +34,6 @@ fn main() {
                                       .long("config")
                                       .help("Config (TOML) file to use")
                                       .takes_value(true))
-                        .arg(clap::Arg::with_name("from_clipboard")
-                                      .short("f")
-                                      .long("from-clipboard")
-                                      .help("Quicksend content from clipboard"))
                         .get_matches();
 
     let default_configcontent : String = include_str!("../../config/default.toml").into();
@@ -93,11 +71,7 @@ fn main() {
         config
     };
 
-    let from_clipboard = args.is_present("from_clipboard");
-
-    if args.is_present("rofi") {
-        run_rofi_app(config, from_clipboard)
-    } else {
-        run_gtk_app(config)
-    }
+    gtk::init().expect("Failed to initialize GTK");
+    let _ = minions::frontend::app::MinionsApp::new(config);
+    gtk::main();
 }

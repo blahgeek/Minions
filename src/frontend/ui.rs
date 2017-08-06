@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-22
+* @Last Modified time: 2017-08-06
 */
 
 extern crate gdk_pixbuf;
@@ -13,8 +13,8 @@ use std::error::Error;
 use mcore::item::{Item, Icon, ItemData};
 use mcore::context::Context;
 
-use frontend_gtk::gtk;
-use frontend_gtk::gtk::prelude::*;
+use frontend::gtk;
+use frontend::gtk::prelude::*;
 
 pub struct MinionsUI {
     window_builder: gtk::Builder,

@@ -1,5 +1,9 @@
 # default config for minions app
 
+# Timeout (in milliseconds) to clear filter text if no more characters is entered
+# Set to 0 to disable
+filter_timeout = 800
+
 extra_plugin_directories = [
 ]
 

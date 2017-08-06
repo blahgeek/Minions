@@ -28,8 +28,6 @@ use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
 
-const FILTER_TEXT_CLEAR_TIME: u32 = 1;
-
 #[derive(Clone)]
 enum Status {
     Initial,
@@ -64,6 +62,7 @@ pub struct MinionsApp {
     ctx: Context,
 
     status: Status,
+    filter_timeout: u32,
 }
 
 
@@ -206,14 +205,14 @@ impl MinionsApp {
         }
     }
 
-    fn process_timeout(&mut self) {
+    fn process_timeout(&mut self, lasttime: std::time::Instant) {
         if let Status::FilteringEntering {
             selected_idx: _,
             filter_text: _,
             filter_text_lasttime,
             filter_indices: _
         } = self.status {
-            if filter_text_lasttime.elapsed() >= std::time::Duration::new(FILTER_TEXT_CLEAR_TIME as u64, 0) {
+            if filter_text_lasttime == lasttime {
                 self.status = Status::FilteringNone;
                 self.update_ui();
             }
@@ -363,19 +362,24 @@ impl MinionsApp {
         let filter_indices = self.ctx.filter(&text);
         let selected_idx = if filter_indices.len() == 0 { -1 } else { 0 };
 
-        gtk::timeout_add_seconds(FILTER_TEXT_CLEAR_TIME, move || {
-            APP.with(|app| {
-                if let Some(ref mut app) = *app.borrow_mut() {
-                    app.process_timeout();
-                }
+        let now = std::time::Instant::now();
+        let now_ = now.clone();
+
+        if self.filter_timeout > 0 {
+            gtk::timeout_add(self.filter_timeout, move || {
+                APP.with(move |app| {
+                    if let Some(ref mut app) = *app.borrow_mut() {
+                        app.process_timeout(now_);
+                    }
+                });
                 Continue(false)
-            })
-        });
+            });
+        }
 
         Status::FilteringEntering {
             selected_idx: selected_idx,
             filter_text: text,
-            filter_text_lasttime: std::time::Instant::now(),
+            filter_text_lasttime: now,
             filter_indices: filter_indices,
         }
     }
@@ -743,6 +747,7 @@ impl MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config.clone()),
             status: Status::Initial,
+            filter_timeout: config.get("filter_timeout").unwrap().as_integer().unwrap_or(0) as u32,
         };
         app.update_ui();
         app.ui.window.hide();

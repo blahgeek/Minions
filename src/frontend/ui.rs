@@ -94,11 +94,12 @@ impl MinionsUI {
                 set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
             }
         } else {
-            self.textentry.set_text("Minions");
+            self.textentry.set_buffer(&gtk::EntryBuffer::new(None));
             set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
+        self.window.set_focus::<gtk::Entry, Option<&gtk::Entry>>(None);
     }
 
     pub fn set_entry_editable(&self) {

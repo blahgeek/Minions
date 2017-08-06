@@ -15,12 +15,15 @@ show_quicksend = "<Ctrl><Shift>space"
     [[search_engine.sites]]
     name = "Bing"
     address = "https://www.bing.com/search?q=%s"
+    suggestion_url = "https://www.bing.com/osjson.aspx?query=%s"
     [[search_engine.sites]]
     name = "DuckDuckGo"
     address = "https://duckduckgo.com/?q=%s"
+    suggestion_url = "https://ac.duckduckgo.com/ac/?q=%s&type=list"
     [[search_engine.sites]]
     name = "Wikipedia"
     address = "https://en.wikipedia.org/wiki/Special:Search?search=%s"
+    suggestion_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s"
 
 [linux_desktop_entry]
 directories = [

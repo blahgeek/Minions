@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -ex
 
 export LPASS_AUTO_SYNC_TIME=3600
 

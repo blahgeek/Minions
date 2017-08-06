@@ -68,6 +68,10 @@ impl MinionsUI {
         window.show_all();
         spinner.hide();
 
+        let style_provider = gtk::CssProvider::new();
+        style_provider.load_from_data(include_str!("./resource/style.css")).unwrap();
+        gtk::StyleContext::add_provider_for_screen(&window.get_screen().unwrap(), &style_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+
         MinionsUI {
             window_builder: window_builder,
             window: window,

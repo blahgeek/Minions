@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-09
 */
 
 extern crate gdk_pixbuf;
@@ -198,7 +198,7 @@ impl MinionsUI {
         if let Some(ref ico) = item.icon {
             set_image_icon(&icon, &icon_text, ico);
         } else {
-            set_image_icon(&icon, &icon_text, &Icon::GtkName("gtk-missing-image".into()));
+            set_image_icon(&icon, &icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
         }
 
         match item.subtitle {

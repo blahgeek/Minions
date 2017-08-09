@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-09
 */
 
 extern crate glib;
@@ -22,6 +22,7 @@ use std::thread;
 use std::sync::mpsc;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::ops::Deref;
 
 use frontend::ui::MinionsUI;
 use mcore::context::Context;
@@ -38,21 +39,21 @@ enum Status {
         selected_idx: i32,
         filter_text: String,
         filter_text_lasttime: std::time::Instant,
-        filter_indices: Vec<usize>,
+        filtered_items: Vec<Rc<Item>>,
     },
     FilteringMoving {
         selected_idx: i32,
         filter_text: String,
-        filter_indices: Vec<usize>,
+        filtered_items: Vec<Rc<Item>>,
     },
     EnteringText {
-        item: usize, // entering text for item (index of list_items)
-        suggestions: Rc<Vec<Item>>, // suggestion items
+        item: Rc<Item>, // entering text for item
+        suggestions: Vec<Rc<Item>>,
         receiver: Option<Rc<mpsc::Receiver<ActionResult>>>, // receiver for running suggestion
     },
     EnteringTextMoving {
-        item: usize,
-        suggestions: Rc<Vec<Item>>,
+        item: Rc<Item>,
+        suggestions: Vec<Rc<Item>>,
         selected_idx: i32,
     },
 }
@@ -143,33 +144,33 @@ impl MinionsApp {
                     warn!("No more listing items!");
                     self.ui.window.hide();
                 }
-                self.ui.set_items(self.ctx.list_items.iter().collect(), -1, &self.ctx);
+                self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect(), -1, &self.ctx);
             },
             Status::FilteringEntering {
                 selected_idx,
                 ref filter_text,
                 filter_text_lasttime: _,
-                ref filter_indices
+                ref filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
                 ref filter_text,
-                ref filter_indices
+                ref filtered_items
             } => {
                 if selected_idx < 0 {
                     self.ui.set_entry(None);
                 } else {
-                    self.ui.set_entry(Some(&self.ctx.list_items[filter_indices[selected_idx as usize]]))
+                    self.ui.set_entry(Some(&filtered_items[selected_idx as usize]))
                 }
                 self.ui.set_spinning(false);
                 self.ui.set_filter_text(&filter_text);
                 self.ui.set_action(None);
                 self.ui.set_reference(self.ctx.reference.as_ref());
-                self.ui.set_items(filter_indices.iter().map(|x| &self.ctx.list_items[x.clone()])
-                                  .collect::<Vec<&Item>>(), selected_idx, &self.ctx);
+                self.ui.set_items(filtered_items.iter().map(|x| x.deref()).collect(),
+                                  selected_idx, &self.ctx);
             },
             Status::EnteringText {
-                item,
+                ref item,
                 ref suggestions,
                 receiver: _
             } => {
@@ -187,20 +188,20 @@ impl MinionsApp {
                 });
 
                 self.ui.set_filter_text("");
-                self.ui.set_action(Some(&self.ctx.list_items[item]));
+                self.ui.set_action(Some(&item));
                 self.ui.set_reference(None);
-                self.ui.set_items(suggestions.iter().collect(), -1, &self.ctx);
+                self.ui.set_items(suggestions.iter().map(|x| x.deref()).collect(), -1, &self.ctx);
             },
             Status::EnteringTextMoving {
-                item,
+                ref item,
                 ref suggestions,
                 selected_idx
             } => {
                 self.ui.set_spinning(false);
                 self.ui.set_filter_text("");
-                self.ui.set_action(Some(&self.ctx.list_items[item]));
+                self.ui.set_action(Some(&item));
                 self.ui.set_reference(None);
-                self.ui.set_items(suggestions.iter().collect(), selected_idx, &self.ctx);
+                self.ui.set_items(suggestions.iter().map(|x| x.deref()).collect(), selected_idx, &self.ctx);
             }
         }
     }
@@ -210,7 +211,7 @@ impl MinionsApp {
             selected_idx: _,
             filter_text: _,
             filter_text_lasttime,
-            filter_indices: _
+            filtered_items: _
         } = self.status {
             if filter_text_lasttime == lasttime {
                 self.status = Status::FilteringNone;
@@ -235,10 +236,10 @@ impl MinionsApp {
                 warn!("Drop thread");
                 Status::FilteringNone
             },
-            Status::EnteringTextMoving { item, ..} => {
+            Status::EnteringTextMoving { ref item, ..} => {
                 Status::EnteringText {
-                    item: item,
-                    suggestions: Rc::new(Vec::new()),
+                    item: item.clone(),
+                    suggestions: Vec::new(),
                     receiver: None
                 }
             },
@@ -254,26 +255,26 @@ impl MinionsApp {
                 Status::FilteringMoving {
                     selected_idx: 0,
                     filter_text: String::new(),
-                    filter_indices: (0..self.ctx.list_items.len()).collect(),
+                    filtered_items: self.ctx.list_items.clone(),
                 }
             },
             Status::FilteringEntering {
                 selected_idx,
                 filter_text,
                 filter_text_lasttime: _,
-                filter_indices
+                filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text,
-                filter_indices
+                filtered_items
             } => {
                 let mut new_idx = selected_idx + delta;
-                if filter_indices.len() == 0 {
+                if filtered_items.len() == 0 {
                     new_idx = -1;
                 } else {
-                    if new_idx >= filter_indices.len() as i32 {
-                        new_idx = filter_indices.len() as i32 - 1;
+                    if new_idx >= filtered_items.len() as i32 {
+                        new_idx = filtered_items.len() as i32 - 1;
                     }
                     if new_idx < 0 {
                         new_idx = 0;
@@ -282,7 +283,7 @@ impl MinionsApp {
                 Status::FilteringMoving {
                     selected_idx: new_idx,
                     filter_text: filter_text,
-                    filter_indices: filter_indices
+                    filtered_items: filtered_items
                 }
             },
             Status::EnteringText {
@@ -328,19 +329,19 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_indices
+                filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_indices
+                filtered_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to send");
                     self.status.clone()
                 } else {
-                    let item = self.ctx.list_items[filter_indices[selected_idx as usize]].clone();
-                    if self.ctx.quicksend_able(&item) {
+                    let item = &filtered_items[selected_idx as usize];
+                    if self.ctx.quicksend_able(item) {
                         if let Err(error) = self.ctx.quicksend(item) {
                             warn!("Unable to quicksend item: {}", error);
                             Status::Error(Rc::new(error))
@@ -359,8 +360,8 @@ impl MinionsApp {
     }
 
     fn _make_status_filteringentering(&self, text: String) -> Status {
-        let filter_indices = self.ctx.filter(&text);
-        let selected_idx = if filter_indices.len() == 0 { -1 } else { 0 };
+        let filtered_items = self.ctx.filter(&text);
+        let selected_idx = if filtered_items.len() == 0 { -1 } else { 0 };
 
         let now = std::time::Instant::now();
         let now_ = now.clone();
@@ -380,7 +381,7 @@ impl MinionsApp {
             selected_idx: selected_idx,
             filter_text: text,
             filter_text_lasttime: now,
-            filter_indices: filter_indices,
+            filtered_items: filtered_items,
         }
     }
 
@@ -397,12 +398,12 @@ impl MinionsApp {
                 selected_idx: _,
                 mut filter_text,
                 filter_text_lasttime: _,
-                filter_indices: _
+                filtered_items: _
             } |
             Status::FilteringMoving {
                 selected_idx: _,
                 mut filter_text,
-                filter_indices: _,
+                filtered_items: _,
             } => {
                 filter_text.push(ch);
                 self._make_status_filteringentering(filter_text)
@@ -425,24 +426,23 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_indices
+                filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_indices
+                filtered_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");
                     self.status.clone()
                 } else {
-                    let idx = filter_indices[selected_idx as usize];
-                    let item = &self.ctx.list_items[idx];
+                    let item = &filtered_items[selected_idx as usize];
                     if self.ctx.selectable_with_text(item) {
                         should_update_ui = true;
                         Status::EnteringText{
-                            item: idx,
-                            suggestions: Rc::new(Vec::new()),
+                            item: item.clone(),
+                            suggestions: Vec::new(),
                             receiver: None,
                         }
                     } else {
@@ -471,15 +471,14 @@ impl MinionsApp {
         }
 
         // only match if receiver is None
-        if let Status::EnteringText{item: idx, suggestions, receiver: None} = self.status.clone() {
+        if let Status::EnteringText{item, suggestions, receiver: None} = self.status.clone() {
             let entry_text = self.ui.textentry.get_text().unwrap();
             trace!("Entry text changed: {}", &entry_text);
 
-            let item = &self.ctx.list_items[idx];
-            if entry_text.len() > 0 && self.ctx.runnable_with_text_realtime(item) {
+            if entry_text.len() > 0 && self.ctx.runnable_with_text_realtime(&item) {
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
                 let entry_text_ = entry_text.clone();
-                self.ctx.async_run_with_text_realtime(item.clone(), &entry_text, move |res: ActionResult| {
+                self.ctx.async_run_with_text_realtime(&item, &entry_text, move |res: ActionResult| {
                     if let Err(error) = send_ch.send(res) {
                         warn!("Unable to send to channel: {}", error);
                     } else {
@@ -490,7 +489,7 @@ impl MinionsApp {
                     }
                 });
                 self.status = Status::EnteringText {
-                    item: idx,
+                    item: item,
                     suggestions: suggestions,
                     receiver: Some(Rc::new(recv_ch)),
                 };
@@ -499,21 +498,21 @@ impl MinionsApp {
     }
 
     fn process_running_text_realtime_callback(&mut self, text: &str) {
-        if let Status::EnteringText{item: idx, suggestions, receiver: Some(receiver)} = self.status.clone() {
+        if let Status::EnteringText{item, suggestions, receiver: Some(receiver)} = self.status.clone() {
             if let Ok(res) = receiver.try_recv() {
                 trace!("Received realtime text result on callback");
                 self.status = match res {
                     Ok(res) => {
                         Status::EnteringText {
-                            item: idx,
-                            suggestions: Rc::new(res),
+                            item: item,
+                            suggestions: res.into_iter().map(|x| Rc::new(x)).collect(),
                             receiver: None
                         }
                     },
                     Err(error) => {
                         warn!("Error running realtime text: {}", error);
                         Status::EnteringText {
-                            item: idx,
+                            item: item,
                             suggestions: suggestions,
                             receiver: None,
                         }
@@ -570,22 +569,21 @@ impl MinionsApp {
                 selected_idx,
                 filter_text: _,
                 filter_text_lasttime: _,
-                filter_indices
+                filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text: _,
-                filter_indices
+                filtered_items
             } => {
                 if selected_idx < 0 {
                     warn!("No item to select");
                     self.status.clone()
                 } else {
-                    let idx = filter_indices[selected_idx as usize];
-                    let item = self.ctx.list_items[idx].clone();
+                    let item = &filtered_items[selected_idx as usize];
 
                     let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
-                    if self.ctx.selectable(&item) {
+                    if self.ctx.selectable(item) {
                         self.ctx.async_select(item, move |res: ActionResult| {
                             if let Err(error) = send_ch.send(res) {
                                 warn!("Unable to send to channel: {}", error);
@@ -599,8 +597,8 @@ impl MinionsApp {
                         Status::Running(Rc::new(recv_ch))
                     } else if self.ctx.selectable_with_text(&item) {
                         Status::EnteringText{
-                            item: idx,
-                            suggestions: Rc::new(Vec::new()),
+                            item: item.clone(),
+                            suggestions: Vec::new(),
                             receiver: None,
                         }
                     } else {
@@ -609,12 +607,11 @@ impl MinionsApp {
                     }
                 }
             },
-            Status::EnteringText{item: idx, ..} => {
+            Status::EnteringText{item, ..} => {
                 let text = self.ui.get_entry_text();
-                let item = self.ctx.list_items[idx].clone();
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
 
-                self.ctx.async_select_with_text(item, &text, move |res: ActionResult| {
+                self.ctx.async_select_with_text(&item, &text, move |res: ActionResult| {
                     if let Err(error) = send_ch.send(res) {
                         warn!("Unable to send to channel: {}", error);
                     } else {
@@ -631,10 +628,10 @@ impl MinionsApp {
                     warn!("No item to select");
                     self.status.clone()
                 } else {
-                    let item = suggestions[selected_idx as usize].clone();
+                    let item = &suggestions[selected_idx as usize];
                     if self.ctx.selectable(&item) {
                         let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
-                        self.ctx.async_select(item, move |res: ActionResult| {
+                        self.ctx.async_select(&item, move |res: ActionResult| {
                             if let Err(error) = send_ch.send(res) {
                                 warn!("Unable to send to channel: {}", error);
                             } else {
@@ -663,21 +660,19 @@ impl MinionsApp {
                 selected_idx,
                 filter_text,
                 filter_text_lasttime: _,
-                filter_indices,
+                filtered_items,
             } |
             Status::FilteringMoving {
                 selected_idx,
                 filter_text,
-                filter_indices,
+                filtered_items,
             } => {
-                let idx = filter_indices[selected_idx as usize];
-                if let Err(error) = self.ctx.copy_content_to_clipboard(
-                                            &self.ctx.list_items[idx]) {
+                if let Err(error) = self.ctx.copy_content_to_clipboard(&filtered_items[selected_idx as usize]) {
                     warn!("Unable to copy item: {}", error);
                 } else {
                     info!("Item copied");
                 }
-                Status::FilteringMoving{selected_idx, filter_text, filter_indices}
+                Status::FilteringMoving{selected_idx, filter_text, filtered_items}
             },
             status @ _ => { status },
         };

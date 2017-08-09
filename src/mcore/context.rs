@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-09
 */
 
 extern crate gtk;
@@ -15,6 +15,7 @@ use toml;
 
 use std::thread;
 use std::error::Error;
+use std::rc::Rc;
 use std::sync::Arc;
 use mcore::action::{Action, ActionArg, ActionResult};
 use mcore::item::{Item, ItemData};
@@ -26,11 +27,7 @@ pub struct Context {
     /// Reference data for quick-send
     pub reference: Option<ItemData>,
     /// Candidates items list
-    pub list_items: Vec<Item>,
-
-    /// Stack of history items, init with empty stack
-    /// Calling the last item's action would yields list_items
-    history_items: Vec<Item>,
+    pub list_items: Vec<Rc<Item>>,
 
     /// Cached all actions
     all_actions: Vec<Arc<Box<Action + Sync + Send>>>,
@@ -44,7 +41,6 @@ impl Context {
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),
-            history_items: Vec::new(),
             all_actions: actions::get_actions(config),
         };
         ctx.reset();
@@ -58,10 +54,9 @@ impl Context {
             .filter(|action| {
                 action.accept_nothing() || action.accept_text()
             })
-            .map(|action| Item::new_action_item(action.clone()))
+            .map(|action| Rc::new(Item::new_action_item(action.clone())))
             .collect();
         self.list_items.sort_by_key(|item| item.priority );
-        self.history_items = Vec::new();
     }
 
     pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
@@ -71,7 +66,7 @@ impl Context {
 
             if let Some(text) = content {
                 trace!("Clipboard content from: {:?}", text);
-                return self.quicksend(Item::new_text_item(&text));
+                return self.quicksend(&Item::new_text_item(&text));
             }
         }
         Ok(())
@@ -84,19 +79,20 @@ impl Context {
     }
 
     /// Filter list_items using fuzzymatch
-    /// return indices of list_items
-    pub fn filter(&self, pattern: &str) -> Vec<usize> {
+    /// return filtered list_items
+    pub fn filter(&self, pattern: &str) -> Vec<Rc<Item>> {
         trace!("filter: {:?}", pattern);
         let scores = self.list_items.iter().map(|item| {
             fuzzymatch(item.get_search_str(), pattern, false)
         });
-        let mut indices_and_scores = (0..self.list_items.len()).zip(scores.into_iter())
-            .collect::<Vec<(usize, i32)>>();
-        indices_and_scores.sort_by_key(|index_and_score| -index_and_score.1);
-        indices_and_scores.into_iter()
-            .filter(|index_and_score| index_and_score.1 > 0)
-            .map(|index_and_score| index_and_score.0)
-            .collect::<Vec<usize>>()
+        let mut items_and_scores = self.list_items.clone().into_iter()
+            .zip(scores.into_iter())
+            .collect::<Vec<(Rc<Item>, i32)>>();
+        items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
+        items_and_scores.into_iter()
+            .filter(|item_and_score| item_and_score.1 > 0)
+            .map(|item_and_score| item_and_score.0)
+            .collect::<Vec<Rc<Item>>>()
     }
 
     pub fn selectable(&self, item: &Item) -> bool {
@@ -124,22 +120,23 @@ impl Context {
     }
 
     pub fn async_select_callback(&mut self, items: Vec<Item>) {
-        self.list_items = items;
+        self.list_items = items.into_iter().map(|x| Rc::new(x)).collect();
         self.list_items.sort_by_key(|x| x.priority);
         self.reference = None;
     }
 
-    pub fn async_select<F>(&self, item: Item, callback: F) -> String
+    pub fn async_select<F>(&self, item: &Item, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
-        if !self.selectable(&item) {
+        if !self.selectable(item) {
             panic!("Item {} is not selectable", item);
         }
         let thread_uuid = Uuid::new_v4().simple().to_string();
+        let action = item.action.clone().unwrap();
+        let action_arg = item.action_arg.clone();
         thread::Builder::new()
             .name(thread_uuid.clone())
             .spawn(move || {
-                let action = item.action.unwrap();
-                let items = action.run_arg(&item.action_arg);
+                let items = action.run_arg(&action_arg);
                 debug!("async select complete, calling back");
                 callback(items);
             })
@@ -147,17 +144,17 @@ impl Context {
         thread_uuid
     }
 
-    pub fn async_select_with_text<F>(&self, item: Item, text: &str, callback: F) -> String
+    pub fn async_select_with_text<F>(&self, item: &Item, text: &str, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
         if !self.selectable_with_text(&item) {
             panic!("Item {} is not selectable with text", &item);
         }
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
+        let action = item.action.clone().unwrap();
         thread::Builder::new()
             .name(thread_uuid.clone())
             .spawn(move || {
-                let action = item.action.unwrap();
                 let items = action.run_text(&text);
                 debug!("async select with text complete, calling back");
                 callback(items);
@@ -166,17 +163,17 @@ impl Context {
         thread_uuid
     }
 
-    pub fn async_run_with_text_realtime<F>(&self, item: Item, text: &str, callback: F) -> String
+    pub fn async_run_with_text_realtime<F>(&self, item: &Item, text: &str, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
         if !self.runnable_with_text_realtime(&item) {
             panic!("Item {} is not runnable with realtime text", &item);
         }
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
+        let action = item.action.clone().unwrap();
         thread::Builder::new()
             .name(thread_uuid.clone())
             .spawn(move || {
-                let action = item.action.unwrap();
                 let items = action.run_text_realtime(&text);
                 debug!("async run with realtime text complete, calling back");
                 callback(items);
@@ -185,42 +182,12 @@ impl Context {
         thread_uuid
     }
 
-    pub fn select(&mut self, item: Item) -> Result<(), Box<Error + Send + Sync>> {
-        if !self.selectable(&item) {
-            panic!("Item {} is not selectable", item);
-        }
-        if let Some(ref action) = item.action {
-            self.list_items = action.run_arg(&item.action_arg)?;
-            self.list_items.sort_by_key(|item| item.priority );
-        } else {
-            panic!("Should not reach here");
-        }
-        self.history_items.push(item);
-        self.reference = None;
-        Ok(())
-    }
-
-    pub fn select_with_text(&mut self, item: Item, text: &str) -> Result<(), Box<Error + Send + Sync>> {
-        if !self.selectable_with_text(&item) {
-            panic!("Item {} is not selectable with text", &item);
-        }
-        if let Some(ref action) = item.action {
-            self.list_items = action.run_text(text)?;
-            self.list_items.sort_by_key(|item| item.priority );
-        } else {
-            panic!("Should not reach here");
-        }
-        self.history_items.push(item);
-        self.reference = None;
-        Ok(())
-    }
-
     pub fn quicksend_able(&self, item: &Item) -> bool {
         self.reference.is_none() && item.data.is_some()
     }
 
-    pub fn quicksend(&mut self, item: Item) -> Result<(), Box<Error + Send + Sync>> {
-        if !self.quicksend_able(&item) {
+    pub fn quicksend(&mut self, item: &Item) -> Result<(), Box<Error + Send + Sync>> {
+        if !self.quicksend_able(item) {
             panic!("Item {} is not quicksend_able", item);
         }
         if let Some(ref data) = item.data {
@@ -230,7 +197,7 @@ impl Context {
                               .map(|action| {
                                   let mut item = Item::new_action_item(action.clone());
                                   item.action_arg = action_arg.clone();
-                                  item
+                                  Rc::new(item)
                               })
                               .collect();
             self.list_items.sort_by_key(|item| item.priority );
@@ -241,13 +208,5 @@ impl Context {
         Ok(())
     }
 
-    pub fn back(&mut self) -> Result<(), Box<Error + Send + Sync>> {
-        if let Some(action_item) = self.history_items.pop() {
-            self.select(action_item)
-        } else {
-            self.reset();
-            Ok(())
-        }
-    }
 }
 

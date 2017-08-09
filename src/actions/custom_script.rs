@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-09
 */
 
 /// Action defined by custom script
@@ -138,18 +138,20 @@ impl Action for PredefinedChildrenAction {
     }
 }
 
-fn output_to_items(output: std::process::Output, script_dir: &std::path::Path, expect_return: bool) -> ActionResult {
-    if !output.status.success() {
-        return Err(Box::new(ActionError::new("Action execution failed")));
+impl ScriptAction {
+    fn output_to_items(&self, output: std::process::Output) -> ActionResult {
+        if !output.status.success() {
+            Err(Box::new(ActionError::new("Action execution failed")))
+        } else if !self.script_returns {
+            Ok(Vec::new())
+        } else {
+            let output = &output.stdout;
+            let json_output : ScriptOutput = serde_json::from_slice(output)?;
+            Ok(json_output.results.into_iter()
+               .map(|x| x.into_item(&self.script_dir))
+               .collect())
+        }
     }
-    if !expect_return {
-        return Ok(Vec::new())
-    }
-    let output = &output.stdout;
-    let json_output : ScriptOutput = serde_json::from_slice(output)?;
-    Ok(json_output.results.into_iter()
-       .map(|x| x.into_item(script_dir))
-       .collect())
 }
 
 impl Action for ScriptAction {
@@ -173,28 +175,28 @@ impl Action for ScriptAction {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.args(&self.script_args);
         debug!("Running script action: {:?}", cmd);
-        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
+        self.output_to_items(cmd.output()?)
     }
     fn run_text(&self, text: &str) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(text);
         cmd.env("MINIONS_ARG_TYPE", "text");
         debug!("Running script action (with text): {:?}", cmd);
-        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
+        self.output_to_items(cmd.output()?)
     }
     fn run_text_realtime(&self, text: &str) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(text);
         cmd.env("MINIONS_ARG_TYPE", "text_realtime");
         debug!("Running script action (with text realtime): {:?}", cmd);
-        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
+        self.output_to_items(cmd.output()?)
     }
     fn run_path(&self, p: &std::path::Path) -> ActionResult {
         let mut cmd = Command::new(&self.script_dir.join(&self.script));
         cmd.arg(p);
         cmd.env("MINIONS_ARG_TYPE", "path");
         debug!("Running script action (with path): {:?}", cmd);
-        output_to_items(cmd.output()?, &self.script_dir, self.script_returns)
+        self.output_to_items(cmd.output()?)
     }
 }
 

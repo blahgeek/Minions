@@ -3,7 +3,7 @@
 # @Author: BlahGeek
 # @Date:   2017-08-06
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-08-07
+# @Last Modified time: 2017-08-09
 
 import os
 import sys
@@ -49,4 +49,4 @@ if __name__ == '__main__':
         'icon': 'file:stardict.png',
     } for item in res]
 
-    print(json.dumps({'results': res}, indent=4))
+    print(json.dumps(res, indent=4))

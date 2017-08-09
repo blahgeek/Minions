@@ -3,7 +3,7 @@
 # @Author: BlahGeek
 # @Date:   2017-06-18
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-06-29
+# @Last Modified time: 2017-08-09
 
 from __future__ import print_function
 from os import path
@@ -19,4 +19,4 @@ data = [{
             'data_text': props['char'],
         } for name, props in data.items() if props.get('char')]
 
-print(json.dumps({'results': data}, indent=4))
+print(json.dumps(data, indent=4))

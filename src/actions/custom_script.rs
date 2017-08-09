@@ -85,11 +85,6 @@ fn parse_icon(text: &str, script_dir: &std::path::Path) -> Option<Icon> {
     }
 }
 
-#[derive(Deserialize)]
-struct ScriptOutput {
-    results: Vec<ScriptItem>,
-}
-
 // some actions used by ScriptItem
 struct OpenURLAction {
     url: String,
@@ -146,8 +141,8 @@ impl ScriptAction {
             Ok(Vec::new())
         } else {
             let output = &output.stdout;
-            let json_output : ScriptOutput = serde_json::from_slice(output)?;
-            Ok(json_output.results.into_iter()
+            let json_output : Vec<ScriptItem> = serde_json::from_slice(output)?;
+            Ok(json_output.into_iter()
                .map(|x| x.into_item(&self.script_dir))
                .collect())
         }

@@ -711,7 +711,7 @@ impl MinionsApp {
             self.process_keyevent_move(-1);
             Inhibit(true)
         } else if let Some(ch) = gdk::keyval_to_unicode(key) {
-            if ch.is_alphabetic() {
+            if ch.is_alphanumeric() {
                 self.process_keyevent_char(ch);
             } else {
                 trace!("Ignore char: {}", ch);

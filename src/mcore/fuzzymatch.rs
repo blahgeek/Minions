@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-05-13
+* @Last Modified time: 2017-08-09
 */
 
 
@@ -45,8 +45,8 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
                         if skipped_count == 0 {
                             score += 1;
                         }
-                        if text_ch.is_uppercase() || (text_ch.is_alphabetic() &&
-                                                      !last_text_ch.is_alphabetic()) {
+                        if text_ch.is_uppercase() || (text_ch.is_alphanumeric() &&
+                                                      !last_text_ch.is_alphanumeric()) {
                             firstchar_bonus *= 2;
                         }
                         last_text_ch = text_ch;

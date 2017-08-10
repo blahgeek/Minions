@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-09
+* @Last Modified time: 2017-08-10
 */
 
 extern crate gtk;
@@ -76,23 +76,6 @@ impl Context {
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
         clipboard.set_text(item.get_copy_str());
         Ok(())
-    }
-
-    /// Filter list_items using fuzzymatch
-    /// return filtered list_items
-    pub fn filter(&self, pattern: &str) -> Vec<Rc<Item>> {
-        trace!("filter: {:?}", pattern);
-        let scores = self.list_items.iter().map(|item| {
-            fuzzymatch(item.get_search_str(), pattern, false)
-        });
-        let mut items_and_scores = self.list_items.clone().into_iter()
-            .zip(scores.into_iter())
-            .collect::<Vec<(Rc<Item>, i32)>>();
-        items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
-        items_and_scores.into_iter()
-            .filter(|item_and_score| item_and_score.1 > 0)
-            .map(|item_and_score| item_and_score.0)
-            .collect::<Vec<Rc<Item>>>()
     }
 
     pub fn selectable(&self, item: &Item) -> bool {

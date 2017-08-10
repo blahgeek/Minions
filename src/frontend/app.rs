@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-09
+* @Last Modified time: 2017-08-10
 */
 
 extern crate glib;
@@ -28,6 +28,7 @@ use frontend::ui::MinionsUI;
 use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
+use mcore::matcher::Matcher;
 
 #[derive(Clone)]
 enum Status {
@@ -64,6 +65,7 @@ pub struct MinionsApp {
 
     status: Status,
     filter_timeout: u32,
+    matcher: Matcher,
 }
 
 
@@ -327,13 +329,13 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filter_text_lasttime: _,
                 filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filtered_items
             } => {
                 if selected_idx < 0 {
@@ -341,6 +343,9 @@ impl MinionsApp {
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
+                    if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
+                        warn!("Unable to record hit: {}", error);
+                    }
                     if self.ctx.quicksend_able(item) {
                         if let Err(error) = self.ctx.quicksend(item) {
                             warn!("Unable to quicksend item: {}", error);
@@ -360,7 +365,7 @@ impl MinionsApp {
     }
 
     fn _make_status_filteringentering(&self, text: String) -> Status {
-        let filtered_items = self.ctx.filter(&text);
+        let filtered_items = self.matcher.sort(&text, &self.ctx.list_items);
         let selected_idx = if filtered_items.len() == 0 { -1 } else { 0 };
 
         let now = std::time::Instant::now();
@@ -424,13 +429,13 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             Status::FilteringEntering {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filter_text_lasttime: _,
                 filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filtered_items
             } => {
                 if selected_idx < 0 {
@@ -438,6 +443,9 @@ impl MinionsApp {
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
+                    if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
+                        warn!("Unable to record hit: {}", error);
+                    }
                     if self.ctx.selectable_with_text(item) {
                         should_update_ui = true;
                         Status::EnteringText{
@@ -567,13 +575,13 @@ impl MinionsApp {
             status @ Status::Initial | status @ Status::FilteringNone => status,
             Status::FilteringEntering {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filter_text_lasttime: _,
                 filtered_items
             } |
             Status::FilteringMoving {
                 selected_idx,
-                filter_text: _,
+                filter_text,
                 filtered_items
             } => {
                 if selected_idx < 0 {
@@ -581,6 +589,9 @@ impl MinionsApp {
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
+                    if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
+                        warn!("Unable to record hit: {}", error);
+                    }
 
                     let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
                     if self.ctx.selectable(item) {
@@ -737,12 +748,13 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    pub fn new(config: toml::Value) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+    pub fn new(config: toml::Value, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
         let app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config.clone()),
             status: Status::Initial,
             filter_timeout: config.get("filter_timeout").unwrap().as_integer().unwrap_or(0) as u32,
+            matcher: matcher,
         };
         app.update_ui();
         app.ui.window.hide();

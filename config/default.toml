@@ -3,6 +3,7 @@
 # Timeout (in milliseconds) to clear filter text if no more characters is entered
 # Set to 0 to disable
 filter_timeout = 800
+history_salt = "Minions-Salt"
 
 extra_plugin_directories = [
 ]

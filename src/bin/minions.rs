@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-10
 */
 
 extern crate minions;
@@ -71,7 +71,9 @@ fn main() {
         config
     };
 
+    let matcher = minions::mcore::matcher::Matcher::new(Path::new("/tmp/minions.log"), "Salt").unwrap();
+
     gtk::init().expect("Failed to initialize GTK");
-    let _ = minions::frontend::app::MinionsApp::new(config);
+    let _ = minions::frontend::app::MinionsApp::new(config, matcher);
     gtk::main();
 }

@@ -1,16 +1,22 @@
 # default config for minions app
 
-# Timeout (in milliseconds) to clear filter text if no more characters is entered
-# Set to 0 to disable
-filter_timeout = 800
-history_salt = "Minions-Salt"
-
+# List of directories containing extra plugins
 extra_plugin_directories = [
 ]
 
-[global_shortcuts]
-show = "<Ctrl>space"
-show_quicksend = "<Ctrl><Shift>space"
+[global]
+    # Timeout (in milliseconds) to clear filter text if no more characters is entered
+    # Set to 0 to disable
+    filter_timeout = 800
+
+    # Keyboard shortcuts to bring up Minions
+    shortcut_show = "<Ctrl>space"
+    # Keyboard shortcuts to bring up Minions with selected text
+    shortcut_show_quicksend = "<Ctrl><Shift>space"
+
+    # Hash salt used in history file
+    # Change this value would make all histories invalid
+    history_file_salt = "Minions-Salt"
 
 # list of search engines
 [search_engine]
@@ -39,7 +45,7 @@ directories = [
 [file_browser]
     [[file_browser.entries]]
     name = "Home Directory"
-    path = "/home/blahgeek/"
+    path = "/home/"
     [[file_browser.entries]]
     name = "Root Directory"
     path = "/"

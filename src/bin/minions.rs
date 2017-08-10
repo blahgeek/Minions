@@ -20,6 +20,9 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 
+use minions::frontend::config::GlobalConfig;
+use minions::frontend::app::MinionsApp;
+use minions::mcore::matcher::Matcher;
 
 fn main() {
     env_logger::init().unwrap();
@@ -71,9 +74,14 @@ fn main() {
         config
     };
 
-    let matcher = minions::mcore::matcher::Matcher::new(Path::new("/tmp/minions.log"), "Salt").unwrap();
+    let global_config = config.get("global").unwrap().clone()
+                        .try_into::<GlobalConfig>().expect("Unable to parse global config section");
+
+    let history_path = env::home_dir().unwrap().join(".minions/history.dat");
+    let matcher = Matcher::new(&history_path, &global_config.history_file_salt)
+                  .expect("Unable to load history file");
 
     gtk::init().expect("Failed to initialize GTK");
-    let _ = minions::frontend::app::MinionsApp::new(config, matcher);
+    let _ = minions::frontend::app::MinionsApp::new(global_config, config, matcher);
     gtk::main();
 }

@@ -8,9 +8,13 @@ It `~/.minions/config.toml` exists, existing sections would override ones in def
 For example, if `~/.minions/config.toml` contains the following content:
 
 ```toml
-[global_shortcuts]
-show = "<Shift>space"
-show_quicksend = "<Ctrl><>space"
+[file_browser]
+    [[file_browser.entries]]
+    name = "Home Directory"
+    path = "/home/blahgeek/"
+    [[file_browser.entries]]
+    name = "Root Directory"
+    path = "/"
 ```
 
-The "global_shortcuts" section would be over-written with new values, leaves all other sections default.
+The whole "file_browser" section would be over-written with new values, leaves all other sections default.

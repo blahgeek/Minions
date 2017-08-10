@@ -17,6 +17,7 @@ use std::error::Error;
 use frontend::gdk;
 use frontend::gtk;
 use frontend::gtk::prelude::*;
+use frontend::config::GlobalConfig;
 
 use std::thread;
 use std::sync::mpsc;
@@ -748,12 +749,12 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    pub fn new(config: toml::Value, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+    pub fn new(global_config: GlobalConfig, config: toml::Value, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
         let app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config.clone()),
             status: Status::Initial,
-            filter_timeout: config.get("filter_timeout").unwrap().as_integer().unwrap_or(0) as u32,
+            filter_timeout: global_config.filter_timeout,
             matcher: matcher,
         };
         app.update_ui();
@@ -778,26 +779,22 @@ impl MinionsApp {
             });
         });
 
-        if let Some(opts) = config.get("global_shortcuts") {
-            unsafe {
-                keybinder_init();
-                if let Some(keys) = opts["show"].as_str() {
-                    info!("Binding shortcut for show: {}", keys);
-                    let s = ffi::CString::new(keys).unwrap();
-                    keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
-                } else {
-                    warn!("No shortcut defined for show");
-                }
-                if let Some(keys) = opts["show_quicksend"].as_str() {
-                    info!("Binding shortcut for show_quicksend: {}", keys);
-                    let s = ffi::CString::new(keys).unwrap();
-                    keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());
-                } else {
-                    warn!("No shortcut defined for show_quicksend");
-                }
+        unsafe {
+            keybinder_init();
+            if let Some(keys) = global_config.shortcut_show {
+                info!("Binding shortcut for show: {}", keys);
+                let s = ffi::CString::new(keys).unwrap();
+                keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
+            } else {
+                warn!("No shortcut defined for show");
             }
-        } else {
-            panic!("No shortcut defined in config");
+            if let Some(keys) = global_config.shortcut_show_quicksend {
+                info!("Binding shortcut for show_quicksend: {}", keys);
+                let s = ffi::CString::new(keys).unwrap();
+                keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());
+            } else {
+                warn!("No shortcut defined for show_quicksend");
+            }
         }
 
         app.ui.window.connect_delete_event(move |_, _| {

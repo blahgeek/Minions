@@ -2,24 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-09
+* @Last Modified time: 2017-08-10
 */
 
 
 pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
     if pattern.len() == 0 { return 0; }
 
-    let text_lowercase = if casesensitive {
-        String::new()
-    } else {
-        text.to_lowercase()
-    };
-
-    let mut text_iter = if casesensitive {
-        text.chars()
-    } else {
-        text_lowercase.chars()
-    }.peekable();
+    let mut text_iter = text.chars().peekable();
     let mut pattern_iter = pattern.chars();
 
     let mut score = 0;
@@ -37,7 +27,8 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
             Some(pattern_ch) => {
                 let mut skipped_count = 0;
                 while let Some(text_ch) = text_iter.next() {
-                    if text_ch != pattern_ch {
+                    if (casesensitive && text_ch != pattern_ch) ||
+                       (!casesensitive && text_ch.to_lowercase().next() != pattern_ch.to_lowercase().next() ) {
                         skipped_count += 1;
                         last_text_ch = text_ch;
                     } else {
@@ -47,7 +38,7 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
                         }
                         if text_ch.is_uppercase() || (text_ch.is_alphanumeric() &&
                                                       !last_text_ch.is_alphanumeric()) {
-                            firstchar_bonus *= 2;
+                            firstchar_bonus += 1;
                         }
                         last_text_ch = text_ch;
                         continue 'outer;

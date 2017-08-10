@@ -82,6 +82,6 @@ fn main() {
                   .expect("Unable to load history file");
 
     gtk::init().expect("Failed to initialize GTK");
-    let _ = minions::frontend::app::MinionsApp::new(global_config, config, matcher);
+    let _ = MinionsApp::new(global_config, config, matcher);
     gtk::main();
 }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2017-08-11
 */
 
 extern crate shlex;
@@ -44,13 +44,15 @@ impl Action for LinuxDesktopEntry {
         item.subtitle = comment;
         item.badge = Some("Desktop Entry".into());
 
-        if let Some(ref icon_text) = self.icon_text {
-            item.icon = Some( if icon_text.starts_with("/") {
+        item.icon = if let Some(ref icon_text) = self.icon_text {
+            Some( if icon_text.starts_with("/") {
                 Icon::File(Path::new(&icon_text).to_path_buf())
             } else {
                 Icon::GtkName(icon_text.clone())
             })
-        }
+        } else {
+            Some(Icon::GtkName("gtk-missing-image".into()))
+        };
         item
     }
 

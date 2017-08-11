@@ -2,14 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2017-08-11
 */
 
 extern crate url;
 extern crate reqwest;
 extern crate serde_json;
 
-use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET};
+use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, EncodeSet};
 use toml;
 
 use std::sync::Arc;
@@ -18,6 +18,17 @@ use std::io::Read;
 use mcore::action::{Action, ActionResult, ActionArg};
 use mcore::item::{Item, Icon};
 use actions::utils::open;
+
+#[derive(Clone)]
+struct DefaultPlusEncodeSet {}
+
+impl EncodeSet for DefaultPlusEncodeSet {
+    fn contains(&self, byte: u8) -> bool {
+        DEFAULT_ENCODE_SET.contains(byte) || byte == '+' as u8
+    }
+}
+
+const DEFAULT_PLUS_ENCODE_SET: DefaultPlusEncodeSet = DefaultPlusEncodeSet{};
 
 #[derive(Clone)]
 pub struct SearchEngine {
@@ -43,7 +54,7 @@ impl Action for SearchEngine {
     fn accept_text_realtime(&self) -> bool { self.suggestion_url.is_some() }
 
     fn run_text(&self, text: &str) -> ActionResult {
-        let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
+        let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
         info!("open: {}", url);
         open::that(&url)?;
@@ -51,7 +62,7 @@ impl Action for SearchEngine {
     }
 
     fn run_text_realtime(&self, text: &str) -> ActionResult {
-        let text = utf8_percent_encode(text, DEFAULT_ENCODE_SET).to_string();
+        let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.suggestion_url.as_ref().unwrap().replace("%s", &text);
 
         let mut result = String::new();

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-08-09
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-10
+* @Last Modified time: 2017-08-11
 */
 
 extern crate crypto;
@@ -24,37 +24,22 @@ use std::rc::Rc;
 use mcore::item::Item;
 use mcore::fuzzymatch::fuzzymatch;
 
-/// 40 byte array representing SHA1 hash result
-#[derive(PartialOrd, PartialEq, Eq, Ord)]
+/// 20 byte array representing SHA1 hash result
+#[derive(PartialOrd, PartialEq, Eq, Ord, Debug)]
 struct SHA1Result {
-    // [u8; 40] does not implement Ord...
-    half0: [u8; 20],
-    half1: [u8; 20],
+    bytes: [u8; 20],
 }
 
 impl SHA1Result {
     fn read_from(reader: &mut Read) -> io::Result<SHA1Result> {
-        let mut sha1bytes: [u8; 40] = [0; 40];
+        let mut sha1bytes: [u8; 20] = [0; 20];
         reader.read_exact(&mut sha1bytes)?;
-        Ok(sha1bytes.into())
+        Ok(SHA1Result{ bytes: sha1bytes })
     }
 
     fn write_to(&self, writer: &mut Write) -> io::Result<()> {
-        writer.write_all(&self.half0)?;
-        writer.write_all(&self.half1)?;
+        writer.write_all(&self.bytes)?;
         Ok(())
-    }
-}
-
-impl From<[u8; 40]> for SHA1Result {
-    fn from(buf: [u8; 40]) -> SHA1Result {
-        let mut res = SHA1Result {
-            half0: [0; 20],
-            half1: [0; 20],
-        };
-        res.half0.copy_from_slice(&buf[0..20]);
-        res.half1.copy_from_slice(&buf[20..40]);
-        res
     }
 }
 
@@ -63,10 +48,10 @@ impl<'a> From<&'a str> for SHA1Result {
         let mut hash = Sha1::new();
         hash.input(text.as_bytes());
 
-        let mut bytes: [u8; 40] = [0; 40];
+        let mut bytes: [u8; 20] = [0; 20];
         hash.result(&mut bytes);
 
-        bytes.into()
+        SHA1Result{ bytes: bytes }
     }
 }
 
@@ -146,6 +131,8 @@ impl Matcher {
     }
 
     fn inc(&mut self, sha1: SHA1Result) -> io::Result<u32> {
+        trace!("Inc: {:?}", &sha1);
+
         sha1.write_to(&mut self.file)?;
         self.file.write_u32::<LittleEndian>(1)?;
         self.file.flush()?;

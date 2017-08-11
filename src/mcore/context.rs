@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-10
+* @Last Modified time: 2017-08-11
 */
 
 extern crate gtk;
@@ -19,7 +19,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 use mcore::action::{Action, ActionArg, ActionResult};
 use mcore::item::{Item, ItemData};
-use mcore::fuzzymatch::fuzzymatch;
 use actions;
 
 

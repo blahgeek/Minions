@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/blahgeek/Minions.svg?branch=master)](https://travis-ci.org/blahgeek/Minions)
 
+## Intro
+
+[![Minions Intro Video](https://img.youtube.com/vi/LcuIeCIz4_I/0.jpg)](https://www.youtube.com/watch?v=LcuIeCIz4_I)
+
 Minions is a productive tool to help your daily works, e.g.
 
 - Quickly search on google without switching to browser first

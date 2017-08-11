@@ -191,15 +191,15 @@ impl Matcher {
             let p1 = ((self.statistics.get(&self.hash_item(&item)).unwrap_or(&0) + 1) as f32).log2() as i32;
             let p2 = 2 * ((self.statistics.get(&self.hash_pattern_item(pattern, &item)).unwrap_or(&0) + 1) as f32).log2() as i32;
             trace!("Score: {}: {} + {} + {}", &item.title, p0, p1, p2);
-            p0 + p1 + p2
+            (p0 + p1 + p2, p0)  // final score and the base score
         });
         let mut items_and_scores =
             items.iter().map(|x| x.clone())
             .zip(scores.into_iter())
-            .collect::<Vec<(Rc<Item>, i32)>>();
-        items_and_scores.sort_by_key(|item_and_score| -item_and_score.1);
+            .collect::<Vec<(Rc<Item>, (i32, i32))>>();
+        items_and_scores.sort_by_key(|item_and_score| -(item_and_score.1).0);
         items_and_scores.into_iter()
-            .filter(|item_and_score| item_and_score.1 > 0)
+            .filter(|item_and_score| (item_and_score.1).1 > 0)
             .map(|item_and_score| item_and_score.0)
             .collect::<Vec<Rc<Item>>>()
     }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-09
+* @Last Modified time: 2017-08-11
 */
 
 /// Action defined by custom script
@@ -142,9 +142,13 @@ impl ScriptAction {
         } else {
             let output = &output.stdout;
             let json_output : Vec<ScriptItem> = serde_json::from_slice(output)?;
-            Ok(json_output.into_iter()
-               .map(|x| x.into_item(&self.script_dir))
-               .collect())
+            if json_output.len() > 0 {
+                Ok(json_output.into_iter()
+                   .map(|x| x.into_item(&self.script_dir))
+                   .collect())
+            } else {
+                Err(Box::new(ActionError::new("Empty result from action")))
+            }
         }
     }
 }

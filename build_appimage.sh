@@ -2,12 +2,14 @@
 # @Author: BlahGeek
 # @Date:   2017-07-09
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-07-10
+# @Last Modified time: 2017-08-11
 
 cd "$(dirname "$0")"
 cargo build --release --verbose
 
 VERSION=$(cat Cargo.toml | grep version | head -n 1 | sed -e 's/version = //; s/"//g')
+GITHASH=$(echo "$TRAVIS_COMMIT" | cut -c1-6)
+VERSION="$VERSION-$GITHASH"
 
 APP=Minions
 

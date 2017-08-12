@@ -16,6 +16,7 @@ Hit `<ctrl>space`, the Minions would show up.
 ![](../images/ui-start.png)
 
 Start typing few characters (in the following image, `p`) and filtered actions would show up. The filter text would be reset to empty if you dont't type for a short period of time.
+Note that the filtering engine is **adaptive**, which means that after you type "g" and select "Google" for several times, that item would gradually be the default when you type "g". (And don't worry, to protect your privacy, the content (filter text and item title) of your history would *NOT* be stored in disk. See [the code](../src/mcore/matcher.rs) for more details.)
 
 ![](../images/ui-filtering.png)
 

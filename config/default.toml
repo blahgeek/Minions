@@ -19,6 +19,8 @@ extra_plugin_directories = [
     history_file_salt = "Minions-Salt"
 
 # list of search engines
+# Each site must have `name` and `address` defined
+# and optionally `suggestion_url` for suggestions, which follows the OpenSearch standard
 [search_engine]
     [[search_engine.sites]]
     name = "Google"
@@ -36,12 +38,16 @@ extra_plugin_directories = [
     address = "https://en.wikipedia.org/wiki/Special:Search?search=%s"
     suggestion_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s"
 
+# Linux desktop entries (Applications)
 [linux_desktop_entry]
-directories = [
-    "/usr/local/share/applications/",
-    "/usr/share/applications/",
-]
+# Directories to find all .desktop files
+    directories = [
+        "/usr/local/share/applications/",
+        "/usr/share/applications/",
+    ]
 
+# File Browser
+# Each entry must include a `name` and a valid `path` (can be directory or file)
 [file_browser]
     [[file_browser.entries]]
     name = "Home Directory"
@@ -50,6 +56,9 @@ directories = [
     name = "Root Directory"
     path = "/"
 
+
 [clipboard_history]
-max_entries = 64
-ignore_single_byte = true
+    # Max number of recent entries to record in history
+    max_entries = 64
+    # Whether to ignore entries with only single byte (useful if you use vim and press "x" a lot)
+    ignore_single_byte = true

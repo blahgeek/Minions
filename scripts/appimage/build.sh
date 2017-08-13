@@ -28,6 +28,8 @@ cp -r plugins build/$APP/$APP.AppDir/usr/share/minions-plugins
 cp config/fonts.conf build/$APP/$APP.AppDir/etc/fonts.conf
 cp -r fonts build/$APP/$APP.AppDir/fonts
 
+cp $(which zenity) build/$APP/$APP.AppDir/usr/bin/
+
 cat scripts/appimage/minions.wrapper.sh | \
     sed "s/__CURRENT_VERSION__/Minions-$VERSION/g" > \
         build/$APP/$APP.AppDir/usr/bin/minions.wrapper.sh

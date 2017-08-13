@@ -13,9 +13,9 @@ check_update() {
                      grep -o "Minions-.\+-[0-9a-f]\{6\}" | \
                      head -n 1)
     if [ "$LATEST_VERSION" != "__CURRENT_VERSION__" ]; then
-        MSG="New version $LATEST_VERSION found. "
-        MSG="${MSG}Current version is __CURRENT_VERSION__. "
-        MSG="${MSG}Visit <a href=\"https://github.com/blahgeek/Minions/releases\">Release page</a> to download."
+        MSG="New version $LATEST_VERSION found. \n"
+        MSG="${MSG}Current version is __CURRENT_VERSION__. \n"
+        MSG="${MSG}Visit <a href=\"https://github.com/blahgeek/Minions/releases\">Release page</a> to download.\n"
         echo "$MSG"
         zenity --info --text "$MSG"
     fi

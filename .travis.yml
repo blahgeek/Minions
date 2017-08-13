@@ -11,7 +11,7 @@ rust:
 - beta
 - nightly
 script:
-- if [ -n "$TRAVIS_TAG" ]; then bash -ex build_appimage.sh; else cargo build --verbose; fi
+- if [ -n "$TRAVIS_TAG" ]; then bash -ex scripts/appimage/build.sh; else cargo build --verbose; fi
 deploy:
   skip_cleanup: true
   provider: releases

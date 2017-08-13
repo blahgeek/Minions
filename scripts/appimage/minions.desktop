@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Minions
-Exec=minions
+Exec=minions.wrapper.sh
 Icon=minions
 Terminal=false
 StartupNotify=false

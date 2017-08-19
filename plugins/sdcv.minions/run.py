@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Author: BlahGeek
 # @Date:   2017-08-06
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-08-09
+# @Last Modified time: 2017-08-19
 
 import os
 import sys

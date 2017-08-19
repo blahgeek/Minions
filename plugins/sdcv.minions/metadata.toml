@@ -7,4 +7,4 @@ script_returns = true
 accept_text = true
 accept_text_realtime = true
 
-requirements = ["exe:sdcv"]
+requirements = ["exe:sdcv", "py3:"]

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-11
+* @Last Modified time: 2017-08-19
 */
 
 /// Action defined by custom script
@@ -23,7 +23,7 @@ use std::io::prelude::*;
 use mcore::item::{Item, ItemData, Icon};
 use mcore::action::{Action, ActionArg, ActionResult};
 use actions::file_browser::FileBrowserEntry;
-use actions::utils::open;
+use actions::utils::{open, requirement};
 use actions::ActionError;
 
 /// Output item from custom script
@@ -290,36 +290,6 @@ struct ScriptMetadata {
 }
 
 
-fn check_requirement(req: &str) -> bool {
-    let mut parts: Vec<&str> = req.splitn(2, ":").collect();
-    if parts.len() < 2 {
-        warn!("Invalid requirement string {}", req);
-        return true;
-    }
-
-    let arg = parts.pop().unwrap();
-    let name = parts.pop().unwrap();
-
-    if name == "exe" {
-        match Command::new("which").arg(arg).stdout(Stdio::null()).status() {
-            Err(error) => {
-                warn!("Error running which {}: {}", arg, error);
-                false
-            },
-            Ok(status) =>
-                if status.success() { true }
-                else {
-                    debug!("Executable {} not found", arg);
-                    false
-                },
-        }
-    } else {
-        warn!("Invalid requirement string {}", req);
-        true
-    }
-}
-
-
 impl ScriptAction {
     fn new_from_script_dir(script_dir: &std::path::Path) -> Result<ScriptAction, Box<Error>> {
         let metafile = script_dir.join("metadata.toml");
@@ -332,7 +302,16 @@ impl ScriptAction {
         let metadata : ScriptMetadata = toml::from_str(&metadata)?;
 
         if let Some(requirements) = metadata.requirements {
-            if !requirements.iter().all(|x| check_requirement(x)) {
+            let req_met = requirements.iter().all(|x| {
+                match requirement::Requirement::new(&x) {
+                    Some(req) => req.check(),
+                    None => {
+                        warn!("Invalid requirement string {}", &x);
+                        false
+                    }
+                }
+            });
+            if !req_met {
                 return Err(Box::new(ActionError::new("requirements not met")));
             }
         }

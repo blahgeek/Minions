@@ -1,9 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Author: BlahGeek
 # @Date:   2017-06-18
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-08-09
+# @Last Modified time: 2017-08-19
 
 from __future__ import print_function
 from os import path

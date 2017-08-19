@@ -6,3 +6,4 @@ script_returns = true
 accept_nothing = true
 accept_text = false
 accept_path = false
+requirements = ["py3:", ]

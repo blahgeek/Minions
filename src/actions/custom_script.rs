@@ -346,7 +346,7 @@ impl ScriptAction {
                 let entry_path = entry.path();
                 match ScriptAction::new_from_script_dir(&entry_path) {
                     Ok(x) => {
-                        debug!("Loaded custom script at {:?}", entry_path);
+                        info!("Loaded custom script at {:?}", entry_path);
                         ret.push(x);
                     },
                     Err(error) => {

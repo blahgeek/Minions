@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-08-09
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-11
+* @Last Modified time: 2017-08-19
 */
 
 extern crate crypto;
@@ -170,7 +170,7 @@ impl Matcher {
             debug!("Using empty statistics");
             BTreeMap::new()
         };
-        info!("Loaded statistics: {}", statistics.len());
+        trace!("Loaded statistics: {}", statistics.len());
 
         debug!("Dump (compact) statistics to {:?}", path);
         dump(path, &statistics)?;

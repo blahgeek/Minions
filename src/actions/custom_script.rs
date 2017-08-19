@@ -302,17 +302,15 @@ impl ScriptAction {
         let metadata : ScriptMetadata = toml::from_str(&metadata)?;
 
         if let Some(requirements) = metadata.requirements {
-            let req_met = requirements.iter().all(|x| {
-                match requirement::Requirement::new(&x) {
-                    Some(req) => req.check(),
-                    None => {
-                        warn!("Invalid requirement string {}", &x);
-                        false
+            for req_text in requirements {
+                if let Some(req) = requirement::Requirement::new(&req_text) {
+                    if !req.check() {
+                        info!("Requirement {:?} for plugin {} not met, cannot load", req, metadata.name);
+                        return Err(Box::new(ActionError::new("requirements not met")));
                     }
+                } else {
+                    warn!("Invalid requirement string {}, ignore", req_text);
                 }
-            });
-            if !req_met {
-                return Err(Box::new(ActionError::new("requirements not met")));
             }
         }
 

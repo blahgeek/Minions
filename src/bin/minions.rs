@@ -2,18 +2,19 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-10
+* @Last Modified time: 2017-08-19
 */
 
 extern crate minions;
-extern crate env_logger;
 extern crate toml;
 extern crate clap;
 extern crate nix;
 extern crate gtk;
+extern crate chrono;
 
 #[macro_use]
 extern crate log;
+extern crate fern;
 
 use std::env;
 use std::path::Path;
@@ -25,7 +26,8 @@ use minions::frontend::app::MinionsApp;
 use minions::mcore::matcher::Matcher;
 
 fn main() {
-    env_logger::init().unwrap();
+    let mut logger = fern::Dispatch::new()
+                         .level(log::LogLevelFilter::Warn);
 
     let args = clap::App::new("Minions (rofi frontend)")
                         .author("BlahGeek <i@blahgeek.com>")
@@ -37,7 +39,28 @@ fn main() {
                                       .long("config")
                                       .help("Config (TOML) file to use")
                                       .takes_value(true))
+                        .arg(clap::Arg::with_name("verbose")
+                                      .short("v")
+                                      .long("verbose")
+                                      .multiple(true)
+                                      .help("Increase logging verbosity, up to 2 times"))
                         .get_matches();
+
+    logger = match args.occurrences_of("verbose") {
+        0 => logger.level_for("minions", log::LogLevelFilter::Info),
+        1 => logger.level_for("minions", log::LogLevelFilter::Debug),
+        _ => logger.level_for("minions", log::LogLevelFilter::Trace),
+    };
+    logger.format(|out, message, record| {
+               out.finish(format_args!("{}[{}][{}] {}",
+                                       chrono::Local::now().format("[%H:%M:%S]"),
+                                       record.level(),
+                                       record.target(),
+                                       message))
+           })
+          .chain(std::io::stderr())
+          .apply()
+          .expect("Unable to setup logging");
 
     let default_configcontent : String = include_str!("../../config/default.toml").into();
     let default_config = default_configcontent.parse::<toml::Value>().unwrap();
@@ -57,7 +80,7 @@ fn main() {
     }
 
     let config = if configcontent.len() == 0 {
-        warn!("Using default builtin config");
+        info!("Using default builtin config");
         default_config
     } else {
         let mut config = configcontent.parse::<toml::Value>().expect("Invalid config file");
@@ -66,7 +89,7 @@ fn main() {
             let default_config = default_config.as_table().unwrap();
             for (key, value) in default_config.into_iter() {
                 if !config_map.contains_key(key) {
-                    warn!("Section {} missing from config, use default", key);
+                    info!("Section {} missing from config, use default", key);
                     config_map.insert(key.clone(), value.clone());
                 }
             }

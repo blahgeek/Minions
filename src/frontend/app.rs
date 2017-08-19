@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-10
+* @Last Modified time: 2017-08-19
 */
 
 extern crate glib;
@@ -84,7 +84,7 @@ extern {
 }
 
 extern fn keybinder_callback_show(_: *const libc::c_char, _: *mut libc::c_void) {
-    info!("keybinder callback: show");
+    trace!("keybinder callback: show");
     glib::idle_add( move || {
         APP.with(|app| {
             if let Some(ref mut app) = *app.borrow_mut() {
@@ -96,7 +96,7 @@ extern fn keybinder_callback_show(_: *const libc::c_char, _: *mut libc::c_void) 
 }
 
 extern fn keybinder_callback_show_clipboard(_: *const libc::c_char, _: *mut libc::c_void) {
-    info!("keybinder callback: show with clipboard");
+    trace!("keybinder callback: show with clipboard");
     glib::idle_add( move || {
         APP.with(|app| {
             if let Some(ref mut app) = *app.borrow_mut() {
@@ -144,7 +144,7 @@ impl MinionsApp {
                 self.ui.set_action(None);
                 self.ui.set_reference(self.ctx.reference.as_ref());
                 if self.ctx.list_items.len() == 0 {
-                    warn!("No more listing items!");
+                    debug!("No more listing items!");
                     self.ui.window.hide();
                 }
                 self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect(), -1, &self.ctx);
@@ -236,7 +236,7 @@ impl MinionsApp {
                 Status::Initial
             },
             Status::Running(_) => {
-                warn!("Drop thread");
+                debug!("Drop thread");
                 Status::FilteringNone
             },
             Status::EnteringTextMoving { ref item, ..} => {
@@ -340,7 +340,7 @@ impl MinionsApp {
                 filtered_items
             } => {
                 if selected_idx < 0 {
-                    warn!("No item to send");
+                    debug!("No item to send");
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
@@ -349,13 +349,13 @@ impl MinionsApp {
                     }
                     if self.ctx.quicksend_able(item) {
                         if let Err(error) = self.ctx.quicksend(item) {
-                            warn!("Unable to quicksend item: {}", error);
+                            debug!("Unable to quicksend item: {}", error);
                             Status::Error(Rc::new(error))
                         } else {
                             Status::FilteringNone
                         }
                     } else {
-                        warn!("Item not sendable");
+                        debug!("Item not sendable");
                         self.status.clone()
                     }
                 }
@@ -440,7 +440,7 @@ impl MinionsApp {
                 filtered_items
             } => {
                 if selected_idx < 0 {
-                    warn!("No item to select");
+                    debug!("No item to select");
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
@@ -455,7 +455,7 @@ impl MinionsApp {
                             receiver: None,
                         }
                     } else {
-                        warn!("Item not selectable with or without text");
+                        debug!("Item not selectable with or without text");
                         self.status.clone()
                     }
                 }
@@ -534,10 +534,10 @@ impl MinionsApp {
                 }
 
             } else {
-                warn!("Unable to receive realtime text result from channel");
+                debug!("Unable to receive realtime text result from channel");
             }
         } else {
-            warn!("Invalid status on realtime text callback");
+            debug!("Invalid status on realtime text callback");
         }
 
     }
@@ -549,7 +549,7 @@ impl MinionsApp {
                 trace!("Received result on callback");
                 res = Some(res_);
             } else {
-                warn!("Unable to receive from channel");
+                debug!("Unable to receive from channel");
             }
         }
 
@@ -560,13 +560,13 @@ impl MinionsApp {
                     Status::FilteringNone
                 },
                 Err(error) => {
-                    warn!("Error from channel: {}", error);
+                    debug!("Error from channel: {}", error);
                     Status::Error(Rc::new(error))
                 }
             };
             self.update_ui();
         } else {
-            warn!("No action result");
+            debug!("No action result");
         }
     }
 
@@ -586,19 +586,19 @@ impl MinionsApp {
                 filtered_items
             } => {
                 if selected_idx < 0 {
-                    warn!("No item to select");
+                    debug!("No item to select");
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];
                     if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
-                        warn!("Unable to record hit: {}", error);
+                        debug!("Unable to record hit: {}", error);
                     }
 
                     let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
                     if self.ctx.selectable(item) {
                         self.ctx.async_select(item, move |res: ActionResult| {
                             if let Err(error) = send_ch.send(res) {
-                                warn!("Unable to send to channel: {}", error);
+                                debug!("Unable to send to channel: {}", error);
                             } else {
                                 glib::idle_add( || {
                                     APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
@@ -614,7 +614,7 @@ impl MinionsApp {
                             receiver: None,
                         }
                     } else {
-                        warn!("Item not selectable with or without text");
+                        debug!("Item not selectable with or without text");
                         self.status.clone()
                     }
                 }
@@ -625,7 +625,7 @@ impl MinionsApp {
 
                 self.ctx.async_select_with_text(&item, &text, move |res: ActionResult| {
                     if let Err(error) = send_ch.send(res) {
-                        warn!("Unable to send to channel: {}", error);
+                        debug!("Unable to send to channel: {}", error);
                     } else {
                         glib::idle_add( || {
                             APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
@@ -637,7 +637,7 @@ impl MinionsApp {
             },
             Status::EnteringTextMoving{item: _, suggestions, selected_idx} => {
                 if selected_idx < 0 {
-                    warn!("No item to select");
+                    debug!("No item to select");
                     self.status.clone()
                 } else {
                     let item = &suggestions[selected_idx as usize];
@@ -645,7 +645,7 @@ impl MinionsApp {
                         let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
                         self.ctx.async_select(&item, move |res: ActionResult| {
                             if let Err(error) = send_ch.send(res) {
-                                warn!("Unable to send to channel: {}", error);
+                                debug!("Unable to send to channel: {}", error);
                             } else {
                                 glib::idle_add( || {
                                     APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
@@ -655,7 +655,7 @@ impl MinionsApp {
                         });
                         Status::Running(Rc::new(recv_ch))
                     } else {
-                        warn!("Item not selectable with nothing");
+                        debug!("Item not selectable with nothing");
                         self.status.clone()
                     }
                 }

@@ -2,16 +2,15 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-09
+* @Last Modified time: 2018-02-04
 */
-
-use toml;
 
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 
 use mcore::item::{Item, ItemData, Icon};
 use mcore::action::{Action, ActionResult};
+use mcore::config::Config;
 use actions::utils::open;
 
 pub struct FileBrowserEntry {
@@ -25,11 +24,6 @@ pub struct FileBrowserEntry {
 struct EntryConfig {
     name: String,
     path: String,
-}
-
-#[derive(Deserialize)]
-struct Config {
-    entries: Vec<EntryConfig>,
 }
 
 impl FileBrowserEntry {
@@ -47,21 +41,16 @@ impl FileBrowserEntry {
         }
     }
 
-    pub fn get_all(config: toml::Value) -> Vec<FileBrowserEntry> {
-        let config = config.try_into::<Config>();
-        if let Err(ref error) = config {
-            warn!("Error loading file browser entry config: {}", error);
-            return Vec::new();
-        }
-        let config = config.unwrap();
+    pub fn get_all(config: &Config) -> Vec<FileBrowserEntry> {
+        let entries = config.get::<Vec<EntryConfig>>(&["file_browser", "entries"]).unwrap();
 
-        config.entries.into_iter()
-        .map(|c| {
-            FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
-        })
+        entries.into_iter()
+            .map(|c| {
+                FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
+            })
         .filter(|x| x.is_some())
-        .map(|x| x.unwrap())
-        .collect()
+            .map(|x| x.unwrap())
+            .collect()
     }
 }
 

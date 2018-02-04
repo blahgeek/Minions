@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2018-02-04
 */
 
 extern crate gtk;
@@ -17,8 +17,6 @@ use self::glib::translate::*;
 use self::gtk::Clipboard;
 use self::chrono::{Local, DateTime};
 
-use toml;
-
 use std::sync::{Arc, Mutex};
 use std::mem::transmute;
 use std::collections::VecDeque;
@@ -26,6 +24,7 @@ use std::collections::VecDeque;
 use actions::ActionError;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
+use mcore::config::Config;
 
 unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
                                 _: *mut libc::c_void,
@@ -81,18 +80,10 @@ impl Action for ClipboardHistoryAction {
     }
 }
 
-#[derive(Deserialize)]
-struct Config {
-    max_entries: usize,
-    ignore_single_byte: Option<bool>,
-}
-
 impl ClipboardHistoryAction {
-    pub fn new(config: toml::Value) -> ClipboardHistoryAction {
-        let config = config.try_into::<Config>().expect("Invalid config");
-
-        let history_max_len = config.max_entries;
-        let ignore_single_byte = config.ignore_single_byte.unwrap_or(false);
+    pub fn new(config: &Config) -> ClipboardHistoryAction {
+        let history_max_len = config.get::<usize>(&["clipboard_history", "history_max_len"]).unwrap();
+        let ignore_single_byte = config.get::<bool>(&["clipboard_history", "ignore_single_byte"]).unwrap();
 
         let action = ClipboardHistoryAction {
             history_max_len: history_max_len,

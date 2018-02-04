@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-11
+* @Last Modified time: 2018-02-04
 */
 
 extern crate shlex;
@@ -10,13 +10,12 @@ extern crate shlex;
 extern crate ini;
 use self::ini::Ini;
 
-use toml;
-
 use std::ffi::OsStr;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, ItemData, Icon};
+use mcore::config::Config;
 use actions::ActionError;
 use actions::utils::subprocess;
 
@@ -71,11 +70,6 @@ impl Action for LinuxDesktopEntry {
     }
 
     fn should_return_items(&self) -> bool { false }
-}
-
-#[derive(Deserialize)]
-struct Config {
-    directories: Vec<String>,
 }
 
 impl LinuxDesktopEntry {
@@ -136,15 +130,10 @@ impl LinuxDesktopEntry {
         })
     }
 
-    pub fn get_all(config: toml::Value) -> Vec<LinuxDesktopEntry> {
-        let config = config.try_into::<Config>();
-        if let Err(ref error) = config {
-            warn!("Error loading linux desktop entry config: {}", error);
-            return Vec::new();
-        }
-        let config = config.unwrap();
+    pub fn get_all(config: &Config) -> Vec<LinuxDesktopEntry> {
+        let directories = config.get::<Vec<String>>(&["linux_desktop_entry", "directories"]).unwrap();
 
-        let application_dirs = config.directories.iter().map(|x| Path::new(x));
+        let application_dirs = directories.iter().map(|x| Path::new(x));
         let mut ret = Vec::new();
 
         for application_dir in application_dirs {

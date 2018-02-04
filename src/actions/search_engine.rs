@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-11
+* @Last Modified time: 2018-02-04
 */
 
 extern crate url;
@@ -10,13 +10,13 @@ extern crate reqwest;
 extern crate serde_json;
 
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, EncodeSet};
-use toml;
 
 use std::sync::Arc;
 use std::io::Read;
 
 use mcore::action::{Action, ActionResult, ActionArg};
 use mcore::item::{Item, Icon};
+use mcore::config::Config;
 use actions::utils::open;
 
 #[derive(Clone)]
@@ -102,30 +102,18 @@ struct ConfigSite {
     suggestion_url: Option<String>,
 }
 
-#[derive(Deserialize)]
-struct Config {
-    sites: Vec<ConfigSite>,
-}
-
 impl SearchEngine {
-    pub fn get_all(config: toml::Value) -> Vec<SearchEngine> {
-        let config = config.try_into::<Config>();
-        match config {
-            Ok(config) =>
-                config.sites.into_iter()
-                .map(|site| {
-                    debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
-                    SearchEngine {
-                        name: site.name,
-                        address: site.address,
-                        suggestion_url: site.suggestion_url,
-                    }
-                })
-                .collect(),
-            Err(error) => {
-                warn!("Error loading search engine sites: {}", error);
-                vec![]
-            }
-        }
+    pub fn get_all(config: &Config) -> Vec<SearchEngine> {
+        let sites = config.get::<Vec<ConfigSite>>(&["search_engine", "sites"]).unwrap();
+        sites.into_iter()
+            .map(|site| {
+                debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
+                SearchEngine {
+                    name: site.name,
+                    address: site.address,
+                    suggestion_url: site.suggestion_url,
+                }
+            })
+        .collect()
     }
 }

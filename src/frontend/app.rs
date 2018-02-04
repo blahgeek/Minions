@@ -2,14 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-19
+* @Last Modified time: 2018-02-04
 */
 
 extern crate glib;
 extern crate libc;
 extern crate glib_sys;
-
-use toml;
 
 use std;
 use std::ffi;
@@ -30,6 +28,7 @@ use mcore::context::Context;
 use mcore::action::ActionResult;
 use mcore::item::Item;
 use mcore::matcher::Matcher;
+use mcore::config::Config;
 
 #[derive(Clone)]
 enum Status {
@@ -749,10 +748,11 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    pub fn new(global_config: GlobalConfig, config: toml::Value, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+    pub fn new(config: &Config, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+        let global_config = config.get::<GlobalConfig>(&["global"]).unwrap();
         let app = MinionsApp {
             ui: MinionsUI::new(),
-            ctx: Context::new(config.clone()),
+            ctx: Context::new(config),
             status: Status::Initial,
             filter_timeout: global_config.filter_timeout,
             matcher: matcher,

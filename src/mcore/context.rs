@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-11
+* @Last Modified time: 2018-02-04
 */
 
 extern crate gtk;
@@ -11,14 +11,13 @@ extern crate gdk;
 extern crate uuid;
 use self::uuid::Uuid;
 
-use toml;
-
 use std::thread;
 use std::error::Error;
 use std::rc::Rc;
 use std::sync::Arc;
 use mcore::action::{Action, ActionArg, ActionResult};
 use mcore::item::{Item, ItemData};
+use mcore::config::Config;
 use actions;
 
 
@@ -36,7 +35,7 @@ pub struct Context {
 impl Context {
 
     /// Create context with initial items
-    pub fn new(config: toml::Value) -> Context {
+    pub fn new(config: &Config) -> Context {
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),

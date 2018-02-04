@@ -82,7 +82,7 @@ impl Action for ClipboardHistoryAction {
 
 impl ClipboardHistoryAction {
     pub fn new(config: &Config) -> ClipboardHistoryAction {
-        let history_max_len = config.get::<usize>(&["clipboard_history", "history_max_len"]).unwrap();
+        let history_max_len = config.get::<usize>(&["clipboard_history", "max_entries"]).unwrap();
         let ignore_single_byte = config.get::<bool>(&["clipboard_history", "ignore_single_byte"]).unwrap();
 
         let action = ClipboardHistoryAction {

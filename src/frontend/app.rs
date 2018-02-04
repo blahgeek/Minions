@@ -15,7 +15,6 @@ use std::error::Error;
 use frontend::gdk;
 use frontend::gtk;
 use frontend::gtk::prelude::*;
-use frontend::config::GlobalConfig;
 
 use std::thread;
 use std::sync::mpsc;
@@ -749,12 +748,12 @@ impl MinionsApp {
     }
 
     pub fn new(config: &Config, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
-        let global_config = config.get::<GlobalConfig>(&["global"]).unwrap();
+        let global_config = config.partial(&["core"]).unwrap();
         let app = MinionsApp {
             ui: MinionsUI::new(),
             ctx: Context::new(config),
             status: Status::Initial,
-            filter_timeout: global_config.filter_timeout,
+            filter_timeout: global_config.get::<u32>(&["filter_timeout"]).unwrap(),
             matcher: matcher,
         };
         app.update_ui();
@@ -781,14 +780,17 @@ impl MinionsApp {
 
         unsafe {
             keybinder_init();
-            if let Some(keys) = global_config.shortcut_show {
+            let keys = global_config.get::<String>(&["shortcut_show"]).unwrap();
+            if keys.len() > 0 {
                 info!("Binding shortcut for show: {}", keys);
                 let s = ffi::CString::new(keys).unwrap();
                 keybinder_bind(s.as_ptr(), keybinder_callback_show, std::ptr::null_mut());
             } else {
                 warn!("No shortcut defined for show");
             }
-            if let Some(keys) = global_config.shortcut_show_quicksend {
+
+            let keys = global_config.get::<String>(&["shortcut_show_quicksend"]).unwrap();
+            if keys.len() > 0 {
                 info!("Binding shortcut for show_quicksend: {}", keys);
                 let s = ffi::CString::new(keys).unwrap();
                 keybinder_bind(s.as_ptr(), keybinder_callback_show_clipboard, std::ptr::null_mut());

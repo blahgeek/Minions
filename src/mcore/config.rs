@@ -96,6 +96,19 @@ impl Config {
         }
         userval.into_result::<T>().or(defaultval.into_result::<T>())
     }
+
+    pub fn partial(&self, path: &[&str]) -> Result<Self, ConfigGetError> {
+        let mut userval = ConfigValue::new(self.user.as_ref());
+        let mut defaultval = ConfigValue::new(Some(&self.default));
+        for p in path {
+            userval.into_next(p);
+            defaultval.into_next(p);
+        }
+        Ok(Config {
+            default: defaultval.into_result::<toml::Value>()?,
+            user: userval.into_result::<toml::Value>().ok(),
+        })
+    }
 }
 
 

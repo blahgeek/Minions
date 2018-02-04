@@ -69,7 +69,7 @@ pub fn get_actions(config: &Config) -> Vec<Arc<Box<Action + Sync + Send>>> {
         Path::new("./usr/share/minions-plugins/").to_path_buf(),
         Path::new("/usr/share/minions-plugins/").to_path_buf(),
     ];
-    for dir in config.get::<Vec<String>>(&["extra_plugin_directories"]).unwrap().iter() {
+    for dir in config.get::<Vec<String>>(&["core", "extra_plugin_directories"]).unwrap().iter() {
         plugin_dirs.push(Path::new(&dir).to_path_buf());
     }
     plugin_dirs.dedup();

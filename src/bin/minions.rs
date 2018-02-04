@@ -63,7 +63,7 @@ fn main() {
     let config = Config::new(&configfile);
 
     let history_path = env::home_dir().unwrap().join(".minions/history.dat");
-    let matcher = Matcher::new(&history_path, &config.get::<String>(&["global", "history_file_salt"]).unwrap())
+    let matcher = Matcher::new(&history_path, &config.get::<String>(&["core", "history_file_salt"]).unwrap())
                   .expect("Unable to load history file");
 
     gtk::init().expect("Failed to initialize GTK");

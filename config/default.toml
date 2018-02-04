@@ -1,10 +1,9 @@
 # default config for minions app
 
-# List of directories containing extra plugins
-extra_plugin_directories = [
-]
+[core]
+    # List of directories containing extra plugins
+    extra_plugin_directories = []
 
-[global]
     # Timeout (in milliseconds) to clear filter text if no more characters is entered
     # Set to 0 to disable
     filter_timeout = 800

@@ -749,9 +749,11 @@ impl MinionsApp {
 
     pub fn new(config: &Config, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
         let global_config = config.partial(&["core"]).unwrap();
+        let ctx = Context::new(config);
+
         let app = MinionsApp {
             ui: MinionsUI::new(),
-            ctx: Context::new(config),
+            ctx: ctx,
             status: Status::Initial,
             filter_timeout: global_config.get::<u32>(&["filter_timeout"]).unwrap(),
             matcher: matcher,

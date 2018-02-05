@@ -37,3 +37,24 @@ pub trait Action {
 
 }
 
+/// An actiton with arg
+pub struct PartialAction {
+    action: Box<Action + Sync + Send>,
+    arg: String,
+}
+
+impl PartialAction {
+    pub fn new(action: Box<Action + Sync + Send>, arg: String) -> Self {
+        PartialAction { action, arg, }
+    }
+}
+
+impl Action for PartialAction {
+
+    fn runnable_bare(&self) -> bool { true }
+
+    fn should_return_items(&self) -> bool { self.action.should_return_items() }
+
+    fn run_bare(&self) -> ActionResult { self.action.run_arg(&self.arg) }
+
+}

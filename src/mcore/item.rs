@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2018-02-05
 */
 
 use std;
@@ -91,12 +91,6 @@ impl Item {
     pub fn new_text_item(text: &str) -> Item {
         let mut item = Item::new(text);
         item.data = Some(ItemData::Text(text.into()));
-        item
-    }
-
-    pub fn new_action_item(action: Arc<Box<Action + Sync + Send>>) -> Item {
-        let mut item = action.get_item();
-        item.action = Some(action);
         item
     }
 

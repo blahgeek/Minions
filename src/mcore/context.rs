@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-05
 */
 
 extern crate gtk;
@@ -28,7 +28,7 @@ pub struct Context {
     pub list_items: Vec<Rc<Item>>,
 
     /// Cached all actions
-    all_actions: Vec<Arc<Box<Action + Sync + Send>>>,
+    action_items: Vec<Item>,
 }
 
 
@@ -39,7 +39,7 @@ impl Context {
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),
-            all_actions: actions::get_actions(config),
+            action_items: actions::get_action_items(config),
         };
         ctx.reset();
         ctx
@@ -48,12 +48,14 @@ impl Context {
     /// Reset context to initial state
     pub fn reset(&mut self) {
         self.reference = None;
-        self.list_items = self.all_actions.iter()
-            .filter(|action| {
-                action.accept_nothing() || action.accept_text()
-            })
-            .map(|action| Rc::new(Item::new_action_item(action.clone())))
-            .collect();
+        self.list_items = self.action_items.iter()
+            .filter(|item| {
+                if let Some(ref a) = item.action {
+                    a.accept_nothing() || a.accept_text()
+                } else {
+                    false
+                }
+            }) .map(|x| Rc::new(x.clone())) .collect();
         self.list_items.sort_by_key(|item| item.priority );
     }
 
@@ -173,14 +175,21 @@ impl Context {
         }
         if let Some(ref data) = item.data {
             let action_arg : ActionArg = item.data.clone().into();
-            self.list_items = self.all_actions.iter()
-                              .filter(|action| action.accept_arg(&action_arg))
-                              .map(|action| {
-                                  let mut item = Item::new_action_item(action.clone());
-                                  item.action_arg = action_arg.clone();
-                                  Rc::new(item)
-                              })
-                              .collect();
+            self.list_items =
+                self.action_items.iter()
+                .filter(|item| {
+                    if let Some(ref a) = item.action {
+                        a.accept_arg(&action_arg)
+                    } else {
+                        false
+                    }
+                })
+                .map(|x| {
+                    let mut item = x.clone();
+                    item.action_arg = action_arg.clone();
+                    Rc::new(item)
+                })
+                .collect();
             self.list_items.sort_by_key(|item| item.priority );
             self.reference = Some(data.clone());
         } else {

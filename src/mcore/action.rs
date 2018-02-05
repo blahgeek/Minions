@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-06
+* @Last Modified time: 2018-02-05
 */
 
 use std;
@@ -39,9 +39,6 @@ pub type ActionResult = Result<Vec<Item>, Box<Error + Send + Sync>>;
 
 /// The general action type
 pub trait Action {
-
-    /// Get an item representing itself
-    fn get_item(&self) -> Item;
 
     /// Whether this action runs without input
     fn accept_nothing(&self) -> bool { false }

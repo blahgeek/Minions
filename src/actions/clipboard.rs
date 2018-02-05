@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-06
 */
 
 extern crate gtk;
@@ -50,16 +50,12 @@ pub struct ClipboardHistoryAction {
 }
 
 impl Action for ClipboardHistoryAction {
-    fn get_item(&self) -> Item {
-        let mut item = Item::new("Clipboard History");
-        item.subtitle = Some(format!("View clipboard history up to {} entries", self.history_max_len));
-        item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-        item
-    }
 
-    fn accept_nothing(&self) -> bool { true }
+    fn runnable_bare(&self) -> bool { true }
 
-    fn run(&self) -> ActionResult {
+    fn should_return_items(&self) -> bool { true }
+
+    fn run_bare(&self) -> ActionResult {
         if let Ok(history) = self.history.lock() {
             debug!("Returning {} clipboard histories", history.len());
             if history.len() == 0 {
@@ -119,3 +115,12 @@ impl ClipboardHistoryAction {
     }
 }
 
+pub fn get(config: &Config) -> Item {
+    let action = ClipboardHistoryAction::new(config);
+    let mut item = Item::new("Clipboard History");
+    item.subtitle = Some(format!("View clipboard history up to {} entries",
+                                 action.history_max_len));
+    item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+    item.action = Some(Arc::new(Box::new(action)));
+    item
+}

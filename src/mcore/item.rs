@@ -8,20 +8,13 @@
 use std;
 use std::fmt;
 use std::sync::Arc;
-use mcore::action::{Action, ActionArg};
+use mcore::action::Action;
 
 #[derive(Debug, Clone)]
 pub enum Icon {
     GtkName(String),
     Character{ch: char, font: String},
     File(std::path::PathBuf),
-}
-
-/// Typed data in item
-#[derive(Debug, Clone)]
-pub enum ItemData {
-    Text(String),
-    Path(std::path::PathBuf),
 }
 
 /// The item type (represents single selectable item (row))
@@ -39,15 +32,13 @@ pub struct Item {
     pub priority: i32,
 
     /// Item data, for quick-send and/or info
-    pub data: Option<ItemData>,
+    pub data: Option<String>,
 
     /// Search str, fallback to title
     pub search_str: Option<String>,
 
     /// Action, optional
     pub action: Option<Arc<Box<Action + Sync + Send>>>,
-    /// Argument for action, optional
-    pub action_arg: ActionArg,
 }
 
 
@@ -77,20 +68,12 @@ impl Item {
             data: None,
             search_str: None,
             action: None,
-            action_arg: ActionArg::None,
         }
-    }
-
-    pub fn new_path_item(path: &std::path::Path) -> Item {
-        let mut item = Item::new(&path.to_string_lossy());
-        item.data = Some(ItemData::Path(path.into()));
-        item.icon = Some(Icon::Character{ch: '', font: "FontAwsome".into()});
-        item
     }
 
     pub fn new_text_item(text: &str) -> Item {
         let mut item = Item::new(text);
-        item.data = Some(ItemData::Text(text.into()));
+        item.data = Some(text.into());
         item
     }
 
@@ -106,10 +89,10 @@ impl Item {
 
     /// Get data for copy
     pub fn get_copy_str(&self) -> &str {
-        match self.data {
-            Some(ItemData::Text(ref text)) => text,
-            Some(ItemData::Path(ref path)) => &path.to_str().unwrap(),
-            _ => &self.title,
+        if let Some(ref s) = self.data {
+            &s
+        } else {
+            &self.title
         }
     }
 

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-09
+* @Last Modified time: 2018-02-05
 */
 
 extern crate gdk_pixbuf;
@@ -10,7 +10,7 @@ extern crate gdk_pixbuf;
 use std::cmp;
 use std::error::Error;
 
-use mcore::item::{Item, Icon, ItemData};
+use mcore::item::{Item, Icon};
 use mcore::context::Context;
 
 use frontend::gtk;
@@ -133,24 +133,15 @@ impl MinionsUI {
         refinfo_box.show();
     }
 
-    pub fn set_reference(&self, reference: Option<&ItemData>) {
+    pub fn set_reference(&self, reference: Option<&String>) {
         let refinfo_box = self.window_builder.get_object::<gtk::Box>("refinfo_box").unwrap();
         let refinfo_title = self.window_builder.get_object::<gtk::Label>("refinfo_text_title").unwrap();
         let refinfo_subtitle = self.window_builder.get_object::<gtk::Label>("refinfo_text_subtitle").unwrap();
 
-        if let Some(data) = reference {
-            match data {
-                &ItemData::Text(ref text) => {
-                    refinfo_title.set_text(&text);
-                    refinfo_subtitle.set_text(&format!("Text data: {} bytes", text.len()));
-                    self.set_action_name(Some("Open Text with"));
-                },
-                &ItemData::Path(ref path) => {
-                    refinfo_title.set_text(&path.to_string_lossy());
-                    refinfo_subtitle.set_text("Path data");
-                    self.set_action_name(Some("Open Path with"));
-                }
-            }
+        if let Some(text) = reference {
+            refinfo_title.set_text(&text);
+            refinfo_subtitle.set_text(&format!("Text data: {} bytes", text.len()));
+            self.set_action_name(Some("Open Text with"));
             refinfo_box.show();
         } else {
             refinfo_box.hide();

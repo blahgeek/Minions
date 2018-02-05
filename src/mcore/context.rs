@@ -99,9 +99,7 @@ impl Context {
 
     pub fn async_select<F>(&self, item: &Item, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
-        if !self.selectable(item) {
-            panic!("Item {} is not selectable", item);
-        }
+        assert!(self.selectable(item));
         let thread_uuid = Uuid::new_v4().simple().to_string();
         let action = item.action.clone().unwrap();
         let action_arg = self.reference.clone();
@@ -123,9 +121,7 @@ impl Context {
 
     pub fn async_select_with_text<F>(&self, item: &Item, text: &str, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
-        if !self.selectable_with_text(&item) {
-            panic!("Item {} is not selectable with text", &item);
-        }
+        assert!(self.selectable_with_text(&item));
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
         let action = item.action.clone().unwrap();
@@ -142,9 +138,7 @@ impl Context {
 
     pub fn async_run_with_text_realtime<F>(&self, item: &Item, text: &str, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
-        if !self.runnable_with_text_realtime(&item) {
-            panic!("Item {} is not runnable with realtime text", &item);
-        }
+        assert!(self.runnable_with_text_realtime(&item));
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
         let action = item.action.clone().unwrap();
@@ -164,21 +158,14 @@ impl Context {
     }
 
     pub fn quicksend(&mut self, item: &Item) -> Result<(), Box<Error + Send + Sync>> {
-        if !self.quicksend_able(item) {
-            panic!("Item {} is not quicksend_able", item);
-        }
-        if let Some(ref data) = item.data {
-            // let action_arg : ActionArg = item.data.clone().into();
-            self.list_items =
-                self.action_items.iter()
-                .filter(|item| {
-                    item.action.as_ref().unwrap().runnable_arg()
-                }).map(|x| x.clone()).collect();
-            self.list_items.sort_by_key(|item| item.priority );
-            self.reference = Some(data.clone());
-        } else {
-            panic!("Should not reach here");
-        }
+        assert!(self.quicksend_able(item));
+        self.list_items =
+            self.action_items.iter()
+            .filter(|item| {
+                item.action.as_ref().unwrap().runnable_arg()
+            }).map(|x| x.clone()).collect();
+        self.list_items.sort_by_key(|item| item.priority );
+        self.reference = item.data.clone();
         Ok(())
     }
 

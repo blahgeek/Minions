@@ -1,8 +1,7 @@
-use std;
+use std::path::Path;
 use std::sync::Arc;
 
 use mcore::item::Item;
-use mcore::action::Action;
 
 use super::action::ScriptAction;
 use super::parser::parse_icon;
@@ -52,7 +51,7 @@ impl ScriptItem {
         }
     }
 
-    pub fn into_item(self, script_dir: &std::path::Path) -> Item {
+    pub fn into_item(self, script_dir: &Path) -> Item {
 
         let action : Option<ScriptAction> =
             if self.action.len() == 0 {

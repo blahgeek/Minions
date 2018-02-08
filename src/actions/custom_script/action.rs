@@ -5,11 +5,9 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use mcore::action::{ActionResult, Action};
-use mcore::item::Item;
 use actions::ActionError;
 
 use super::item::{ScriptOutputFormat, ScriptItem};
-use super::parser::parse_icon;
 
 pub struct ScriptAction {
     pub script_dir: PathBuf,

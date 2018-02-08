@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-05
+* @Last Modified time: 2018-02-08
 */
 
 extern crate gtk;
@@ -14,8 +14,7 @@ use self::uuid::Uuid;
 use std::thread;
 use std::error::Error;
 use std::rc::Rc;
-use std::sync::Arc;
-use mcore::action::{Action, ActionResult};
+use mcore::action::ActionResult;
 use mcore::item::Item;
 use mcore::config::Config;
 use actions;

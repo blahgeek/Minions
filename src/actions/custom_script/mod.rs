@@ -1,12 +1,9 @@
-extern crate serde_json;
-
 mod parser;
 mod item;
 mod action;
 mod requirement;
 
 use toml;
-use std;
 use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
@@ -16,11 +13,9 @@ use mcore::item::Item;
 use mcore::config::Config;
 
 use actions::ActionError;
-
 use self::item::ScriptItem;
-pub use self::action::ScriptAction;
 
-fn get_item(script_dir: &std::path::Path) -> Result<Item, Box<Error>> {
+fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
 
     let metafile = script_dir.join("metadata.toml");
     debug!("Reading script metadata: {:?}", metafile);

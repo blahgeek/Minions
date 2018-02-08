@@ -26,11 +26,15 @@ fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
     }
     let item : ScriptItem = toml::from_str(&itemdata)?;
 
+    if item.title.len() == 0 {
+        return Err(Box::new(ActionError::new("Invalid item.toml")));
+    }
+
     for req_text in item.requirements.iter() {
         if let Some(req) = requirement::Requirement::new(&req_text) {
             if !req.check() {
                 info!("Requirement {:?} for plugin {} not met, cannot load", req, item.title);
-                return Err(Box::new(ActionError::new("requirements not met")));
+                return Err(Box::new(ActionError::new("Requirements not met")));
             }
         } else {
             warn!("Invalid requirement string {}, ignore", req_text);

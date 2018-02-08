@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-06
+* @Last Modified time: 2018-02-08
 */
 
 extern crate shlex;
@@ -21,7 +21,7 @@ use actions::ActionError;
 use actions::utils::subprocess;
 
 #[derive(Debug)]
-pub struct LinuxDesktopEntry {
+struct LinuxDesktopEntry {
     name: String,
     comment: Option<String>,
     exec: Vec<String>,

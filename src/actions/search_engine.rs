@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-06
+* @Last Modified time: 2018-02-08
 */
 
 extern crate url;
@@ -31,7 +31,7 @@ impl EncodeSet for DefaultPlusEncodeSet {
 const DEFAULT_PLUS_ENCODE_SET: DefaultPlusEncodeSet = DefaultPlusEncodeSet{};
 
 #[derive(Deserialize, Clone)]
-pub struct SearchEngine {
+struct SearchEngine {
     /// Name of the search engine
     name: String,
     /// The URL of the target, replace %s with search text

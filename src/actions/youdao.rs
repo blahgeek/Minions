@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-06
+* @Last Modified time: 2018-02-08
 */
 
 extern crate url;
@@ -21,7 +21,7 @@ use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use actions::ActionError;
 
-pub struct Youdao {}
+struct Youdao {}
 
 // yes, here are both app key and secret, I dont care
 static APP_KEY: &'static str = "259f2733d8e07293";

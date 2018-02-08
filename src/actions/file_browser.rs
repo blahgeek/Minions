@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-06
+* @Last Modified time: 2018-02-08
 */
 
 use std::sync::Arc;
@@ -13,7 +13,7 @@ use mcore::action::{Action, ActionResult};
 use mcore::config::Config;
 use actions::utils::open;
 
-pub struct FileBrowserEntry {
+struct FileBrowserEntry {
     name: String,
     path: PathBuf,
     is_file: bool,
@@ -21,7 +21,7 @@ pub struct FileBrowserEntry {
 
 
 impl FileBrowserEntry {
-    pub fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
+    fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
         if ! (path.is_dir() || path.is_file()) {
             warn!("Invalid path: {:?}", path);
             None

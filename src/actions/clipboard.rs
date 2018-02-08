@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-06
+* @Last Modified time: 2018-02-08
 */
 
 extern crate gtk;
@@ -44,7 +44,7 @@ where F: Fn(&Clipboard) + 'static {
 }
 
 
-pub struct ClipboardHistoryAction {
+struct ClipboardHistoryAction {
     history_max_len: usize,
     history: Arc<Mutex<VecDeque<(String, DateTime<Local>)>>>,
 }
@@ -77,7 +77,7 @@ impl Action for ClipboardHistoryAction {
 }
 
 impl ClipboardHistoryAction {
-    pub fn new(config: &Config) -> ClipboardHistoryAction {
+    fn new(config: &Config) -> ClipboardHistoryAction {
         let history_max_len = config.get::<usize>(&["clipboard_history", "max_entries"]).unwrap();
         let ignore_single_byte = config.get::<bool>(&["clipboard_history", "ignore_single_byte"]).unwrap();
 

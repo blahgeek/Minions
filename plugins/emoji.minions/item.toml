@@ -1,0 +1,5 @@
+title = "Emojis"
+subtitle = "Find emojis by keywords"
+icon = "character::😂"
+action = ["./run.py"]
+requirements = ["py3:", ]

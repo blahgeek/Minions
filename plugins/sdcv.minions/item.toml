@@ -1,0 +1,9 @@
+title = "Lookup in StarDict"
+subtitle = "Lookup words in StarDict using sdcv"
+icon = "file:stardict.png"
+action = ["./run.py"]
+action_run_bare = false
+action_run_arg = true
+action_run_realtime = true
+
+requirements = ["exe:sdcv", "py3:"]

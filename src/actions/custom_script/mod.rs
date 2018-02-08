@@ -17,14 +17,14 @@ use self::item::ScriptItem;
 
 fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
 
-    let metafile = script_dir.join("metadata.toml");
-    debug!("Reading script metadata: {:?}", metafile);
+    let itemfile = script_dir.join("item.toml");
+    debug!("Reading script item: {:?}", itemfile);
 
-    let mut metadata = String::new();
-    if let Ok(mut metafile) = File::open(&metafile) {
-        metafile.read_to_string(&mut metadata)?;
+    let mut itemdata = String::new();
+    if let Ok(mut itemfile) = File::open(&itemfile) {
+        itemfile.read_to_string(&mut itemdata)?;
     }
-    let item : ScriptItem = toml::from_str(&metadata)?;
+    let item : ScriptItem = toml::from_str(&itemdata)?;
 
     for req_text in item.requirements.iter() {
         if let Some(req) = requirement::Requirement::new(&req_text) {

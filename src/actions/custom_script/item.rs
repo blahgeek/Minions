@@ -41,7 +41,7 @@ impl ScriptItem {
             badge: None,
             icon: None,
             data: None,
-            priority: 0,
+            priority: -10,
             action: Vec::new(),
             action_output_format: ScriptOutputFormat::Json,
             action_run_bare: true,

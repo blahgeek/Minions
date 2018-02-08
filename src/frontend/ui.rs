@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-05
+* @Last Modified time: 2018-02-08
 */
 
 extern crate gdk_pixbuf;
@@ -180,7 +180,6 @@ impl MinionsUI {
         let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
         let badge = builder.get_object::<gtk::Label>("badge").unwrap();
         let selectable = builder.get_object::<gtk::Label>("selectable").unwrap();
-        let arrow = builder.get_object::<gtk::Label>("arrow").unwrap();
         let icon = builder.get_object::<gtk::Image>("icon").unwrap();
         let icon_text = builder.get_object::<gtk::Label>("icon_text").unwrap();
 
@@ -203,15 +202,6 @@ impl MinionsUI {
         match item.badge {
             Some(ref text) => badge.set_text(&text),
             None => item_ui.remove(&badge),
-        }
-
-        if match item.action {
-            Some(ref action) => !action.should_return_items(),
-            None => true,
-        } {
-            arrow.set_text("");
-        } else {
-            arrow.set_text("");
         }
 
         if ctx.selectable(&item) {

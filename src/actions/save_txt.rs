@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2018-02-08
 */
 
 extern crate uuid;
@@ -37,8 +37,6 @@ impl Action for SaveTxtAction {
     }
 
     fn accept_text(&self) -> bool { true }
-
-    fn should_return_items(&self) -> bool { true }
 
     fn run_text(&self, text: &str) -> ActionResult {
         let mut filepath = self.tempdir.clone();

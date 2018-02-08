@@ -60,8 +60,6 @@ impl Action for FileBrowserEntry {
 
     fn runnable_bare (&self) -> bool { true }
 
-    fn should_return_items(&self) -> bool { !self.is_file }
-
     fn run_bare (&self) -> ActionResult {
         if self.is_file {
             info!("open: {:?}", self.path);

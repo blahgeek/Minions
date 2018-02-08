@@ -53,8 +53,6 @@ impl Action for ClipboardHistoryAction {
 
     fn runnable_bare(&self) -> bool { true }
 
-    fn should_return_items(&self) -> bool { true }
-
     fn run_bare(&self) -> ActionResult {
         if let Ok(history) = self.history.lock() {
             debug!("Returning {} clipboard histories", history.len());

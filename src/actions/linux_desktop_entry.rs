@@ -44,8 +44,6 @@ impl Action for LinuxDesktopEntry {
     fn run_bare (&self) -> ActionResult {
         self.run_path_or_empty(None)
     }
-
-    fn should_return_items(&self) -> bool { false }
 }
 
 impl LinuxDesktopEntry {

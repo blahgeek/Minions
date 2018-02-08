@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-05
+* @Last Modified time: 2018-02-08
 */
 
 use std;
@@ -22,9 +22,6 @@ pub trait Action {
 
     /// Whether this action runs with argument in realtime
     fn runnable_arg_realtime(&self) -> bool { false }
-
-    /// Whether this action is supposed to return items
-    fn should_return_items(&self) -> bool { true }
 
     /// Run realtime (auto-complete)
     fn run_arg_realtime(&self, &str) -> ActionResult { unimplemented!() }
@@ -52,8 +49,6 @@ impl PartialAction {
 impl Action for PartialAction {
 
     fn runnable_bare(&self) -> bool { true }
-
-    fn should_return_items(&self) -> bool { self.action.should_return_items() }
 
     fn run_bare(&self) -> ActionResult { self.action.run_arg(&self.arg) }
 

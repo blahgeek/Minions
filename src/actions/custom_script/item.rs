@@ -23,7 +23,7 @@ pub struct ScriptItem {
     pub data: Option<String>,
     pub priority: i32,
 
-    pub action: Vec<String>,
+    pub action: Option<String>,
     pub action_output_format: ScriptOutputFormat,
 
     pub action_run_bare: bool,
@@ -42,7 +42,7 @@ impl ScriptItem {
             icon: None,
             data: None,
             priority: -20,
-            action: Vec::new(),
+            action: None,
             action_output_format: ScriptOutputFormat::Json,
             action_run_bare: true,
             action_run_arg: false,
@@ -54,17 +54,17 @@ impl ScriptItem {
     pub fn into_item(self, script_dir: &Path) -> Item {
 
         let action : Option<ScriptAction> =
-            if self.action.len() == 0 {
-                None
-            } else {
-                Some( ScriptAction {
-                    script_dir: script_dir.to_path_buf(),
-                    action: self.action.clone(),
-                    action_output_format: self.action_output_format,
-                    action_run_bare: self.action_run_bare,
-                    action_run_arg: self.action_run_arg,
-                    action_run_realtime: self.action_run_realtime,
-                } )
+            match self.action {
+                None => None,
+                Some(action) =>
+                    Some( ScriptAction {
+                        script_dir: script_dir.to_path_buf(),
+                        action: action,
+                        action_output_format: self.action_output_format,
+                        action_run_bare: self.action_run_bare,
+                        action_run_arg: self.action_run_arg,
+                        action_run_realtime: self.action_run_realtime,
+                    } ),
             };
 
         let icon =

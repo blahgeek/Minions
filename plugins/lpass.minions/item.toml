@@ -1,5 +1,5 @@
 title = "Lastpass"
 subtitle = "Find all lastpass items"
 icon = "file:logo.png"
-action = ["./run.sh"]
+action = "./run.sh"
 requirements = ["exe:lpass"]

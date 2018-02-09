@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-08
 */
 
 extern crate gtk;
@@ -44,22 +44,16 @@ where F: Fn(&Clipboard) + 'static {
 }
 
 
-pub struct ClipboardHistoryAction {
+struct ClipboardHistoryAction {
     history_max_len: usize,
     history: Arc<Mutex<VecDeque<(String, DateTime<Local>)>>>,
 }
 
 impl Action for ClipboardHistoryAction {
-    fn get_item(&self) -> Item {
-        let mut item = Item::new("Clipboard History");
-        item.subtitle = Some(format!("View clipboard history up to {} entries", self.history_max_len));
-        item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-        item
-    }
 
-    fn accept_nothing(&self) -> bool { true }
+    fn runnable_bare(&self) -> bool { true }
 
-    fn run(&self) -> ActionResult {
+    fn run_bare(&self) -> ActionResult {
         if let Ok(history) = self.history.lock() {
             debug!("Returning {} clipboard histories", history.len());
             if history.len() == 0 {
@@ -81,7 +75,7 @@ impl Action for ClipboardHistoryAction {
 }
 
 impl ClipboardHistoryAction {
-    pub fn new(config: &Config) -> ClipboardHistoryAction {
+    fn new(config: &Config) -> ClipboardHistoryAction {
         let history_max_len = config.get::<usize>(&["clipboard_history", "max_entries"]).unwrap();
         let ignore_single_byte = config.get::<bool>(&["clipboard_history", "ignore_single_byte"]).unwrap();
 
@@ -119,3 +113,12 @@ impl ClipboardHistoryAction {
     }
 }
 
+pub fn get(config: &Config) -> Item {
+    let action = ClipboardHistoryAction::new(config);
+    let mut item = Item::new("Clipboard History");
+    item.subtitle = Some(format!("View clipboard history up to {} entries",
+                                 action.history_max_len));
+    item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+    item.action = Some(Arc::new(Box::new(action)));
+    item
+}

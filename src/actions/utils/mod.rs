@@ -7,4 +7,3 @@
 
 pub mod open;
 pub mod subprocess;
-pub mod requirement;

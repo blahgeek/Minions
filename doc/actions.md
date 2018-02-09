@@ -13,7 +13,6 @@ Some actions requires additional command to run that does not come with Minions.
 - **Clipboard History**: View clipboard history.
 - **Youdao Translate**: Translate.
 - **Lookup in StarDict**: Lookup words in [StarDict](http://stardict-4.sourceforge.net/). Requires [sdcv](https://dushistov.github.io/sdcv/) installed and dictionaries configured.
-- **Save as TXT**: Save text as .txt file in temp dir.
 - **Kill Process**: List running processes and select to kill. Requires *python3* and *psutil* for python3 installed.
 
 And:

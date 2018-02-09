@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-15
+* @Last Modified time: 2018-02-08
 */
 
 extern crate url;
@@ -15,11 +15,13 @@ use self::url::form_urlencoded;
 
 use std::char;
 use std::io::Read;
+use std::sync::Arc;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
+use mcore::config::Config;
 use actions::ActionError;
 
-pub struct Youdao {}
+struct Youdao {}
 
 // yes, here are both app key and secret, I dont care
 static APP_KEY: &'static str = "259f2733d8e07293";
@@ -42,17 +44,10 @@ struct YoudaoResult {
 }
 
 impl Action for Youdao {
-    fn get_item(&self) -> Item {
-        let mut item = Item::new("Youdao Translate");
-        item.badge = Some("Translate".into());
-        item.priority = -5;
-        item.icon = Some(Icon::Character{ch: char::from_u32(0xf02d).unwrap(), font: "FontAwesome".into()});
-        item
-    }
 
-    fn accept_text(&self) -> bool { true }
+    fn runnable_arg (&self) -> bool { true }
 
-    fn run_text(&self, text: &str) -> ActionResult {
+    fn run_arg (&self, text: &str) -> ActionResult {
         let salt = "WTF";
         let mut hash = crypto::md5::Md5::new();
         hash.input(APP_KEY.as_bytes());
@@ -100,6 +95,15 @@ impl Action for Youdao {
 
         Ok(ret)
     }
+}
+
+pub fn get(_: &Config) -> Item {
+    let mut item = Item::new("Youdao Translate");
+    item.badge = Some("Translate".into());
+    item.priority = -5;
+    item.icon = Some(Icon::Character{ch: char::from_u32(0xf02d).unwrap(), font: "FontAwesome".into()});
+    item.action = Some(Arc::new(Box::new(Youdao{})));
+    item
 }
 
 #[test]

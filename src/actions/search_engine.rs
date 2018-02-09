@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-08
 */
 
 extern crate url;
@@ -14,7 +14,7 @@ use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, Encod
 use std::sync::Arc;
 use std::io::Read;
 
-use mcore::action::{Action, ActionResult, ActionArg};
+use mcore::action::{Action, ActionResult, PartialAction};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use actions::utils::open;
@@ -30,8 +30,8 @@ impl EncodeSet for DefaultPlusEncodeSet {
 
 const DEFAULT_PLUS_ENCODE_SET: DefaultPlusEncodeSet = DefaultPlusEncodeSet{};
 
-#[derive(Clone)]
-pub struct SearchEngine {
+#[derive(Deserialize, Clone)]
+struct SearchEngine {
     /// Name of the search engine
     name: String,
     /// The URL of the target, replace %s with search text
@@ -42,18 +42,10 @@ pub struct SearchEngine {
 
 
 impl Action for SearchEngine {
-    fn get_item(&self) -> Item {
-        let mut item = Item::new(&self.name);
-        item.badge = Some("Search Engine".into());
-        item.priority = -10;
-        item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-        item
-    }
+    fn runnable_arg(&self) -> bool { true }
+    fn runnable_arg_realtime(&self) -> bool { self.suggestion_url.is_some() }
 
-    fn accept_text(&self) -> bool { true }
-    fn accept_text_realtime(&self) -> bool { self.suggestion_url.is_some() }
-
-    fn run_text(&self, text: &str) -> ActionResult {
+    fn run_arg(&self, text: &str) -> ActionResult {
         let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
         info!("open: {}", url);
@@ -61,7 +53,7 @@ impl Action for SearchEngine {
         Ok(Vec::new())
     }
 
-    fn run_text_realtime(&self, text: &str) -> ActionResult {
+    fn run_arg_realtime(&self, text: &str) -> ActionResult {
         let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.suggestion_url.as_ref().unwrap().replace("%s", &text);
 
@@ -85,8 +77,9 @@ impl Action for SearchEngine {
                 let mut item = Item::new_text_item(a.as_str().unwrap());
                 item.subtitle = Some(b.as_str().unwrap().into());
                 item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-                item.action = Some(Arc::new(Box::new(self.clone())));
-                item.action_arg = ActionArg::Text(item.title.clone());
+                item.action = Some(Arc::new(Box::new(
+                                PartialAction::new(Box::new(self.clone()), a.as_str().unwrap().into())
+                            )));
                 item
             })
             .collect::<Vec<Item>>()
@@ -95,25 +88,17 @@ impl Action for SearchEngine {
 
 }
 
-#[derive(Deserialize)]
-struct ConfigSite {
-    name: String,
-    address: String,
-    suggestion_url: Option<String>,
-}
-
-impl SearchEngine {
-    pub fn get_all(config: &Config) -> Vec<SearchEngine> {
-        let sites = config.get::<Vec<ConfigSite>>(&["search_engine", "sites"]).unwrap();
-        sites.into_iter()
-            .map(|site| {
-                debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
-                SearchEngine {
-                    name: site.name,
-                    address: site.address,
-                    suggestion_url: site.suggestion_url,
-                }
-            })
+pub fn get(config: &Config) -> Vec<Item> {
+    let sites = config.get::<Vec<SearchEngine>>(&["search_engine", "sites"]).unwrap();
+    sites.into_iter()
+        .map(|site| {
+            debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
+            let mut item = Item::new(&site.name);
+            item.badge = Some("Search Engine".into());
+            item.priority = -10;
+            item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+            item.action = Some(Arc::new(Box::new(site)));
+            item
+        })
         .collect()
-    }
 }

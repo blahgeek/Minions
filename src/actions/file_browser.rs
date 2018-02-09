@@ -2,32 +2,26 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-08
 */
 
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 
-use mcore::item::{Item, ItemData, Icon};
+use mcore::item::{Item, Icon};
 use mcore::action::{Action, ActionResult};
 use mcore::config::Config;
 use actions::utils::open;
 
-pub struct FileBrowserEntry {
+struct FileBrowserEntry {
     name: String,
     path: PathBuf,
     is_file: bool,
 }
 
 
-#[derive(Deserialize)]
-struct EntryConfig {
-    name: String,
-    path: String,
-}
-
 impl FileBrowserEntry {
-    pub fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
+    fn new(name: String, path: PathBuf) -> Option<FileBrowserEntry> {
         if ! (path.is_dir() || path.is_file()) {
             warn!("Invalid path: {:?}", path);
             None
@@ -41,22 +35,7 @@ impl FileBrowserEntry {
         }
     }
 
-    pub fn get_all(config: &Config) -> Vec<FileBrowserEntry> {
-        let entries = config.get::<Vec<EntryConfig>>(&["file_browser", "entries"]).unwrap();
-
-        entries.into_iter()
-            .map(|c| {
-                FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
-            })
-        .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
-            .collect()
-    }
-}
-
-
-impl Action for FileBrowserEntry {
-    fn get_item (&self) -> Item {
+    fn into_item(self) -> Item {
         let mut ret = Item::new(&self.name);
         ret.subtitle = Some(self.path.to_string_lossy().into());
         ret.badge = if self.is_file {
@@ -69,16 +48,19 @@ impl Action for FileBrowserEntry {
         } else {
             Icon::Character{ch: '', font: "FontAwesome".into()}
         });
-        ret.data = Some(ItemData::Path(self.path.clone()));
+        ret.data = Some(self.path.to_string_lossy().into());
         ret.priority = -10;
+        ret.action = Some(Arc::new(Box::new(self)));
         ret
     }
+}
 
-    fn accept_nothing(&self) -> bool { true }
 
-    fn should_return_items(&self) -> bool { !self.is_file }
+impl Action for FileBrowserEntry {
 
-    fn run(&self) -> ActionResult {
+    fn runnable_bare (&self) -> bool { true }
+
+    fn run_bare (&self) -> ActionResult {
         if self.is_file {
             info!("open: {:?}", self.path);
             open::that(&self.path.to_string_lossy())?;
@@ -92,9 +74,7 @@ impl Action for FileBrowserEntry {
                 match entry {
                     Ok(entry) => {
                         if let Some(act) = FileBrowserEntry::new(entry.file_name().to_string_lossy().into(), entry.path()) {
-                            let mut item = act.get_item();
-                            item.action = Some(Arc::new(Box::new(act)));
-                            ret.push(item);
+                            ret.push(act.into_item())
                         }
                     },
                     Err(error) => {
@@ -104,8 +84,7 @@ impl Action for FileBrowserEntry {
             }
             if let Some(parent) = self.path.parent() {
                 if let Some(act) = FileBrowserEntry::new("..".into(), parent.into()) {
-                    let mut item = act.get_item();
-                    item.action = Some(Arc::new(Box::new(act)));
+                    let mut item = act.into_item();
                     item.priority = -100;
                     ret.push(item);
                 }
@@ -113,4 +92,23 @@ impl Action for FileBrowserEntry {
             Ok(ret)
         }
     }
+}
+
+#[derive(Deserialize)]
+struct EntryConfig {
+    name: String,
+    path: String,
+}
+
+
+pub fn get(config: &Config) -> Vec<Item> {
+    let entries = config.get::<Vec<EntryConfig>>(&["file_browser", "entries"]).unwrap();
+
+    entries.into_iter()
+        .map(|c| {
+            FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
+        })
+        .filter(|x| x.is_some())
+            .map(|x| x.unwrap().into_item())
+            .collect()
 }

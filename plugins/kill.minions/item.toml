@@ -1,0 +1,4 @@
+title = "Kill Process"
+subtitle = "List all running proccesses, select to kill"
+action = "./run.py"
+requirements = ["py3:psutil"]

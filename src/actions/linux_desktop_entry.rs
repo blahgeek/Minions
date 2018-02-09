@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-08
 */
 
 extern crate shlex;
@@ -12,15 +12,16 @@ use self::ini::Ini;
 
 use std::ffi::OsStr;
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::path::Path;
 use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, ItemData, Icon};
+use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use actions::ActionError;
 use actions::utils::subprocess;
 
 #[derive(Debug)]
-pub struct LinuxDesktopEntry {
+struct LinuxDesktopEntry {
     name: String,
     comment: Option<String>,
     exec: Vec<String>,
@@ -30,51 +31,24 @@ pub struct LinuxDesktopEntry {
 
 impl Action for LinuxDesktopEntry {
 
-    fn get_item(&self) -> Item {
-        let exe_path = if self.exec.len() > 0 {
-            Some(self.exec[0].clone())
-        } else { None };
-        let comment = self.comment.clone();
+    fn runnable_bare (&self) -> bool { true }
 
-        let mut item = Item::new(&self.name);
-        if let Some(exe_path) = exe_path {
-            item.data = Some(ItemData::Path(PathBuf::from(&exe_path)));
-        }
-        item.subtitle = comment;
-        item.badge = Some("Desktop Entry".into());
-
-        item.icon = if let Some(ref icon_text) = self.icon_text {
-            Some( if icon_text.starts_with("/") {
-                Icon::File(Path::new(&icon_text).to_path_buf())
-            } else {
-                Icon::GtkName(icon_text.clone())
-            })
-        } else {
-            Some(Icon::GtkName("gtk-missing-image".into()))
-        };
-        item
-    }
-
-    fn accept_nothing(&self) -> bool { true }
-
-    fn accept_path(&self) -> bool {
+    fn runnable_arg (&self) -> bool {
         self.exec.iter().find(|arg| (*arg == "%f" || *arg == "%F")).is_some()
     }
 
-    fn run_path(&self, path: &Path) -> ActionResult {
-        self.run_path_or_empty(Some(path))
+    fn run_arg (&self, arg: &str) -> ActionResult {
+        self.run_path_or_empty(Some(arg))
     }
 
-    fn run(&self) -> ActionResult {
+    fn run_bare (&self) -> ActionResult {
         self.run_path_or_empty(None)
     }
-
-    fn should_return_items(&self) -> bool { false }
 }
 
 impl LinuxDesktopEntry {
 
-    fn run_path_or_empty(&self, path: Option<&Path>) -> ActionResult {
+    fn run_path_or_empty(&self, path: Option<&str>) -> ActionResult {
         if self.exec.len() <= 0 {
             return Err(Box::new(ActionError::new("Executable path is empty")));
         }
@@ -91,9 +65,7 @@ impl LinuxDesktopEntry {
         for arg in self.exec.iter() {
             if *arg == "%f" || *arg == "%F" {
                 if let Some(p) = path {
-                    if let Some(p) = p.to_str() {
-                        cmd.push(p);
-                    }
+                    cmd.push(p);
                 }
             } else if *arg == "%u" || *arg == "%U" {
                 // nop
@@ -130,7 +102,7 @@ impl LinuxDesktopEntry {
         })
     }
 
-    pub fn get_all(config: &Config) -> Vec<LinuxDesktopEntry> {
+    fn get_all(config: &Config) -> Vec<LinuxDesktopEntry> {
         let directories = config.get::<Vec<String>>(&["linux_desktop_entry", "directories"]).unwrap();
 
         let application_dirs = directories.iter().map(|x| Path::new(x));
@@ -157,5 +129,35 @@ impl LinuxDesktopEntry {
 
         ret
     }
+}
+
+
+pub fn get(config: &Config) -> Vec<Item> {
+    LinuxDesktopEntry::get_all(config).into_iter()
+        .map(|action| {
+            let exe_path = if action.exec.len() > 0 {
+                Some(action.exec[0].clone())
+            } else { None };
+            let comment = action.comment.clone();
+
+            let mut item = Item::new(&action.name);
+            if let Some(exe_path) = exe_path {
+                item.data = Some(exe_path);
+            }
+            item.subtitle = comment;
+            item.badge = Some("Desktop Entry".into());
+
+            item.icon = if let Some(ref icon_text) = action.icon_text {
+                Some( if icon_text.starts_with("/") {
+                    Icon::File(Path::new(&icon_text).to_path_buf())
+                } else {
+                    Icon::GtkName(icon_text.clone())
+                })
+            } else {
+                Some(Icon::GtkName("gtk-missing-image".into()))
+            };
+            item.action = Some(Arc::new(Box::new(action)));
+            item
+        }).collect()
 }
 

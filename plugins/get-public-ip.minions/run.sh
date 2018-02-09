@@ -5,9 +5,5 @@
 # @Last Modified time: 2017-08-20
 
 IP="$(curl http://whatismyip.akamai.com/)"
-echo "
-[{
-    \"title\": \"$IP\",
-    \"icon\": \"character:FontAwesome:\"
-}]
-"
+echo -e "title:$IP\x01\n"
+echo -e "icon:character:FontAwesome:\x01\n"

@@ -1,7 +1,7 @@
 extern crate serde_json;
 extern crate shlex;
 
-use std;
+use std::error::Error;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -39,6 +39,27 @@ impl Action for ScriptAction {
     }
 }
 
+
+fn parse_json (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+    Ok(serde_json::from_slice(output)?)
+}
+
+fn parse_escaped_test (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+    let mut ret : Vec<ScriptItem> = Vec::new();
+    for item_output in output.split(|x| *x == 0u8) {
+        let mut item_json = serde_json::map::Map::<String, serde_json::Value>::new();
+        for line in item_output.split(|x| *x == 1u8) {
+            let line = String::from_utf8(line.to_vec())?;
+            let parts: Vec<&str> = line.as_str().trim().splitn(2, ':').collect();
+            if parts.len() == 2 {
+                item_json.insert(parts[0].into(), serde_json::Value::String(parts[1].into()));
+            }
+        }
+        ret.push(serde_json::from_value(serde_json::Value::Object(item_json))?);
+    }
+    Ok(ret)
+}
+
 impl ScriptAction {
 
     fn run_action (&self, arg: Option<&str>, typ: &str) -> ActionResult {
@@ -59,23 +80,13 @@ impl ScriptAction {
         cmd.current_dir(&self.script_dir);
         cmd.env("MINIONS_RUN_TYPE", typ);
         debug!("Running script action: {:?}", cmd);
-        self.output_to_items(cmd.output()?)
-    }
 
-    fn output_to_items(&self, output: std::process::Output) -> ActionResult {
-        if !output.status.success() {
-            Err(Box::new(ActionError::new("Action execution failed")))
-        } else {
-            // TODO: match self.script_return_format
-            let output = &output.stdout;
-            let json_output : Vec<ScriptItem> = serde_json::from_slice(output)?;
-            if json_output.len() > 0 {
-                Ok(json_output.into_iter()
-                   .map(|x| x.into_item(&self.script_dir))
-                   .collect())
-            } else {
-                Err(Box::new(ActionError::new("Empty result from action")))
-            }
-        }
+        let output = cmd.output()?.stdout;
+        let items = match self.action_output_format {
+            ScriptOutputFormat::Json => parse_json(&output),
+            ScriptOutputFormat::EscapedText => parse_escaped_test(&output),
+        }?;
+
+        Ok(items.into_iter().map(|x| x.into_item(&self.script_dir)).collect())
     }
 }

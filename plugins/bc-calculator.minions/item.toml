@@ -2,6 +2,7 @@ title = "Calculator"
 subtitle = "Math calculator using bc command"
 icon = "character::+"
 action = "./run.sh"
+action_output_format = "escaped_text"
 action_run_bare = false
 action_run_arg = true
 action_run_realtime = true

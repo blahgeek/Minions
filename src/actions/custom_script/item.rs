@@ -11,6 +11,7 @@ use super::parser::parse_icon;
 pub enum ScriptOutputFormat {
     Json,
     EscapedText,
+    PlainText,
 }
 
 #[derive(Deserialize, Clone)]

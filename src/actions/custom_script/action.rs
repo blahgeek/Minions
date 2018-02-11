@@ -44,7 +44,7 @@ fn parse_json (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync
     Ok(serde_json::from_slice(output)?)
 }
 
-fn parse_escaped_test (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
     let mut ret : Vec<ScriptItem> = Vec::new();
     for item_output in output.split(|x| *x == 0u8) {
         let mut item_json = serde_json::map::Map::<String, serde_json::Value>::new();
@@ -56,6 +56,16 @@ fn parse_escaped_test (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Sen
             }
         }
         ret.push(serde_json::from_value(serde_json::Value::Object(item_json))?);
+    }
+    Ok(ret)
+}
+
+fn parse_plain_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+    let mut ret : Vec<ScriptItem> = Vec::new();
+    for item_output in output.split(|x| *x == '\n' as u8) {
+        let mut item = ScriptItem::default();
+        item.title = String::from_utf8(item_output.to_vec())?;
+        ret.push(item);
     }
     Ok(ret)
 }
@@ -82,10 +92,16 @@ impl ScriptAction {
         debug!("Running script action: {:?}", cmd);
 
         let output = cmd.output()?.stdout;
-        let items = match self.action_output_format {
-            ScriptOutputFormat::Json => parse_json(&output),
-            ScriptOutputFormat::EscapedText => parse_escaped_test(&output),
-        }?;
+        let items =
+            if output.len() == 0 {
+                Vec::new()
+            } else {
+                match self.action_output_format {
+                    ScriptOutputFormat::Json => parse_json(&output),
+                    ScriptOutputFormat::EscapedText => parse_escaped_text(&output),
+                    ScriptOutputFormat::PlainText => parse_plain_text(&output),
+                }?
+            };
 
         Ok(items.into_iter().map(|x| x.into_item(&self.script_dir)).collect())
     }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-11
 */
 
 extern crate gtk;
@@ -67,7 +67,7 @@ impl Context {
 
     pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
-        clipboard.set_text(item.get_copy_str());
+        clipboard.set_text(item.data.as_ref().unwrap_or(&item.title));
         Ok(())
     }
 
@@ -152,19 +152,14 @@ impl Context {
         thread_uuid
     }
 
-    pub fn quicksend_able(&self, item: &Item) -> bool {
-        self.reference.is_none() && item.data.is_some()
-    }
-
     pub fn quicksend(&mut self, item: &Item) -> Result<(), Box<Error + Send + Sync>> {
-        assert!(self.quicksend_able(item));
         self.list_items =
             self.action_items.iter()
             .filter(|item| {
                 item.action.as_ref().unwrap().runnable_arg()
             }).map(|x| x.clone()).collect();
         self.list_items.sort_by_key(|item| item.priority );
-        self.reference = item.data.clone();
+        self.reference = Some(item.data.as_ref().unwrap_or(&item.title).clone());
         Ok(())
     }
 

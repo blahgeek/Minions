@@ -281,16 +281,11 @@ impl MinionsApp {
                     if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
                         warn!("Unable to record hit: {}", error);
                     }
-                    if self.ctx.quicksend_able(item) {
-                        if let Err(error) = self.ctx.quicksend(item) {
-                            debug!("Unable to quicksend item: {}", error);
-                            Status::Error(Rc::new(error))
-                        } else {
-                            Status::Default
-                        }
+                    if let Err(error) = self.ctx.quicksend(item) {
+                        debug!("Unable to quicksend item: {}", error);
+                        Status::Error(Rc::new(error))
                     } else {
-                        debug!("Item not sendable");
-                        self.status.clone()
+                        Status::Default
                     }
                 }
             },

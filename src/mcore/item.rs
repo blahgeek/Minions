@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-05
+* @Last Modified time: 2018-02-11
 */
 
 use std;
@@ -82,15 +82,6 @@ impl Item {
     pub fn get_search_str(&self) -> &str {
         if let Some(ref search_str) = self.search_str {
             &search_str
-        } else {
-            &self.title
-        }
-    }
-
-    /// Get data for copy
-    pub fn get_copy_str(&self) -> &str {
-        if let Some(ref s) = self.data {
-            &s
         } else {
             &self.title
         }

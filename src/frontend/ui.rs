@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-11
+* @Last Modified time: 2018-02-12
 */
 
 extern crate gdk_pixbuf;
@@ -125,8 +125,9 @@ impl MinionsUI {
 
     pub fn set_error(&self, error: &Box<Error>) {
         let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
-        label.set_text(error.description());
+        label.set_text(&format!("{}: {}", error.description(), error));
         label.show();
+        set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("dialog-warning".into()));
     }
 
     pub fn set_reference(&self, reference: Option<&String>) {

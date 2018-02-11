@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-11
 */
 
 extern crate gdk_pixbuf;
@@ -124,27 +124,19 @@ impl MinionsUI {
     }
 
     pub fn set_error(&self, error: &Box<Error>) {
-        let refinfo_box = self.window_builder.get_object::<gtk::Box>("refinfo_box").unwrap();
-        let refinfo_title = self.window_builder.get_object::<gtk::Label>("refinfo_text_title").unwrap();
-        let refinfo_subtitle = self.window_builder.get_object::<gtk::Label>("refinfo_text_subtitle").unwrap();
-
-        refinfo_title.set_text("Error occured during execution");
-        refinfo_subtitle.set_text(error.description());
-        refinfo_box.show();
+        let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
+        label.set_text(error.description());
+        label.show();
     }
 
     pub fn set_reference(&self, reference: Option<&String>) {
-        let refinfo_box = self.window_builder.get_object::<gtk::Box>("refinfo_box").unwrap();
-        let refinfo_title = self.window_builder.get_object::<gtk::Label>("refinfo_text_title").unwrap();
-        let refinfo_subtitle = self.window_builder.get_object::<gtk::Label>("refinfo_text_subtitle").unwrap();
-
+        let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
         if let Some(text) = reference {
-            refinfo_title.set_text(&text);
-            refinfo_subtitle.set_text(&format!("Text data: {} bytes", text.len()));
-            self.set_action_name(Some("Open Text with"));
-            refinfo_box.show();
+            label.set_text(&text);
+            self.set_action_name(Some("Quicksend"));
+            label.show();
         } else {
-            refinfo_box.hide();
+            label.hide();
         }
     }
 

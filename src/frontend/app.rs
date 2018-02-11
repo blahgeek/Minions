@@ -34,17 +34,12 @@ enum Status {
     Initial,
     Running(Rc<mpsc::Receiver<ActionResult>>),
     Error(Rc<Box<Error>>), // Rc is for Clone
-    FilteringNone,
-    FilteringEntering {
-        selected_idx: i32,
-        filter_text: String,
-        filter_text_lasttime: std::time::Instant,
-        filtered_items: Vec<Rc<Item>>,
-    },
-    FilteringMoving {
+    Default,
+    Filtering {
         selected_idx: i32,
         filter_text: String,
         filtered_items: Vec<Rc<Item>>,
+        timestamp: std::time::Instant,
     },
     Entering {
         item: Rc<Item>, // entering text for item
@@ -59,7 +54,7 @@ pub struct MinionsApp {
     ctx: Context,
 
     status: Status,
-    filter_timeout: u32,
+    filter_timeout: std::time::Duration,
     matcher: Matcher,
 }
 
@@ -131,7 +126,7 @@ impl MinionsApp {
                 self.ui.set_spinning(false);
                 self.ui.set_error(&error);
             },
-            Status::FilteringNone => {
+            Status::Default => {
                 self.ui.set_spinning(false);
                 self.ui.set_entry(None);
                 self.ui.set_filter_text("");
@@ -143,16 +138,11 @@ impl MinionsApp {
                 }
                 self.ui.set_items(self.ctx.list_items.iter().map(|x| x.deref()).collect(), -1, &self.ctx);
             },
-            Status::FilteringEntering {
+            Status::Filtering {
                 selected_idx,
                 ref filter_text,
-                filter_text_lasttime: _,
-                ref filtered_items
-            } |
-            Status::FilteringMoving {
-                selected_idx,
-                ref filter_text,
-                ref filtered_items
+                ref filtered_items,
+                ..
             } => {
                 if selected_idx < 0 {
                     self.ui.set_entry(None);
@@ -193,19 +183,19 @@ impl MinionsApp {
         }
     }
 
-    fn process_timeout(&mut self, lasttime: std::time::Instant) {
-        if let Status::FilteringEntering {
-            selected_idx: _,
-            filter_text: _,
-            filter_text_lasttime,
-            filtered_items: _
-        } = self.status {
-            if filter_text_lasttime == lasttime {
-                self.status = Status::FilteringNone;
-                self.update_ui();
-            }
-        }
-    }
+    // fn process_timeout(&mut self, lasttime: std::time::Instant) {
+    //     if let Status::Filtering {
+    //         selected_idx: _,
+    //         filter_text: _,
+    //         filter_text_lasttime,
+    //         filtered_items: _
+    //     } = self.status {
+    //         if filter_text_lasttime == lasttime {
+    //             self.status = Status::Default;
+    //             self.update_ui();
+    //         }
+    //     }
+    // }
 
     fn process_keyevent_escape(&mut self) {
         trace!("Processing keyevent Escape");
@@ -215,15 +205,15 @@ impl MinionsApp {
                 self.ui.window.hide();
                 Status::Initial
             },
-            Status::FilteringNone => {
+            Status::Default => {
                 self.ctx.reset();
                 Status::Initial
             },
             Status::Running(_) => {
                 debug!("Drop thread");
-                Status::FilteringNone
+                Status::Default
             },
-            _ => Status::FilteringNone,
+            _ => Status::Default,
         };
         self.update_ui();
     }
@@ -231,23 +221,19 @@ impl MinionsApp {
     fn process_keyevent_move(&mut self, delta: i32) {
         trace!("Processing keyevent Move: {}", delta);
         self.status = match self.status.clone() {
-            Status::FilteringNone | Status::Initial => {
-                Status::FilteringMoving {
+            Status::Default | Status::Initial => {
+                Status::Filtering {
                     selected_idx: 0,
                     filter_text: String::new(),
                     filtered_items: self.ctx.list_items.clone(),
+                    timestamp: std::time::Instant::now(),
                 }
             },
-            Status::FilteringEntering {
+            Status::Filtering {
                 selected_idx,
                 filter_text,
-                filter_text_lasttime: _,
-                filtered_items
-            } |
-            Status::FilteringMoving {
-                selected_idx,
-                filter_text,
-                filtered_items
+                filtered_items,
+                timestamp,
             } => {
                 let mut new_idx = selected_idx + delta;
                 if filtered_items.len() == 0 {
@@ -260,10 +246,11 @@ impl MinionsApp {
                         new_idx = 0;
                     }
                 }
-                Status::FilteringMoving {
+                Status::Filtering {
                     selected_idx: new_idx,
                     filter_text: filter_text,
-                    filtered_items: filtered_items
+                    filtered_items: filtered_items,
+                    timestamp: timestamp,
                 }
             },
             Status::Entering {
@@ -294,16 +281,11 @@ impl MinionsApp {
     fn process_keyevent_tab(&mut self) {
         trace!("Processing keyevent Tab");
         self.status = match self.status.clone() {
-            Status::FilteringEntering {
+            Status::Filtering {
                 selected_idx,
                 filter_text,
-                filter_text_lasttime: _,
-                filtered_items
-            } |
-            Status::FilteringMoving {
-                selected_idx,
-                filter_text,
-                filtered_items
+                filtered_items,
+                ..
             } => {
                 if selected_idx < 0 {
                     debug!("No item to send");
@@ -318,7 +300,7 @@ impl MinionsApp {
                             debug!("Unable to quicksend item: {}", error);
                             Status::Error(Rc::new(error))
                         } else {
-                            Status::FilteringNone
+                            Status::Default
                         }
                     } else {
                         debug!("Item not sendable");
@@ -331,61 +313,40 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    fn _make_status_filteringentering(&self, text: String) -> Status {
-        let filtered_items = self.matcher.sort(&text, &self.ctx.list_items);
-        let selected_idx = if filtered_items.len() == 0 { -1 } else { 0 };
-
-        let now = std::time::Instant::now();
-        let now_ = now.clone();
-
-        if self.filter_timeout > 0 {
-            gtk::timeout_add(self.filter_timeout, move || {
-                APP.with(move |app| {
-                    if let Some(ref mut app) = *app.borrow_mut() {
-                        app.process_timeout(now_);
-                    }
-                });
-                Continue(false)
-            });
-        }
-
-        Status::FilteringEntering {
-            selected_idx: selected_idx,
-            filter_text: text,
-            filter_text_lasttime: now,
-            filtered_items: filtered_items,
-        }
-    }
-
     fn process_keyevent_char(&mut self, ch: char) {
         trace!("Processing keyevent Char: {}", ch);
-        let mut should_update_ui = true;
-        self.status = match self.status.clone() {
-            Status::Initial | Status::FilteringNone => {
+
+        let newfilter = match self.status {
+            Status::Initial | Status::Default => {
                 let mut text = String::new();
                 text.push(ch);
-                self._make_status_filteringentering(text)
+                Some(text)
             },
-            Status::FilteringEntering {
-                selected_idx: _,
-                mut filter_text,
-                filter_text_lasttime: _,
-                filtered_items: _
-            } |
-            Status::FilteringMoving {
-                selected_idx: _,
-                mut filter_text,
-                filtered_items: _,
+            Status::Filtering {
+                ref filter_text,
+                ref timestamp,
+                ..
             } => {
-                filter_text.push(ch);
-                self._make_status_filteringentering(filter_text)
+                let mut text = String::new();
+                if timestamp.elapsed() < self.filter_timeout {
+                    text = filter_text.clone();
+                }
+                text.push(ch);
+                Some(text)
             },
-            status @ _ => {
-                should_update_ui = false;
-                status
-            },
+            _ => None,
         };
-        if should_update_ui {
+
+        if let Some(newfilter) = newfilter {
+            let filtered_items = self.matcher.sort(&newfilter, &self.ctx.list_items);
+            let selected_idx = if filtered_items.len() == 0 { -1 } else { 0 };
+
+            self.status = Status::Filtering {
+                selected_idx: selected_idx,
+                filter_text: newfilter,
+                filtered_items: filtered_items,
+                timestamp: std::time::Instant::now(),
+            };
             self.update_ui();
         }
     }
@@ -394,16 +355,11 @@ impl MinionsApp {
         trace!("Processing keyevent Space");
         let mut should_update_ui = false;
         self.status = match self.status.clone() {
-            Status::FilteringEntering {
+            Status::Filtering {
                 selected_idx,
                 filter_text,
-                filter_text_lasttime: _,
-                filtered_items
-            } |
-            Status::FilteringMoving {
-                selected_idx,
-                filter_text,
-                filtered_items
+                filtered_items,
+                ..
             } => {
                 if selected_idx < 0 {
                     debug!("No item to select");
@@ -518,7 +474,7 @@ impl MinionsApp {
             self.status = match res {
                 Ok(res) => {
                     self.ctx.async_select_callback(res);
-                    Status::FilteringNone
+                    Status::Default
                 },
                 Err(error) => {
                     debug!("Error from channel: {}", error);
@@ -534,17 +490,12 @@ impl MinionsApp {
     fn process_keyevent_enter(&mut self) {
         trace!("Processing keyevent Enter");
         self.status = match self.status.clone() {
-            status @ Status::Initial | status @ Status::FilteringNone => status,
-            Status::FilteringEntering {
+            status @ Status::Initial | status @ Status::Default => status,
+            Status::Filtering {
                 selected_idx,
                 filter_text,
-                filter_text_lasttime: _,
-                filtered_items
-            } |
-            Status::FilteringMoving {
-                selected_idx,
-                filter_text,
-                filtered_items
+                filtered_items,
+                ..
             } => {
                 if selected_idx < 0 {
                     debug!("No item to select");
@@ -627,23 +578,18 @@ impl MinionsApp {
     fn process_keyevent_copy(&mut self) {
         trace!("Process keyevent copy");
         self.status = match self.status.clone() {
-            Status::FilteringEntering {
-                selected_idx,
-                filter_text,
-                filter_text_lasttime: _,
-                filtered_items,
-            } |
-            Status::FilteringMoving {
+            Status::Filtering {
                 selected_idx,
                 filter_text,
                 filtered_items,
+                ..
             } => {
                 if let Err(error) = self.ctx.copy_content_to_clipboard(&filtered_items[selected_idx as usize]) {
                     warn!("Unable to copy item: {}", error);
                 } else {
                     info!("Item copied");
                 }
-                Status::FilteringMoving{selected_idx, filter_text, filtered_items}
+                self.status.clone()
             },
             status @ _ => { status },
         };
@@ -701,7 +647,7 @@ impl MinionsApp {
             if let Err(error) = self.ctx.quicksend_from_clipboard() {
                 warn!("Unable to get content from clipboard: {}", error);
             } else {
-                self.status = Status::FilteringNone;
+                self.status = Status::Default;
             }
         }
         self.ui.window.show();
@@ -716,7 +662,7 @@ impl MinionsApp {
             ui: MinionsUI::new(),
             ctx: ctx,
             status: Status::Initial,
-            filter_timeout: global_config.get::<u32>(&["filter_timeout"]).unwrap(),
+            filter_timeout: std::time::Duration::from_millis(global_config.get::<u64>(&["filter_timeout"]).unwrap()),
             matcher: matcher,
         };
         app.update_ui();

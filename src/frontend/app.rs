@@ -314,7 +314,8 @@ impl MinionsApp {
                 ..
             } => {
                 let mut text = String::new();
-                if timestamp.elapsed() < self.filter_timeout {
+                if (self.filter_timeout.as_secs() == 0 && self.filter_timeout.subsec_nanos() == 0)
+                    || timestamp.elapsed() < self.filter_timeout {
                     text = filter_text.clone();
                 }
                 text.push(ch);

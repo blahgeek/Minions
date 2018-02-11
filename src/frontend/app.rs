@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-02-11
 */
 
 extern crate glib;
@@ -46,15 +46,11 @@ enum Status {
         filter_text: String,
         filtered_items: Vec<Rc<Item>>,
     },
-    EnteringText {
+    Entering {
         item: Rc<Item>, // entering text for item
         suggestions: Vec<Rc<Item>>,
+        selected_idx: i32, // selected index of suggestions
         receiver: Option<Rc<mpsc::Receiver<ActionResult>>>, // receiver for running suggestion
-    },
-    EnteringTextMoving {
-        item: Rc<Item>,
-        suggestions: Vec<Rc<Item>>,
-        selected_idx: i32,
     },
 }
 
@@ -170,9 +166,10 @@ impl MinionsApp {
                 self.ui.set_items(filtered_items.iter().map(|x| x.deref()).collect(),
                                   selected_idx, &self.ctx);
             },
-            Status::EnteringText {
+            Status::Entering {
                 ref item,
                 ref suggestions,
+                selected_idx,
                 receiver: _
             } => {
                 self.ui.set_spinning(false);
@@ -180,7 +177,7 @@ impl MinionsApp {
                 glib::timeout_add(50, move || {
                     APP.with(|app| {
                         if let Some(ref app) = *app.borrow() {
-                            if let Status::EnteringText{..} = app.status {
+                            if let Status::Entering{..} = app.status {
                                 app.ui.set_entry_editable();
                             }
                         }
@@ -191,19 +188,8 @@ impl MinionsApp {
                 self.ui.set_filter_text("");
                 self.ui.set_action(Some(&item));
                 self.ui.set_reference(None);
-                self.ui.set_items(suggestions.iter().map(|x| x.deref()).collect(), -1, &self.ctx);
-            },
-            Status::EnteringTextMoving {
-                ref item,
-                ref suggestions,
-                selected_idx
-            } => {
-                self.ui.set_spinning(false);
-                self.ui.set_filter_text("");
-                self.ui.set_action(Some(&item));
-                self.ui.set_reference(None);
                 self.ui.set_items(suggestions.iter().map(|x| x.deref()).collect(), selected_idx, &self.ctx);
-            }
+            },
         }
     }
 
@@ -236,13 +222,6 @@ impl MinionsApp {
             Status::Running(_) => {
                 debug!("Drop thread");
                 Status::FilteringNone
-            },
-            Status::EnteringTextMoving { ref item, ..} => {
-                Status::EnteringText {
-                    item: item.clone(),
-                    suggestions: Vec::new(),
-                    receiver: None
-                }
             },
             _ => Status::FilteringNone,
         };
@@ -287,35 +266,24 @@ impl MinionsApp {
                     filtered_items: filtered_items
                 }
             },
-            Status::EnteringText {
+            Status::Entering {
                 item,
                 suggestions,
-                receiver
-            } => {
-                if suggestions.len() == 0 {
-                    Status::EnteringText { item: item, suggestions: suggestions, receiver: receiver }
-                } else {
-                    Status::EnteringTextMoving {
-                        item: item,
-                        selected_idx: if delta > 0 { 0 } else { suggestions.len() as i32 - 1 },
-                        suggestions: suggestions,
-                    }
-                }
-            },
-            Status::EnteringTextMoving {
-                item, suggestions, selected_idx
+                selected_idx,
+                ..
             } => {
                 let mut new_idx = selected_idx + delta;
                 if new_idx >= suggestions.len() as i32 {
                     new_idx = suggestions.len() as i32 - 1;
                 }
                 if new_idx < 0 {
-                    new_idx = 0;
+                    new_idx = -1;
                 }
-                Status::EnteringTextMoving {
+                Status::Entering {
                     item: item,
                     suggestions: suggestions,
-                    selected_idx: new_idx
+                    selected_idx: new_idx,
+                    receiver: None, // drop receiver
                 }
             },
             status @ _ => status,
@@ -447,9 +415,10 @@ impl MinionsApp {
                     }
                     if self.ctx.selectable_with_text(item) {
                         should_update_ui = true;
-                        Status::EnteringText{
+                        Status::Entering{
                             item: item.clone(),
                             suggestions: Vec::new(),
+                            selected_idx: -1,
                             receiver: None,
                         }
                     } else {
@@ -468,17 +437,8 @@ impl MinionsApp {
 
     fn process_entry_text_changed(&mut self) {
 
-        if let Status::EnteringTextMoving{item, suggestions, ..} = self.status.clone() {
-            // go back to entering
-            self.status = Status::EnteringText {
-                item: item,
-                suggestions: suggestions,
-                receiver: None
-            }
-        }
-
         // only match if receiver is None
-        if let Status::EnteringText{item, suggestions, receiver: None} = self.status.clone() {
+        if let Status::Entering{item, suggestions, receiver: None, ..} = self.status.clone() {
             let entry_text = self.ui.textentry.get_text().unwrap();
             trace!("Entry text changed: {}", &entry_text);
 
@@ -495,9 +455,10 @@ impl MinionsApp {
                         });
                     }
                 });
-                self.status = Status::EnteringText {
+                self.status = Status::Entering {
                     item: item,
                     suggestions: suggestions,
+                    selected_idx: -1,
                     receiver: Some(Rc::new(recv_ch)),
                 };
             }
@@ -505,22 +466,24 @@ impl MinionsApp {
     }
 
     fn process_running_text_realtime_callback(&mut self, text: &str) {
-        if let Status::EnteringText{item, suggestions, receiver: Some(receiver)} = self.status.clone() {
+        if let Status::Entering{item, suggestions, receiver: Some(receiver), ..} = self.status.clone() {
             if let Ok(res) = receiver.try_recv() {
                 trace!("Received realtime text result on callback");
                 self.status = match res {
                     Ok(res) => {
-                        Status::EnteringText {
+                        Status::Entering {
                             item: item,
                             suggestions: res.into_iter().map(|x| Rc::new(x)).collect(),
+                            selected_idx: -1,
                             receiver: None
                         }
                     },
                     Err(error) => {
                         warn!("Error running realtime text: {}", error);
-                        Status::EnteringText {
+                        Status::Entering {
                             item: item,
                             suggestions: suggestions,
+                            selected_idx: -1,
                             receiver: None,
                         }
                     }
@@ -606,9 +569,10 @@ impl MinionsApp {
                         });
                         Status::Running(Rc::new(recv_ch))
                     } else if self.ctx.selectable_with_text(&item) {
-                        Status::EnteringText{
+                        Status::Entering{
                             item: item.clone(),
                             suggestions: Vec::new(),
+                            selected_idx: -1,
                             receiver: None,
                         }
                     } else {
@@ -617,26 +581,22 @@ impl MinionsApp {
                     }
                 }
             },
-            Status::EnteringText{item, ..} => {
-                let text = self.ui.get_entry_text();
+            Status::Entering{item, suggestions, selected_idx, ..} => {
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
 
-                self.ctx.async_select_with_text(&item, &text, move |res: ActionResult| {
-                    if let Err(error) = send_ch.send(res) {
-                        debug!("Unable to send to channel: {}", error);
-                    } else {
-                        glib::idle_add( || {
-                            APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
-                            Continue(false)
-                        });
-                    }
-                });
-                Status::Running(Rc::new(recv_ch))
-            },
-            Status::EnteringTextMoving{item: _, suggestions, selected_idx} => {
                 if selected_idx < 0 {
-                    debug!("No item to select");
-                    self.status.clone()
+                    let text = self.ui.get_entry_text();
+                    self.ctx.async_select_with_text(&item, &text, move |res: ActionResult| {
+                        if let Err(error) = send_ch.send(res) {
+                            debug!("Unable to send to channel: {}", error);
+                        } else {
+                            glib::idle_add( || {
+                                APP.with(move |app| app.borrow_mut().as_mut().unwrap().process_running_callback() );
+                                Continue(false)
+                            });
+                        }
+                    });
+                    Status::Running(Rc::new(recv_ch))
                 } else {
                     let item = &suggestions[selected_idx as usize];
                     if self.ctx.selectable(&item) {
@@ -657,6 +617,7 @@ impl MinionsApp {
                         self.status.clone()
                     }
                 }
+
             },
             status @ _ => status,
         };

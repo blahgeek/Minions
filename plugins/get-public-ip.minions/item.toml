@@ -3,5 +3,4 @@ subtitle = "Get public IP Address via akamai.com"
 icon = "character:FontAwesome:"
 action = "curl http://whatismyip.akamai.com/"
 action_output_format = "plain_text"
-action_run_arg = true
 requirements = ["exe:curl"]

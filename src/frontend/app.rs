@@ -183,20 +183,6 @@ impl MinionsApp {
         }
     }
 
-    // fn process_timeout(&mut self, lasttime: std::time::Instant) {
-    //     if let Status::Filtering {
-    //         selected_idx: _,
-    //         filter_text: _,
-    //         filter_text_lasttime,
-    //         filtered_items: _
-    //     } = self.status {
-    //         if filter_text_lasttime == lasttime {
-    //             self.status = Status::Default;
-    //             self.update_ui();
-    //         }
-    //     }
-    // }
-
     fn process_keyevent_escape(&mut self) {
         trace!("Processing keyevent Escape");
         self.status = match self.status {
@@ -283,8 +269,8 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             Status::Filtering {
                 selected_idx,
-                filter_text,
-                filtered_items,
+                ref filter_text,
+                ref filtered_items,
                 ..
             } => {
                 if selected_idx < 0 {
@@ -357,8 +343,8 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             Status::Filtering {
                 selected_idx,
-                filter_text,
-                filtered_items,
+                ref filter_text,
+                ref filtered_items,
                 ..
             } => {
                 if selected_idx < 0 {
@@ -378,7 +364,7 @@ impl MinionsApp {
                             receiver: None,
                         }
                     } else {
-                        debug!("Item not selectable with or without text");
+                        debug!("Item not selectable with text");
                         self.status.clone()
                     }
                 }
@@ -493,8 +479,8 @@ impl MinionsApp {
             status @ Status::Initial | status @ Status::Default => status,
             Status::Filtering {
                 selected_idx,
-                filter_text,
-                filtered_items,
+                ref filter_text,
+                ref filtered_items,
                 ..
             } => {
                 if selected_idx < 0 {
@@ -580,7 +566,6 @@ impl MinionsApp {
         self.status = match self.status.clone() {
             Status::Filtering {
                 selected_idx,
-                filter_text,
                 filtered_items,
                 ..
             } => {

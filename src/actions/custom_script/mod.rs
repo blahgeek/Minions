@@ -24,10 +24,14 @@ fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
     if let Ok(mut itemfile) = File::open(&itemfile) {
         itemfile.read_to_string(&mut itemdata)?;
     }
-    let item : ScriptItem = toml::from_str(&itemdata)?;
+    let mut item : ScriptItem = toml::from_str(&itemdata)?;
 
     if item.title.len() == 0 {
         return Err(Box::new(ActionError::new("Invalid item.toml")));
+    }
+
+    if item.badge.is_none() {
+        item.badge = Some("Script".into());
     }
 
     for req_text in item.requirements.iter() {

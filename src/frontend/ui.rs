@@ -21,14 +21,18 @@ use frontend::gtk::prelude::*;
 use self::lru_cache::LruCache;
 
 pub struct MinionsUI {
-    window_builder: gtk::Builder,
     pub window: gtk::Window,
-    listbox: gtk::ListBox,
-    filterlabel: gtk::Label,
     pub textentry: gtk::Entry,
+
+    listbox: gtk::ListBox,
+    filter_label: gtk::Label,
     icon: gtk::Image,
     icon_text: gtk::Label,
     spinner: gtk::Spinner,
+    reference_label: gtk::Label,
+    action_box: gtk::Box,
+    action_label: gtk::Label,
+
     gtkbuf_cache: RefCell<LruCache<PathBuf, Option<gdk_pixbuf::Pixbuf>>>,
 }
 
@@ -40,15 +44,10 @@ const GTKBUF_CACHE_SIZE: usize = 128;
 impl MinionsUI {
 
     pub fn new() -> MinionsUI {
-        let window_builder = gtk::Builder::new_from_string(include_str!("resource/minions.glade"));
-        let window = window_builder.get_object::<gtk::Window>("root")
+        let builder = gtk::Builder::new_from_string(include_str!("resource/minions.glade"));
+        let window = builder.get_object::<gtk::Window>("root")
                      .expect("Failed to initialize from glade file");
-        let listbox = window_builder.get_object::<gtk::ListBox>("listbox").unwrap();
-        let label = window_builder.get_object::<gtk::Label>("filter").unwrap();
-        let entry = window_builder.get_object::<gtk::Entry>("entry").unwrap();
-        let icon = window_builder.get_object::<gtk::Image>("icon").unwrap();
-        let icon_text = window_builder.get_object::<gtk::Label>("icon_text").unwrap();
-        let spinner = window_builder.get_object::<gtk::Spinner>("spinner").unwrap();
+        let spinner = builder.get_object::<gtk::Spinner>("spinner").unwrap();
 
         window.show_all();
         spinner.hide();
@@ -58,14 +57,16 @@ impl MinionsUI {
         gtk::StyleContext::add_provider_for_screen(&window.get_screen().unwrap(), &style_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
 
         MinionsUI {
-            window_builder: window_builder,
             window: window,
-            listbox: listbox,
-            filterlabel: label,
-            textentry: entry,
-            icon: icon,
-            icon_text: icon_text,
             spinner: spinner,
+            listbox: builder.get_object::<gtk::ListBox>("listbox").unwrap(),
+            filter_label: builder.get_object::<gtk::Label>("filter").unwrap(),
+            textentry: builder.get_object::<gtk::Entry>("entry").unwrap(),
+            icon: builder.get_object::<gtk::Image>("icon").unwrap(),
+            icon_text: builder.get_object::<gtk::Label>("icon_text").unwrap(),
+            reference_label: builder.get_object::<gtk::Label>("reference").unwrap(),
+            action_box: builder.get_object::<gtk::Box>("action_box").unwrap(),
+            action_label: builder.get_object::<gtk::Label>("action_name").unwrap(),
             gtkbuf_cache: RefCell::new(LruCache::new(GTKBUF_CACHE_SIZE)),
         }
     }
@@ -135,35 +136,31 @@ impl MinionsUI {
     }
 
     pub fn set_filter_text(&self, text: &str) {
-        self.filterlabel.set_text(text);
+        self.filter_label.set_text(text);
     }
 
     pub fn set_error(&self, error: &Box<Error>) {
-        let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
-        label.set_text(&format!("{}: {}", error.description(), error));
-        label.show();
+        self.reference_label.set_text(&format!("{}: {}", error.description(), error));
+        self.reference_label.show();
         self.set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("dialog-warning".into()));
     }
 
     pub fn set_reference(&self, reference: Option<&String>) {
-        let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
         if let Some(text) = reference {
-            label.set_text(&text);
+            self.reference_label.set_text(&text);
             self.set_action_name(Some("Quicksend"));
-            label.show();
+            self.reference_label.show();
         } else {
-            label.hide();
+            self.reference_label.hide();
         }
     }
 
     fn set_action_name(&self, name: Option<&str>) {
-        let action_box = self.window_builder.get_object::<gtk::Box>("action_box").unwrap();
-        let action_name = self.window_builder.get_object::<gtk::Label>("action_name").unwrap();
         if let Some(name) = name {
-            action_name.set_text(name);
-            action_box.show();
+            self.action_label.set_text(name);
+            self.action_box.show();
         } else {
-            action_box.hide();
+            self.action_box.hide();
         }
     }
 

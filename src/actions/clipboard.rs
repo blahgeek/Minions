@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-12
 */
 
 extern crate gtk;
@@ -15,6 +15,7 @@ extern crate chrono;
 use self::glib::signal::connect;
 use self::glib::translate::*;
 use self::gtk::Clipboard;
+use self::gtk::ClipboardExt;
 use self::chrono::{Local, DateTime};
 
 use std::sync::{Arc, Mutex};

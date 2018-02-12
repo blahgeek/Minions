@@ -34,7 +34,7 @@ static ICON_FONT_SIZE: i32 = 28;
 fn set_image_icon(w_image: &gtk::Image, w_label: &gtk::Label, icon: &Icon) {
     match icon {
         &Icon::GtkName(ref ico_name) => {
-            w_image.set_from_icon_name(&ico_name, gtk::IconSize::Button.into());
+            w_image.set_from_icon_name(Some(ico_name.as_str()), gtk::IconSize::Button.into());
             w_image.set_pixel_size(ICON_SIZE);
             w_image.show();
             w_label.hide();
@@ -69,7 +69,7 @@ impl MinionsUI {
         spinner.hide();
 
         let style_provider = gtk::CssProvider::new();
-        style_provider.load_from_data(include_str!("./resource/style.css")).unwrap();
+        style_provider.load_from_data(include_bytes!("./resource/style.css")).unwrap();
         gtk::StyleContext::add_provider_for_screen(&window.get_screen().unwrap(), &style_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
 
         MinionsUI {

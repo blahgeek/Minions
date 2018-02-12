@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-11
+* @Last Modified time: 2018-02-12
 */
 
 extern crate glib;
@@ -593,13 +593,13 @@ impl MinionsApp {
         } else if key == gdk::enums::key::Tab {
             self.process_keyevent_tab();
             Inhibit(true)
-        } else if key == 'j' as u32 && modi == gdk::CONTROL_MASK {
+        } else if key == 'j' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
             self.process_keyevent_move(1);
             Inhibit(true)
-        } else if key == 'k' as u32 && modi == gdk::CONTROL_MASK {
+        } else if key == 'k' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
             self.process_keyevent_move(-1);
             Inhibit(true)
-        } else if key == 'c' as u32 && modi == gdk::CONTROL_MASK {
+        } else if key == 'c' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
             self.process_keyevent_copy();
             Inhibit(true)
         } else if key == gdk::enums::key::Down {

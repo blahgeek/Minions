@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-11
+* @Last Modified time: 2018-02-12
 */
 
 extern crate gtk;
@@ -18,6 +18,8 @@ use mcore::action::ActionResult;
 use mcore::item::Item;
 use mcore::config::Config;
 use actions;
+
+use self::gtk::ClipboardExt;
 
 
 pub struct Context {

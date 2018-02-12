@@ -6,8 +6,11 @@
 */
 
 extern crate gdk_pixbuf;
+extern crate lru_cache;
 
 use std::cmp;
+use std::cell::RefCell;
+use std::path::PathBuf;
 use std::error::Error;
 
 use mcore::item::{Item, Icon};
@@ -15,6 +18,7 @@ use mcore::context::Context;
 
 use frontend::gtk;
 use frontend::gtk::prelude::*;
+use self::lru_cache::LruCache;
 
 pub struct MinionsUI {
     window_builder: gtk::Builder,
@@ -25,32 +29,13 @@ pub struct MinionsUI {
     icon: gtk::Image,
     icon_text: gtk::Label,
     spinner: gtk::Spinner,
+    gtkbuf_cache: RefCell<LruCache<PathBuf, Option<gdk_pixbuf::Pixbuf>>>,
 }
 
-static LISTBOX_NUM: i32 = 5;
-static ICON_SIZE: i32 = 45;
-static ICON_FONT_SIZE: i32 = 28;
-
-fn set_image_icon(w_image: &gtk::Image, w_label: &gtk::Label, icon: &Icon) {
-    match icon {
-        &Icon::GtkName(ref ico_name) => {
-            w_image.set_from_icon_name(Some(ico_name.as_str()), gtk::IconSize::Button.into());
-            w_image.set_pixel_size(ICON_SIZE);
-            w_image.show();
-            w_label.hide();
-        },
-        &Icon::File(ref path) => {
-            w_image.set_from_pixbuf(gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok().as_ref());
-            w_image.show();
-            w_label.hide();
-        },
-        &Icon::Character{ref ch, ref font} => {
-            w_label.set_markup(&format!("<span font_desc=\"{} {}\">{}</span>", font, ICON_FONT_SIZE, ch));
-            w_image.hide();
-            w_label.show();
-        },
-    }
-}
+const LISTBOX_NUM: i32 = 5;
+const ICON_SIZE: i32 = 45;
+const ICON_FONT_SIZE: i32 = 28;
+const GTKBUF_CACHE_SIZE: usize = 128;
 
 impl MinionsUI {
 
@@ -81,6 +66,7 @@ impl MinionsUI {
             icon: icon,
             icon_text: icon_text,
             spinner: spinner,
+            gtkbuf_cache: RefCell::new(LruCache::new(GTKBUF_CACHE_SIZE)),
         }
     }
 
@@ -89,17 +75,46 @@ impl MinionsUI {
         else { self.spinner.hide(); }
     }
 
+    fn set_image_icon(&self, w_image: &gtk::Image, w_label: &gtk::Label, icon: &Icon) {
+        match icon {
+            &Icon::GtkName(ref ico_name) => {
+                w_image.set_from_icon_name(Some(ico_name.as_str()), gtk::IconSize::Button.into());
+                w_image.set_pixel_size(ICON_SIZE);
+                w_image.show();
+                w_label.hide();
+            },
+            &Icon::File(ref path) => {
+                let mut gtkbuf_cache = self.gtkbuf_cache.borrow_mut();
+                let buf = if let Some(pixbuf) = gtkbuf_cache.get_mut(path) {
+                    pixbuf.clone()
+                } else {
+                    gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok()
+                };
+                w_image.set_from_pixbuf(buf.as_ref());
+                gtkbuf_cache.insert(path.clone(), buf);
+                w_image.show();
+                w_label.hide();
+            },
+            &Icon::Character{ref ch, ref font} => {
+                w_label.set_markup(&format!("<span font_desc=\"{} {}\">{}</span>", font, ICON_FONT_SIZE, ch));
+                w_image.hide();
+                w_label.show();
+            },
+        }
+    }
+
+
     pub fn set_entry(&self, item: Option<&Item>) {
         if let Some(item) = item {
             self.textentry.set_text(&item.title);
             if let Some(ref ico) = item.icon {
-                set_image_icon(&self.icon, &self.icon_text, ico);
+                self.set_image_icon(&self.icon, &self.icon_text, ico);
             } else {
-                set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
+                self.set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
             }
         } else {
             self.textentry.set_buffer(&gtk::EntryBuffer::new(None));
-            set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
+            self.set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
@@ -127,7 +142,7 @@ impl MinionsUI {
         let label = self.window_builder.get_object::<gtk::Label>("reference").unwrap();
         label.set_text(&format!("{}: {}", error.description(), error));
         label.show();
-        set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("dialog-warning".into()));
+        self.set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("dialog-warning".into()));
     }
 
     pub fn set_reference(&self, reference: Option<&String>) {
@@ -155,7 +170,7 @@ impl MinionsUI {
     pub fn set_action(&self, item: Option<&Item>) {
         if let Some(item) = item {
             if let Some(ref ico) = item.icon {
-                set_image_icon(&self.icon, &self.icon_text, ico);
+                self.set_image_icon(&self.icon, &self.icon_text, ico);
             }
             self.set_action_name(Some(&item.title));
         } else {
@@ -163,7 +178,7 @@ impl MinionsUI {
         }
     }
 
-    fn build_item(item: &Item, ctx: &Context) -> gtk::Box {
+    fn build_item(&self, item: &Item, ctx: &Context) -> gtk::Box {
         let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
         let item_ui = builder.get_object::<gtk::Box>("item_template")
                       .expect("Failed to get item template from glade file");
@@ -179,9 +194,9 @@ impl MinionsUI {
         title.set_text(&item.title);
 
         if let Some(ref ico) = item.icon {
-            set_image_icon(&icon, &icon_text, ico);
+            self.set_image_icon(&icon, &icon_text, ico);
         } else {
-            set_image_icon(&icon, &icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
+            self.set_image_icon(&icon, &icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
         }
 
         match item.subtitle {
@@ -224,7 +239,7 @@ impl MinionsUI {
 
         trace!("display: {}:{}", display_start, display_end);
         for i in display_start .. display_end {
-            let item_ui = MinionsUI::build_item(items[i as usize], ctx);
+            let item_ui = self.build_item(items[i as usize], ctx);
             self.listbox.add(&item_ui);
         }
 

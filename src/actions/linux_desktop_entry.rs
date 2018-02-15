@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-15
 */
 
 extern crate shlex;
@@ -34,7 +34,9 @@ impl Action for LinuxDesktopEntry {
     fn runnable_bare (&self) -> bool { true }
 
     fn runnable_arg (&self) -> bool {
-        self.exec.iter().find(|arg| (*arg == "%f" || *arg == "%F")).is_some()
+        self.exec.iter().find(
+            |arg| (*arg == "%f" || *arg == "%F" || *arg == "%u" || *arg == "%U")
+        ).is_some()
     }
 
     fn run_arg (&self, arg: &str) -> ActionResult {
@@ -63,12 +65,11 @@ impl LinuxDesktopEntry {
         }
 
         for arg in self.exec.iter() {
-            if *arg == "%f" || *arg == "%F" {
+            let larg = arg.to_lowercase();
+            if larg == "%f" || larg == "%u" {
                 if let Some(p) = path {
                     cmd.push(p);
                 }
-            } else if *arg == "%u" || *arg == "%U" {
-                // nop
             } else {
                 cmd.push(&arg);
             }

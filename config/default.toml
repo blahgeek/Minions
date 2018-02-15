@@ -53,7 +53,7 @@
 [file_browser]
     [[file_browser.entries]]
     name = "Home Directory"
-    path = "/home/"
+    path = "~/"
     [[file_browser.entries]]
     name = "Root Directory"
     path = "/"

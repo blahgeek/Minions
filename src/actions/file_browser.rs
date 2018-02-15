@@ -5,6 +5,7 @@
 * @Last Modified time: 2018-02-15
 */
 
+use std::env;
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 
@@ -105,7 +106,14 @@ pub fn get(config: &Config) -> Vec<Item> {
 
     entries.into_iter()
         .map(|c| {
-            FileBrowserEntry::new(c.name, Path::new(&c.path).to_path_buf())
+            let mut p = Path::new(&c.path).to_path_buf();
+            if c.path.starts_with("~/") {
+                if let Some(homedir) = env::home_dir() {
+                    p = homedir;
+                    p.push(Path::new(&c.path[2..]));
+                }
+            }
+            FileBrowserEntry::new(c.name, p)
         })
         .filter(|x| x.is_some())
             .map(|x| x.unwrap().into_item())

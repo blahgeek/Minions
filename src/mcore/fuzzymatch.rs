@@ -2,14 +2,61 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-08-10
+* @Last Modified time: 2018-02-15
 */
 
+extern crate pinyin;
+
+use std::iter::Iterator;
+use std::collections::VecDeque;
+use std::str::Chars;
+
+struct PinyinChars<'a> {
+    pyqueue: VecDeque<char>,
+    chars: Chars<'a>,
+}
+
+impl<'a> Iterator for PinyinChars<'a> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<char> {
+        if let Some(c) = self.pyqueue.pop_front() {
+            return Some(c)
+        }
+        if let Some(c) = self.chars.next() {
+            if c.is_ascii() {
+                Some(c)
+            } else {
+                let mut s = String::new();
+                s.push(c);
+                for word in pinyin::lazy_pinyin(&s, &pinyin::Args::new()).into_iter() {
+                    for c in word.chars() {
+                        self.pyqueue.push_back(c)
+                    }
+                    self.pyqueue.push_back(' ')
+                }
+                Some(' ')
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl<'a> PinyinChars<'a> {
+    fn new(s: &'a str) -> PinyinChars<'a> {
+        PinyinChars {
+            pyqueue: VecDeque::with_capacity(8),
+            chars: s.chars(),
+        }
+    }
+}
 
 pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
     if pattern.len() == 0 { return 0; }
 
-    let mut text_iter = text.chars().peekable();
+    let pinyin_chars = PinyinChars::new(text);
+    let mut text_iter = pinyin_chars.peekable();
     let mut pattern_iter = pattern.chars();
 
     let mut score = 0;
@@ -61,7 +108,9 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use mcore::fuzzymatch::fuzzymatch;
+    use super::*;
+    use std::vec::Vec;
+
     #[test]
     fn fuzzymatch_test() {
         assert!(fuzzymatch("hello world", "hw", false) > 0);
@@ -73,8 +122,18 @@ mod tests {
         assert!(fuzzymatch("Hello World", "helloworld", false) >
                 fuzzymatch("Hello World", "hello", false));
         assert!(fuzzymatch("Hello World", "world", false) > 0);
-        assert!(fuzzymatch("你好 世界", "世界", false) > 0);
-        assert!(fuzzymatch("你好 世界", "你世", false) > 0);
+        // assert!(fuzzymatch("你好 世界", "世界", false) > 0);
+        // assert!(fuzzymatch("你好 世界", "你世", false) > 0);
         assert!(fuzzymatch("", "hw", false) == 0);
+    }
+
+    #[test]
+    fn pinyinchars_test() {
+        assert_eq!(PinyinChars::new("你好 world").collect::<Vec<char>>(),
+                   &[' ', 'n', 'i', ' ',
+                   ' ', 'h', 'a', 'o', ' ',
+                   ' ', 'w', 'o', 'r', 'l', 'd']);
+        assert!(fuzzymatch("你好 世界", "nhsj", false) > 0);
+        assert!(fuzzymatch("你好 世界", "ni", false) > 0);
     }
 }

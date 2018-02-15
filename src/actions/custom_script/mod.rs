@@ -63,11 +63,11 @@ pub fn get(config: &Config) -> Vec<Item> {
     let mut ret : Vec<Item> = Vec::new();
 
     for plugin_dir in plugin_dirs.iter() {
-        debug!("Loading custom action from {:?}", plugin_dir);
+        info!("Loading custom action from {:?}", plugin_dir);
 
         let entries = plugin_dir.read_dir();
         if let Err(error) = entries {
-            warn!("Unable to read dir: {}", error);
+            info!("Unable to read dir {:?}: {}", plugin_dir, error);
             continue;
         }
         let entries = entries.unwrap();

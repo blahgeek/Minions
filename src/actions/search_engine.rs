@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-15
 */
 
 extern crate url;
@@ -48,7 +48,6 @@ impl Action for SearchEngine {
     fn run_arg(&self, text: &str) -> ActionResult {
         let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);
-        info!("open: {}", url);
         open::that(&url)?;
         Ok(Vec::new())
     }

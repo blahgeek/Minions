@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-15
 */
 
 use std::sync::Arc;
@@ -62,7 +62,6 @@ impl Action for FileBrowserEntry {
 
     fn run_bare (&self) -> ActionResult {
         if self.is_file {
-            info!("open: {:?}", self.path);
             open::that(&self.path.to_string_lossy())?;
             Ok(Vec::new())
         } else {

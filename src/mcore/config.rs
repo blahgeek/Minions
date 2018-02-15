@@ -121,10 +121,10 @@ mod tests {
     fn test_config_get() {
         let dummyconfig = Config::new(std::path::Path::new(""));
 
-        let v = dummyconfig.get::<i32>(&["global", "filter_timeout"]).unwrap();
+        let v = dummyconfig.get::<i32>(&["core", "filter_timeout"]).unwrap();
         assert_eq!(v, 800);
 
-        let v = dummyconfig.get::<i32>(&["global", "filter_timeoutx"]);
+        let v = dummyconfig.get::<i32>(&["core", "filter_timeoutx"]);
         assert!(v.is_err());
     }
 }

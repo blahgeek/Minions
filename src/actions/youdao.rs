@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-02-15
 */
 
 extern crate url;
@@ -109,7 +109,7 @@ pub fn get(_: &Config) -> Item {
 #[test]
 fn test_youdao() {
     let youdao = Youdao {};
-    let res = youdao.run_text("hello");
+    let res = youdao.run_arg("hello");
     if let Err(error) = res {
         println!("{}", error);
     }

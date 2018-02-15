@@ -55,7 +55,10 @@ fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Sen
                 item_json.insert(parts[0].into(), serde_json::Value::String(parts[1].into()));
             }
         }
-        ret.push(serde_json::from_value(serde_json::Value::Object(item_json))?);
+        let item : ScriptItem = serde_json::from_value(serde_json::Value::Object(item_json))?;
+        if item.title.len() > 0 {
+            ret.push(item)
+        }
     }
     Ok(ret)
 }

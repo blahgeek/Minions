@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-12
+* @Last Modified time: 2018-02-22
 */
 
 extern crate gdk_pixbuf;
@@ -20,6 +20,16 @@ use frontend::gtk;
 use frontend::gtk::prelude::*;
 use self::lru_cache::LruCache;
 
+
+pub struct ItemUI {
+    title: gtk::Label,
+    subtitle: gtk::Label,
+    badge: gtk::Label,
+    selectable: gtk::Label,
+    icon: gtk::Image,
+    icon_text: gtk::Label,
+}
+
 pub struct MinionsUI {
     pub window: gtk::Window,
     pub textentry: gtk::Entry,
@@ -34,6 +44,7 @@ pub struct MinionsUI {
     action_label: gtk::Label,
 
     gtkbuf_cache: RefCell<LruCache<PathBuf, Option<gdk_pixbuf::Pixbuf>>>,
+    items: Vec<ItemUI>,
 }
 
 const LISTBOX_NUM: i32 = 5;
@@ -48,6 +59,7 @@ impl MinionsUI {
         let window = builder.get_object::<gtk::Window>("root")
                      .expect("Failed to initialize from glade file");
         let spinner = builder.get_object::<gtk::Spinner>("spinner").unwrap();
+        let listbox = builder.get_object::<gtk::ListBox>("listbox").unwrap();
 
         window.show_all();
         spinner.hide();
@@ -56,10 +68,25 @@ impl MinionsUI {
         style_provider.load_from_data(include_bytes!("./resource/style.css")).unwrap();
         gtk::StyleContext::add_provider_for_screen(&window.get_screen().unwrap(), &style_provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+        let mut items = Vec::new();
+        for _ in 0..LISTBOX_NUM {
+            let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
+            let item_ui_top = builder.get_object::<gtk::Box>("item_template").unwrap();
+            items.push(ItemUI{
+                title: builder.get_object::<gtk::Label>("title").unwrap(),
+                subtitle: builder.get_object::<gtk::Label>("subtitle").unwrap(),
+                badge: builder.get_object::<gtk::Label>("badge").unwrap(),
+                selectable: builder.get_object::<gtk::Label>("selectable").unwrap(),
+                icon: builder.get_object::<gtk::Image>("icon").unwrap(),
+                icon_text: builder.get_object::<gtk::Label>("icon_text").unwrap(),
+            });
+            listbox.add(&item_ui_top);
+        }
+
         MinionsUI {
             window: window,
             spinner: spinner,
-            listbox: builder.get_object::<gtk::ListBox>("listbox").unwrap(),
+            listbox: listbox,
             filter_label: builder.get_object::<gtk::Label>("filter").unwrap(),
             textentry: builder.get_object::<gtk::Entry>("entry").unwrap(),
             icon: builder.get_object::<gtk::Image>("icon").unwrap(),
@@ -68,6 +95,7 @@ impl MinionsUI {
             action_box: builder.get_object::<gtk::Box>("action_box").unwrap(),
             action_label: builder.get_object::<gtk::Label>("action_name").unwrap(),
             gtkbuf_cache: RefCell::new(LruCache::new(GTKBUF_CACHE_SIZE)),
+            items: items,
         }
     }
 
@@ -175,55 +203,40 @@ impl MinionsUI {
         }
     }
 
-    fn build_item(&self, item: &Item, ctx: &Context) -> gtk::Box {
-        let builder = gtk::Builder::new_from_string(include_str!("resource/item_template.glade"));
-        let item_ui = builder.get_object::<gtk::Box>("item_template")
-                      .expect("Failed to get item template from glade file");
+    fn update_item(&self, idx: usize, item: &Item, ctx: &Context) {
+        let item_ui = &self.items[idx];
 
-        let titlebox = builder.get_object::<gtk::Box>("titlebox").unwrap();
-        let title = builder.get_object::<gtk::Label>("title").unwrap();
-        let subtitle = builder.get_object::<gtk::Label>("subtitle").unwrap();
-        let badge = builder.get_object::<gtk::Label>("badge").unwrap();
-        let selectable = builder.get_object::<gtk::Label>("selectable").unwrap();
-        let icon = builder.get_object::<gtk::Image>("icon").unwrap();
-        let icon_text = builder.get_object::<gtk::Label>("icon_text").unwrap();
-
-        title.set_text(&item.title);
-
+        item_ui.title.set_text(&item.title);
         if let Some(ref ico) = item.icon {
-            self.set_image_icon(&icon, &icon_text, ico);
+            self.set_image_icon(&item_ui.icon, &item_ui.icon_text, ico);
         } else {
-            self.set_image_icon(&icon, &icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
+            self.set_image_icon(&item_ui.icon, &item_ui.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
         }
 
         match item.subtitle {
             Some(ref text) => if text.len() > 0 {
-                subtitle.set_text(&text)
+                item_ui.subtitle.show();
+                item_ui.subtitle.set_text(&text);
             } else {
-                titlebox.remove(&subtitle)
+                item_ui.subtitle.hide();
             },
-            None => titlebox.remove(&subtitle),
+            None => item_ui.subtitle.hide(),
         }
         match item.badge {
-            Some(ref text) => badge.set_text(&text),
-            None => item_ui.remove(&badge),
+            Some(ref text) => { item_ui.badge.set_text(&text); item_ui.badge.show(); },
+            None => item_ui.badge.hide(),
         }
 
         if ctx.selectable(&item) {
-            selectable.set_text("");
+            item_ui.selectable.set_text("");
         } else if ctx.selectable_with_text(&item) {
-            selectable.set_text("");
+            item_ui.selectable.set_text("");
         } else {
-            selectable.set_text(" ");
+            item_ui.selectable.set_text(" ");
         }
-
-        item_ui
     }
 
     pub fn set_items(&self, items: Vec<&Item>, highlight: i32, ctx: &Context) {
-        for item_ui in self.listbox.get_children().iter() {
-            self.listbox.remove(item_ui);
-        }
 
         let mut display_start =
             if highlight < (LISTBOX_NUM / 2) { 0 }
@@ -236,8 +249,11 @@ impl MinionsUI {
 
         trace!("display: {}:{}", display_start, display_end);
         for i in display_start .. display_end {
-            let item_ui = self.build_item(items[i as usize], ctx);
-            self.listbox.add(&item_ui);
+            self.update_item((i - display_start) as usize, items[i as usize], ctx);
+            self.listbox.get_row_at_index(i - display_start).unwrap().show();
+        }
+        for i in (display_end - display_start) .. LISTBOX_NUM {
+            self.listbox.get_row_at_index(i).unwrap().hide();
         }
 
         if highlight < 0 {

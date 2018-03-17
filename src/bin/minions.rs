@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-04
+* @Last Modified time: 2018-03-18
 */
 
 extern crate minions;
@@ -19,8 +19,6 @@ use std::env;
 use std::path::Path;
 
 use minions::frontend::app::MinionsApp;
-use minions::mcore::matcher::Matcher;
-use minions::mcore::config::Config;
 
 fn main() {
     let mut logger = fern::Dispatch::new()
@@ -60,13 +58,8 @@ fn main() {
         Some(filename) => Path::new(&filename).to_path_buf(),
         None => env::home_dir().unwrap().join(".minions/config.toml"),
     };
-    let config = Config::new(&configfile);
-
-    let history_path = env::home_dir().unwrap().join(".minions/history.dat");
-    let matcher = Matcher::new(&history_path, &config.get::<String>(&["core", "history_file_salt"]).unwrap())
-                  .expect("Unable to load history file");
 
     gtk::init().expect("Failed to initialize GTK");
-    let _ = MinionsApp::new(&config, matcher);
+    let _ = MinionsApp::new(&configfile);
     gtk::main();
 }

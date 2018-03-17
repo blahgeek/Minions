@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-17
+* @Last Modified time: 2018-03-18
 */
 
 extern crate gtk;
@@ -30,7 +30,6 @@ pub struct Context {
 
     /// Cached all actions
     action_items: Vec<Rc<Item>>,
-    config: Config,
 }
 
 
@@ -41,17 +40,16 @@ impl Context {
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),
-            config: config.clone(),
             action_items: Vec::new(),
         };
-        ctx.reload();
+        ctx.reload(config);
         ctx.reset();
         ctx
     }
 
     /// Reload all action items
-    pub fn reload(&mut self) {
-        self.action_items = actions::get_action_items(&self.config).into_iter()
+    pub fn reload(&mut self, config: &Config) {
+        self.action_items = actions::get_action_items(config).into_iter()
             .map(|x| Rc::new(x)).collect();
     }
 

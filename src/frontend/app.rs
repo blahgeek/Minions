@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-17
+* @Last Modified time: 2018-03-18
 */
 
 extern crate glib;
@@ -635,9 +635,16 @@ impl MinionsApp {
         self.update_ui();
     }
 
-    pub fn new(config: &Config, matcher: Matcher) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+    pub fn new(configpath: &std::path::Path) -> &'static thread::LocalKey<RefCell<Option<MinionsApp>>> {
+        let config = Config::new(configpath);
         let global_config = config.partial(&["core"]).unwrap();
-        let ctx = Context::new(config);
+
+        let matcher = Matcher::new(
+            &global_config.get_filename(&["history_file"]).unwrap(),
+            &global_config.get::<String>(&["history_file_salt"]).unwrap()
+            ).unwrap();
+
+        let ctx = Context::new(&config);
 
         let app = MinionsApp {
             ui: MinionsUI::new(),
@@ -694,11 +701,13 @@ impl MinionsApp {
             Inhibit(false)
         });
 
-        glib::source::unix_signal_add(1, || {
+        let configpath = configpath.to_path_buf();
+        glib::source::unix_signal_add(1, move || {
             APP.with(|app| {
+                let newconfig = Config::new(&configpath);
                 if let Some(ref mut app) = *app.borrow_mut() {
                     info!("Received SIGHUP, reloading context");
-                    app.ctx.reload();
+                    app.ctx.reload(&newconfig);
                 }
             });
             Continue(true)

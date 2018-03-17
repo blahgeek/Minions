@@ -98,6 +98,19 @@ impl Config {
         userval.into_result::<T>().or(defaultval.into_result::<T>())
     }
 
+    /// Same as get::<PathBuf>, but handle paths starting with `~/`
+    pub fn get_filename<'de>(&self, path: &[&str]) -> Result<std::path::PathBuf, ConfigGetError> {
+        let strval = self.get::<String>(path)?;
+        let mut p = std::path::Path::new(&strval).to_path_buf();
+        if strval.starts_with("~/") {
+            if let Some(homedir) = std::env::home_dir() {
+                p = homedir;
+                p.push(std::path::Path::new(&strval[2..]));
+            }
+        }
+        Ok(p)
+    }
+
     pub fn partial(&self, path: &[&str]) -> Result<Self, ConfigGetError> {
         let mut userval = ConfigValue::new(self.user.as_ref());
         let mut defaultval = ConfigValue::new(Some(&self.default));
@@ -127,5 +140,11 @@ mod tests {
 
         let v = dummyconfig.get::<i32>(&["core", "filter_timeoutx"]);
         assert!(v.is_err());
+
+        let v = dummyconfig.get::<String>(&["core", "history_file"]).unwrap();
+        assert_eq!(v, "~/.minions/history.dat");
+
+        let v = dummyconfig.get_filename(&["core", "history_file"]).unwrap();
+        assert!(v.to_str().unwrap().ends_with("/.minions/history.dat"));
     }
 }

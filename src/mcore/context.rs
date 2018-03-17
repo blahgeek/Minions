@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-12
+* @Last Modified time: 2018-03-17
 */
 
 extern crate gtk;
@@ -82,7 +82,7 @@ impl Context {
 
     pub fn selectable_with_text(&self, item: &Item) -> bool {
         if let Some(ref action) = item.action {
-            action.runnable_arg()
+            action.runnable_arg() && self.reference.is_none()
         } else { false }
     }
 

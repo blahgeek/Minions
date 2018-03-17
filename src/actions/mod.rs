@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-18
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-03-17
 */
 
 mod utils;
@@ -13,6 +13,7 @@ mod file_browser;
 mod custom_script;
 mod youdao;
 mod clipboard;
+mod reload;
 
 use std::fmt;
 use std::error::Error;
@@ -54,6 +55,7 @@ pub fn get_action_items(config: &Config) -> Vec<Item> {
 
     ret.push(clipboard::get(config));
     ret.push(youdao::get(config));
+    ret.push(reload::get(config));
 
     ret
 }

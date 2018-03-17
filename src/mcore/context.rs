@@ -30,6 +30,7 @@ pub struct Context {
 
     /// Cached all actions
     action_items: Vec<Rc<Item>>,
+    config: Config,
 }
 
 
@@ -40,11 +41,18 @@ impl Context {
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),
-            action_items: actions::get_action_items(config).into_iter()
-                .map(|x| Rc::new(x)).collect(),
+            config: config.clone(),
+            action_items: Vec::new(),
         };
+        ctx.reload();
         ctx.reset();
         ctx
+    }
+
+    /// Reload all action items
+    pub fn reload(&mut self) {
+        self.action_items = actions::get_action_items(&self.config).into_iter()
+            .map(|x| Rc::new(x)).collect();
     }
 
     /// Reset context to initial state

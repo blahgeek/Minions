@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-12
+* @Last Modified time: 2018-03-17
 */
 
 extern crate glib;
@@ -692,6 +692,16 @@ impl MinionsApp {
         app.ui.window.connect_delete_event(move |_, _| {
             gtk::main_quit();
             Inhibit(false)
+        });
+
+        glib::source::unix_signal_add(1, || {
+            APP.with(|app| {
+                if let Some(ref mut app) = *app.borrow_mut() {
+                    info!("Received SIGHUP, reloading context");
+                    app.ctx.reload();
+                }
+            });
+            Continue(true)
         });
 
         APP.with(|g_app| *g_app.borrow_mut() = Some(app) );

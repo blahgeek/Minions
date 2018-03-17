@@ -63,6 +63,7 @@ impl<'a> ConfigValue<'a> {
     }
 }
 
+#[derive(Clone)]
 pub struct Config {
     default: toml::Value,
     user: Option<toml::Value>,

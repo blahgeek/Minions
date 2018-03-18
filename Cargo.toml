@@ -39,3 +39,4 @@ gtk = { version = "0.3", features = ["v3_10"] }
 gtk-sys = "0.5"
 lru-cache = "0.1.1"
 pinyin = "0.2"
+rusqlite = "0.13"

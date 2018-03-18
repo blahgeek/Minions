@@ -20,6 +20,9 @@
     # Change this value would make all histories invalid
     history_file_salt = "Minions-Salt"
 
+    # Database location, used by many services (e.g. clipboard history)
+    db_file = "~/.minions/minions.db"
+
 # list of search engines
 # Each site must have `name` and `address` defined
 # and optionally `suggestion_url` for suggestions, which follows the OpenSearch standard

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-12
+* @Last Modified time: 2018-03-18
 */
 
 extern crate gtk;
@@ -16,16 +16,15 @@ use self::glib::signal::connect;
 use self::glib::translate::*;
 use self::gtk::Clipboard;
 use self::gtk::ClipboardExt;
-use self::chrono::{Local, DateTime};
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::mem::transmute;
-use std::collections::VecDeque;
 
 use actions::ActionError;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
+use mcore::lrudb::LruDB;
 
 unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
                                 _: *mut libc::c_void,
@@ -47,7 +46,7 @@ where F: Fn(&Clipboard) + 'static {
 
 struct ClipboardHistoryAction {
     history_max_len: usize,
-    history: Arc<Mutex<VecDeque<(String, DateTime<Local>)>>>,
+    lrudb: LruDB,
 }
 
 impl Action for ClipboardHistoryAction {
@@ -55,22 +54,18 @@ impl Action for ClipboardHistoryAction {
     fn runnable_bare(&self) -> bool { true }
 
     fn run_bare(&self) -> ActionResult {
-        if let Ok(history) = self.history.lock() {
-            debug!("Returning {} clipboard histories", history.len());
-            if history.len() == 0 {
-                Err(Box::new(ActionError::new("No clipboard history available")))
-            } else {
-                Ok(history.iter().map(|x| {
-                    let mut item = Item::new_text_item(&x.0);
-                    item.subtitle = Some(format!("{}, {} bytes",
-                                                 x.1.format("%T %b %e").to_string(),
-                                                 x.0.len()));
-                    item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-                    item
-                }).collect())
-            }
+        let history = self.lrudb.getall()?;
+        if history.len() == 0 {
+            Err(Box::new(ActionError::new("No clipboard history available")))
         } else {
-            Err(Box::new(ActionError::new("Unable to unlock history")))
+            Ok(history.iter().map(|x| {
+                let mut item = Item::new_text_item(&x.data);
+                item.subtitle = Some(format!("{}, {} bytes",
+                                             x.time.format("%T %b %e").to_string(),
+                                             x.data.len()));
+                item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+                item
+            }).collect())
         }
     }
 }
@@ -79,34 +74,23 @@ impl ClipboardHistoryAction {
     fn new(config: &Config) -> ClipboardHistoryAction {
         let history_max_len = config.get::<usize>(&["clipboard_history", "max_entries"]).unwrap();
         let ignore_single_byte = config.get::<bool>(&["clipboard_history", "ignore_single_byte"]).unwrap();
+        let db_file = config.get_filename(&["core", "db_file"]).unwrap();
 
         let action = ClipboardHistoryAction {
             history_max_len: history_max_len,
-            history: Arc::new(Mutex::new(VecDeque::new())),
+            lrudb: LruDB::new("clipboard_history", history_max_len, Some(&db_file)).unwrap(),
         };
-        let history = action.history.clone();
 
+        let lrudb = LruDB::new("clipboard_history", history_max_len, Some(&db_file)).unwrap();
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
         connect_clipboard_change(&clipboard, move |clipboard| {
             let content = clipboard.wait_for_text();
             if let Some(text) = content {
                 trace!("New clipboard text: {:?}", text);
-                if let Ok(mut history) = history.lock() {
-                    let is_dup = if let Some(front) = history.front() {
-                        text == front.0.as_str()
-                    } else {
-                        false
-                    };
-                    if is_dup {
-                        debug!("Duplicate, do not push to history");
-                    } else if ignore_single_byte && text.len() <= 1 {
-                        debug!("Single byte, do not push to history");
-                    } else {
-                        history.push_front((text.into(), Local::now()));
-                    }
-                    while history.len() > history_max_len {
-                        history.pop_back().unwrap();
-                    }
+                if ignore_single_byte && text.len() <= 1 {
+                    debug!("Single byte, do not store in history");
+                } else if let Err(err) = lrudb.add(&text) {
+                    warn!("Unable to store clipboard text: {}", err);
                 }
             }
         });

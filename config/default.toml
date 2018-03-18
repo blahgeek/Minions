@@ -13,12 +13,12 @@
     # Keyboard shortcuts to bring up Minions with selected text
     shortcut_show_quicksend = "<Ctrl><Shift>space"
 
-    # History file location
-    history_file = "~/.minions/history.dat"
+    # Statistic file location
+    statistic_file = "~/.minions/statistic.dat"
 
-    # Hash salt used in history file
-    # Change this value would make all histories invalid
-    history_file_salt = "Minions-Salt"
+    # Hash salt used in statistic file
+    # Change this value would make all statistic invalid
+    statistic_file_salt = "Minions-Salt"
 
     # Database location, used by many services (e.g. clipboard history)
     db_file = "~/.minions/minions.db"

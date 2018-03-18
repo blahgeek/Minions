@@ -141,10 +141,10 @@ mod tests {
         let v = dummyconfig.get::<i32>(&["core", "filter_timeoutx"]);
         assert!(v.is_err());
 
-        let v = dummyconfig.get::<String>(&["core", "history_file"]).unwrap();
-        assert_eq!(v, "~/.minions/history.dat");
+        let v = dummyconfig.get::<String>(&["core", "statistic_file"]).unwrap();
+        assert_eq!(v, "~/.minions/statistic.dat");
 
-        let v = dummyconfig.get_filename(&["core", "history_file"]).unwrap();
-        assert!(v.to_str().unwrap().ends_with("/.minions/history.dat"));
+        let v = dummyconfig.get_filename(&["core", "statistic_file"]).unwrap();
+        assert!(v.to_str().unwrap().ends_with("/.minions/statistic.dat"));
     }
 }

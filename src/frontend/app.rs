@@ -640,8 +640,8 @@ impl MinionsApp {
         let global_config = config.partial(&["core"]).unwrap();
 
         let matcher = Matcher::new(
-            &global_config.get_filename(&["history_file"]).unwrap(),
-            &global_config.get::<String>(&["history_file_salt"]).unwrap()
+            &global_config.get_filename(&["statistic_file"]).unwrap(),
+            &global_config.get::<String>(&["statistic_file_salt"]).unwrap()
             ).unwrap();
 
         let ctx = Context::new(&config);

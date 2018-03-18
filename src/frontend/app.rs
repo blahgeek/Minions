@@ -273,8 +273,8 @@ impl MinionsApp {
                 ref filtered_items,
                 ..
             } => {
-                if selected_idx < 0 {
-                    debug!("No item to send");
+                if selected_idx < 0 || self.ctx.reference.is_some() {
+                    debug!("No item to send or not sendable");
                     self.status.clone()
                 } else {
                     let item = &filtered_items[selected_idx as usize];

@@ -67,8 +67,9 @@ impl LruDB {
         conn.execute("CREATE TABLE IF NOT EXISTS lrudata (
                 id INTEGER PRIMARY KEY,
                 scope TEXT,
-                data TEXT UNIQUE,
-                time INTEGER
+                data TEXT,
+                time INTEGER,
+                UNIQUE (scope, data)
             )", &[])?;
         conn.execute("CREATE INDEX IF NOT EXISTS scope_time_id_idx ON lrudata (scope, time, id)", &[])?;
 

@@ -1,15 +1,16 @@
 extern crate chrono;
 extern crate rusqlite;
 
+use self::chrono::TimeZone;
+
 use std::result::Result;
 use std::error::Error;
 use std::path::Path;
 use std::sync::Mutex;
-// use std::time::{SystemTime, UNIX_EPOCH, Duration};
 
 pub struct LruResult {
     pub data: String,
-    pub time: chrono::NaiveDateTime,
+    pub time: chrono::DateTime<chrono::Local>,
 }
 
 pub struct LruDB {
@@ -41,7 +42,7 @@ impl LruDB {
             stmt.query_map(&[], |row| {
                 LruResult {
                     data: row.get(0),
-                    time: chrono::NaiveDateTime::from_timestamp(row.get(1), 0),
+                    time: chrono::Local.timestamp(row.get(1), 0),
                 }
             })?;
         let mut ret : Vec<LruResult> = Vec::new();

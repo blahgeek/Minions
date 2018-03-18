@@ -45,6 +45,8 @@ impl Action for SearchEngine {
     fn runnable_arg(&self) -> bool { true }
     fn runnable_arg_realtime(&self) -> bool { self.suggestion_url.is_some() }
 
+    fn suggest_arg_scope(&self) -> Option<&str> { Some(&self.name) }
+
     fn run_arg(&self, text: &str) -> ActionResult {
         let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.address.replace("%s", &text);

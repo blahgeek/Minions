@@ -31,6 +31,8 @@ pub struct ScriptItem {
     pub action_run_arg: bool,
     pub action_run_realtime: bool,
 
+    pub action_suggest_arg_scope: Option<String>,
+
     pub requirements: Vec<String>,
 }
 
@@ -48,6 +50,7 @@ impl ScriptItem {
             action_run_bare: true,
             action_run_arg: false,
             action_run_realtime: true,
+            action_suggest_arg_scope: None,
             requirements: Vec::new(),
         }
     }
@@ -65,6 +68,7 @@ impl ScriptItem {
                         action_run_bare: self.action_run_bare,
                         action_run_arg: self.action_run_arg,
                         action_run_realtime: self.action_run_realtime,
+                        action_suggest_arg_scope: self.action_suggest_arg_scope,
                     } ),
             };
 

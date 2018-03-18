@@ -47,8 +47,6 @@ impl Action for Youdao {
 
     fn runnable_arg (&self) -> bool { true }
 
-    fn suggest_arg_scope(&self) -> Option<&str> { Some("youdao") }
-
     fn run_arg (&self, text: &str) -> ActionResult {
         let salt = "WTF";
         let mut hash = crypto::md5::Md5::new();

@@ -19,12 +19,21 @@ pub struct ScriptAction {
     pub action_run_bare: bool,
     pub action_run_arg: bool,
     pub action_run_realtime: bool,
+
+    pub action_suggest_arg_scope: Option<String>,
 }
 
 impl Action for ScriptAction {
     fn runnable_bare(&self) -> bool { self.action_run_bare }
     fn runnable_arg(&self) -> bool { self.action_run_arg }
     fn runnable_arg_realtime(&self) -> bool { self.action_run_realtime }
+
+    fn suggest_arg_scope(&self) -> Option<&str> {
+        match self.action_suggest_arg_scope {
+            Some(ref s) => Some(&s),
+            None => None,
+        }
+    }
 
     fn run_bare (&self) -> ActionResult {
         self.run_action(None, "bare")

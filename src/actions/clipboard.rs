@@ -54,7 +54,7 @@ impl Action for ClipboardHistoryAction {
     fn runnable_bare(&self) -> bool { true }
 
     fn run_bare(&self) -> ActionResult {
-        let history = self.lrudb.getall()?;
+        let history = self.lrudb.getall("clipboard_history")?;
         if history.len() == 0 {
             Err(Box::new(ActionError::new("No clipboard history available")))
         } else {
@@ -78,10 +78,10 @@ impl ClipboardHistoryAction {
 
         let action = ClipboardHistoryAction {
             history_max_len: history_max_len,
-            lrudb: LruDB::new("clipboard_history", history_max_len, Some(&db_file)).unwrap(),
+            lrudb: LruDB::new(Some(&db_file)).unwrap(),
         };
 
-        let lrudb = LruDB::new("clipboard_history", history_max_len, Some(&db_file)).unwrap();
+        let lrudb = LruDB::new(Some(&db_file)).unwrap();
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
         connect_clipboard_change(&clipboard, move |clipboard| {
             let content = clipboard.wait_for_text();
@@ -89,7 +89,7 @@ impl ClipboardHistoryAction {
                 trace!("New clipboard text: {:?}", text);
                 if ignore_single_byte && text.len() <= 1 {
                     debug!("Single byte, do not store in history");
-                } else if let Err(err) = lrudb.add(&text) {
+                } else if let Err(err) = lrudb.add("clipboard_history", &text, history_max_len as i32) {
                     warn!("Unable to store clipboard text: {}", err);
                 }
             }

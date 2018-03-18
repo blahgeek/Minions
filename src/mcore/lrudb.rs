@@ -15,31 +15,29 @@ pub struct LruResult {
 
 pub struct LruDB {
     conn: Mutex<rusqlite::Connection>,
-    max_n: usize,
-    table: String,
 }
 
 
 impl LruDB {
 
-    pub fn add(&self, s: &str) -> Result<(), Box<Error + Sync + Send>> {
+    /// Add data at scope, keep last max_n entries
+    pub fn add(&self, scope: &str, s: &str, max_n: i32) -> Result<(), Box<Error + Sync + Send>> {
         let conn = self.conn.lock().unwrap();
         let now = chrono::Local::now().timestamp();
-        conn.execute(&format!("INSERT OR REPLACE INTO {} (data, time) VALUES (?, ?)", self.table),
-                     &[&s, &now])?;
-        conn.execute(
-            &format!("DELETE FROM {} WHERE id NOT IN
-                      (SELECT id FROM {} ORDER BY time DESC, id DESC LIMIT {})",
-                      self.table, self.table, self.max_n), &[])?;
+        conn.execute("INSERT OR REPLACE INTO lrudata (scope, data, time) VALUES (?, ?, ?)",
+                     &[&scope, &s, &now])?;
+        conn.execute("DELETE FROM lrudata WHERE scope = ? AND id NOT IN
+                      (SELECT id FROM lrudata WHERE scope = ? ORDER BY time DESC, id DESC LIMIT ?)",
+                      &[&scope, &scope, &max_n])?;
         Ok(())
     }
 
-    pub fn getall(&self) -> Result<Vec<LruResult>, Box<Error + Sync + Send>> {
+    /// Get all data in order
+    pub fn getall(&self, scope: &str) -> Result<Vec<LruResult>, Box<Error + Sync + Send>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare(
-            &format!("SELECT data, time FROM {} ORDER BY time DESC, id DESC", self.table))?;
+        let mut stmt = conn.prepare("SELECT data, time FROM lrudata WHERE scope = ? ORDER BY time DESC, id DESC")?;
         let data_iter =
-            stmt.query_map(&[], |row| {
+            stmt.query_map(&[&scope], |row| {
                 LruResult {
                     data: row.get(0),
                     time: chrono::Local.timestamp(row.get(1), 0),
@@ -52,14 +50,13 @@ impl LruDB {
         Ok(ret)
     }
 
-    pub fn getall_textonly(&self) -> Result<Vec<String>, Box<Error + Sync + Send>> {
-        Ok(self.getall()?.into_iter()
+    pub fn getall_textonly(&self, scope: &str) -> Result<Vec<String>, Box<Error + Sync + Send>> {
+        Ok(self.getall(scope)?.into_iter()
            .map(|x| x.data)
            .collect())
     }
 
-    pub fn new(scope: &str, max_n: usize, dbpath: Option<&Path>) -> Result<LruDB, Box<Error + Sync + Send>> {
-        let table = format!("lru_{}", scope);
+    pub fn new(dbpath: Option<&Path>) -> Result<LruDB, Box<Error + Sync + Send>> {
         let conn =
             if let Some(dbpath) = dbpath {
                 rusqlite::Connection::open(dbpath)?
@@ -67,18 +64,16 @@ impl LruDB {
                 rusqlite::Connection::open_in_memory()?
             };
 
-        conn.execute(&format!("CREATE TABLE IF NOT EXISTS {} (
+        conn.execute("CREATE TABLE IF NOT EXISTS lrudata (
                 id INTEGER PRIMARY KEY,
+                scope TEXT,
                 data TEXT UNIQUE,
                 time INTEGER
-            )", table), &[])?;
-        conn.execute(&format!("CREATE INDEX IF NOT EXISTS time_id_idx ON {} (time, id)", table),
-                     &[])?;
+            )", &[])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS scope_time_id_idx ON lrudata (scope, time, id)", &[])?;
 
         Ok(LruDB {
             conn: Mutex::new(conn),
-            max_n: max_n,
-            table: table,
         })
     }
 
@@ -91,17 +86,17 @@ mod tests {
 
     #[test]
     fn lrudb_test() {
-        let lru = LruDB::new("test", 3, None).unwrap();
-        lru.add("hello").unwrap();
-        lru.add("world").unwrap();
-        assert_eq!(lru.getall_textonly().unwrap(), vec!["world", "hello"]);
+        let lru = LruDB::new(None).unwrap();
+        lru.add("test", "hello", 3).unwrap();
+        lru.add("test", "world", 3).unwrap();
+        assert_eq!(lru.getall_textonly("test").unwrap(), vec!["world", "hello"]);
 
-        lru.add("hello").unwrap();
-        assert_eq!(lru.getall_textonly().unwrap(), vec!["hello", "world"]);
+        lru.add("test", "hello", 3).unwrap();
+        assert_eq!(lru.getall_textonly("test").unwrap(), vec!["hello", "world"]);
 
-        lru.add("1").unwrap();
-        lru.add("2").unwrap();
-        assert_eq!(lru.getall_textonly().unwrap(), vec!["2", "1", "hello"]);
+        lru.add("test", "1", 3).unwrap();
+        lru.add("test", "2", 3).unwrap();
+        assert_eq!(lru.getall_textonly("test").unwrap(), vec!["2", "1", "hello"]);
     }
 
 }

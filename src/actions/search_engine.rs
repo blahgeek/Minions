@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-15
+* @Last Modified time: 2018-03-18
 */
 
 extern crate url;
@@ -77,7 +77,9 @@ impl Action for SearchEngine {
                 item.subtitle = Some(b.as_str().unwrap().into());
                 item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
                 item.action = Some(Arc::new(Box::new(
-                                PartialAction::new(Box::new(self.clone()), a.as_str().unwrap().into())
+                                PartialAction::new(
+                                    Arc::new(Box::new(self.clone())),
+                                    a.as_str().unwrap().into())
                             )));
                 item
             })

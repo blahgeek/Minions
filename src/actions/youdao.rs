@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-15
+* @Last Modified time: 2018-03-18
 */
 
 extern crate url;
@@ -46,6 +46,8 @@ struct YoudaoResult {
 impl Action for Youdao {
 
     fn runnable_arg (&self) -> bool { true }
+
+    fn suggest_arg_scope(&self) -> Option<&str> { Some("youdao") }
 
     fn run_arg (&self, text: &str) -> ActionResult {
         let salt = "WTF";

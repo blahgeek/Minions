@@ -11,12 +11,14 @@ extern crate gdk;
 extern crate uuid;
 use self::uuid::Uuid;
 
+use std::sync::Arc;
 use std::thread;
 use std::error::Error;
 use std::rc::Rc;
-use mcore::action::ActionResult;
+use mcore::action::{ActionResult, PartialAction};
 use mcore::item::Item;
 use mcore::config::Config;
+use mcore::lrudb::LruDB;
 use actions;
 
 use self::gtk::ClipboardExt;
@@ -30,6 +32,9 @@ pub struct Context {
 
     /// Cached all actions
     action_items: Vec<Rc<Item>>,
+
+    lrudb: LruDB,
+    history_max_n: i32,
 }
 
 
@@ -37,10 +42,15 @@ impl Context {
 
     /// Create context with initial items
     pub fn new(config: &Config) -> Context {
+        let db_file = config.get_filename(&["core", "db_file"]).unwrap();
+        let history_max_n = config.get::<i32>(&["core", "history"]).unwrap();
+
         let mut ctx = Context {
             reference: None,
             list_items: Vec::new(),
             action_items: Vec::new(),
+            lrudb: LruDB::new(Some(&db_file)).unwrap(),
+            history_max_n: history_max_n,
         };
         ctx.reload(config);
         ctx.reset();
@@ -129,9 +139,17 @@ impl Context {
     pub fn async_select_with_text<F>(&self, item: &Item, text: &str, callback: F) -> String
     where F: FnOnce(ActionResult) + Send + 'static {
         assert!(self.selectable_with_text(&item));
+
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
         let action = item.action.clone().unwrap();
+
+        if let Some(scope) = action.suggest_arg_scope() {
+            if let Err(error) = self.lrudb.add(scope, &text, self.history_max_n) {
+                warn!("Unable to save arg history: {}", error);
+            }
+        }
+
         thread::Builder::new()
             .name(thread_uuid.clone())
             .spawn(move || {
@@ -169,6 +187,29 @@ impl Context {
         self.list_items.sort_by_key(|item| item.priority );
         self.reference = Some(item.data.as_ref().unwrap_or(&item.title).clone());
         Ok(())
+    }
+
+    pub fn suggest_arg(&self, item: &Item) -> Vec<Item> {
+        if let Some(ref action) = item.action {
+            if let Some(scope) = action.suggest_arg_scope() {
+                if let Ok(history) = self.lrudb.getall(scope) {
+                    history.into_iter().map(|x| {
+                        let mut sug = Item::new(&x.data);
+                        sug.subtitle = Some(x.time.format("%T %b %e").to_string());
+                        sug.icon = item.icon.clone();
+                        sug.badge = Some("History".into());
+                        sug.action = Some(Arc::new(Box::new(PartialAction::new(action.clone(), x.data))));
+                        sug
+                    }).collect()
+                } else {
+                    Vec::new()
+                }
+            } else {
+                Vec::new()
+            }
+        } else {
+            Vec::new()
+        }
     }
 
 }

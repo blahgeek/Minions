@@ -355,7 +355,8 @@ impl MinionsApp {
                         should_update_ui = true;
                         Status::Entering{
                             item: item.clone(),
-                            suggestions: Vec::new(),
+                            suggestions: self.ctx.suggest_arg(item)
+                                .into_iter().map(|x| Rc::new(x)).collect(),
                             selected_idx: -1,
                             receiver: None,
                         }
@@ -504,7 +505,8 @@ impl MinionsApp {
                     } else if self.ctx.selectable_with_text(&item) {
                         Status::Entering{
                             item: item.clone(),
-                            suggestions: Vec::new(),
+                            suggestions: self.ctx.suggest_arg(item)
+                                .into_iter().map(|x| Rc::new(x)).collect(),
                             selected_idx: -1,
                             receiver: None,
                         }

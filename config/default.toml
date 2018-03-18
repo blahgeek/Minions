@@ -23,6 +23,9 @@
     # Database location, used by many services (e.g. clipboard history)
     db_file = "~/.minions/minions.db"
 
+    # Max number of saved history entries (input text) for each action
+    history = 10
+
 # list of search engines
 # Each site must have `name` and `address` defined
 # and optionally `suggestion_url` for suggestions, which follows the OpenSearch standard

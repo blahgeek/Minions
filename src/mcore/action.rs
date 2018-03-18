@@ -2,9 +2,10 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-03-18
 */
 
+use std::sync::Arc;
 use std::error::Error;
 use mcore::item::Item;
 
@@ -22,6 +23,9 @@ pub trait Action {
     /// Whether this action runs with argument in realtime
     fn runnable_arg_realtime(&self) -> bool { false }
 
+    /// Scope of entered argument history, only valid if runnable_arg
+    fn suggest_arg_scope(&self) -> Option<&str> { None }
+
     /// Run realtime (auto-complete)
     fn run_arg_realtime(&self, &str) -> ActionResult { unimplemented!() }
 
@@ -35,12 +39,12 @@ pub trait Action {
 
 /// An actiton with arg
 pub struct PartialAction {
-    action: Box<Action + Sync + Send>,
+    action: Arc<Box<Action + Sync + Send>>,
     arg: String,
 }
 
 impl PartialAction {
-    pub fn new(action: Box<Action + Sync + Send>, arg: String) -> Self {
+    pub fn new(action: Arc<Box<Action + Sync + Send>>, arg: String) -> Self {
         PartialAction { action, arg, }
     }
 }

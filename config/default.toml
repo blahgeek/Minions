@@ -33,9 +33,11 @@
     [[search_engine.sites]]
     name = "Google"
     address = "https://www.google.com/search?q=%s"
+    suggestion_url = "https://clients1.google.com/complete/search?q=%s&client=chrome"
     [[search_engine.sites]]
     name = "Google I'm Feeling Lucky"
     address = "https://www.google.com/search?q=%s&btnI"
+    suggestion_url = "https://clients1.google.com/complete/search?q=%s&client=chrome"
     [[search_engine.sites]]
     name = "Bing"
     address = "https://www.bing.com/search?q=%s"

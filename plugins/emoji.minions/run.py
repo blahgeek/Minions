@@ -1,22 +1,47 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# @Author: BlahGeek
-# @Date:   2017-06-18
-# @Last Modified by:   BlahGeek
-# @Last Modified time: 2018-02-15
 
-from __future__ import print_function
-from os import path
+import os
+import re
 import json
+from datetime import datetime
 
 
-data = json.load(open(path.join(path.dirname(__file__), 'emojis.json')))
-data = [{
-            'title': name,
-            'icon': 'character::{}'.format(props['char']),
-            'subtitle': ' '.join(props['keywords']),
-            'badge': props['category'],
-            'data': props['char'],
-        } for name, props in data.items() if props.get('char')]
+EMOJIPEDIA_URL = 'https://emojipedia.org/emoji/'
+EMOJI_DATA_PATH = os.path.expanduser('~/.minions/emoji.html')
+EMOJI_PATTERN = (r'<a\s+href="/emoji/[^/]*/">' +
+                 r'\s*<span\s+class="emoji">' +
+                 r'\s*([^<])' +  # ignore multi-char emoji for now
+                 r'\s*</span>' +
+                 r'\s*([^<]+)' +
+                 r'</a>')
+
+
+data_last_update = 'Never'
+data = []
+
+try:
+    content = open(EMOJI_DATA_PATH).read()
+    data_last_update = os.stat(EMOJI_DATA_PATH).st_mtime
+except OSError:
+    pass
+else:
+    data_last_update = datetime.fromtimestamp(data_last_update).ctime()
+    for m in re.finditer(EMOJI_PATTERN, content):
+        emoji = m.group(1).strip()
+        desc = m.group(2).strip()
+        data.append({
+            'title': desc,
+            'icon': 'character::{}'.format(emoji),
+            'data': emoji,
+        })
+
+data.append({
+    'title': 'Update Emoji data from emojipedia.org',
+    'subtitle': 'Last update: {}'.format(data_last_update),
+    'priority': 100,
+    'action': ('bash -c "wget {} -O {}"'
+               .format(EMOJIPEDIA_URL, EMOJI_DATA_PATH)),
+})
 
 print(json.dumps(data, indent=4))

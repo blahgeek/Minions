@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-15
+* @Last Modified time: 2018-03-21
 */
 
 extern crate pinyin;
@@ -61,6 +61,7 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
 
     let mut score = 0;
     let mut firstchar_bonus = 1;
+    let mut noskip_bonus = 1;
 
     let mut match_success = false;
     let mut last_text_ch: char = '\u{0}';
@@ -77,11 +78,13 @@ pub fn fuzzymatch(text: &str, pattern: &str, casesensitive: bool) -> i32 {
                     if (casesensitive && text_ch != pattern_ch) ||
                        (!casesensitive && text_ch.to_lowercase().next() != pattern_ch.to_lowercase().next() ) {
                         skipped_count += 1;
+                        noskip_bonus = 1;
                         last_text_ch = text_ch;
                     } else {
                         score += 1;
                         if skipped_count == 0 {
-                            score += 1;
+                            score += noskip_bonus;
+                            noskip_bonus *= 2;
                         }
                         if text_ch.is_uppercase() || (text_ch.is_alphanumeric() &&
                                                       !last_text_ch.is_alphanumeric()) {
@@ -115,7 +118,9 @@ mod tests {
     fn fuzzymatch_test() {
         assert!(fuzzymatch("hello world", "hw", false) > 0);
         assert!(fuzzymatch("hello world", "hw", false) >
-                fuzzymatch("hello world", "he", false));
+                fuzzymatch("hello world", "hl", false));
+        assert!(fuzzymatch("hello world", "hell", false) >
+                fuzzymatch("hello world", "hwld", false));
         assert!(fuzzymatch("hello world", "hww", false) == 0);
         assert!(fuzzymatch("Hello World", "hw", false) > 0);
         assert!(fuzzymatch("Hello World", "hw", true) == 0);

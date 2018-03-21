@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-03-22
 */
 
 extern crate gtk;
@@ -33,7 +33,7 @@ pub struct Context {
     /// Cached all actions
     action_items: Vec<Rc<Item>>,
 
-    lrudb: LruDB,
+    lrudb: Arc<LruDB>,
     history_max_n: i32,
 }
 
@@ -49,7 +49,7 @@ impl Context {
             reference: None,
             list_items: Vec::new(),
             action_items: Vec::new(),
-            lrudb: LruDB::new(Some(&db_file)).unwrap(),
+            lrudb: Arc::new(LruDB::new(Some(&db_file)).unwrap()),
             history_max_n: history_max_n,
         };
         ctx.reload(config);
@@ -198,7 +198,19 @@ impl Context {
                         sug.subtitle = Some(x.time.format("%T %b %e").to_string());
                         sug.icon = item.icon.clone();
                         sug.badge = Some("History".into());
-                        sug.action = Some(Arc::new(Box::new(PartialAction::new(action.clone(), x.data))));
+
+                        let lrudb = self.lrudb.clone();
+                        let scope : String = scope.into();
+                        let arg = x.data.clone();
+                        let history_max_n = self.history_max_n;
+                        sug.action = Some(Arc::new(Box::new(PartialAction::new(
+                                        action.clone(), x.data,
+                                        Some(Box::new(move || {
+                                            if let Err(error) = lrudb.add(&scope, &arg, history_max_n) {
+                                                warn!("Unable to save arg history: {}", error);
+                                            }
+                                        }))
+                                        ))));
                         sug
                     }).collect()
                 } else {

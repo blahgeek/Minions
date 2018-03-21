@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-03-22
 */
 
 extern crate url;
@@ -81,7 +81,7 @@ impl Action for SearchEngine {
                 item.action = Some(Arc::new(Box::new(
                                 PartialAction::new(
                                     Arc::new(Box::new(self.clone())),
-                                    a.as_str().unwrap().into())
+                                    a.as_str().unwrap().into(), None)
                             )));
                 item
             })

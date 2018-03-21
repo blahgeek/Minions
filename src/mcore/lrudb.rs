@@ -22,6 +22,7 @@ impl LruDB {
 
     /// Add data at scope, keep last max_n entries
     pub fn add(&self, scope: &str, s: &str, max_n: i32) -> Result<(), Box<Error + Sync + Send>> {
+        debug!("Adding `{}` to scope `{}`", s, scope);
         let conn = self.conn.lock().unwrap();
         let now = chrono::Local::now().timestamp();
         conn.execute("INSERT OR REPLACE INTO lrudata (scope, data, time) VALUES (?, ?, ?)",

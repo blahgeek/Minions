@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-03-21
 */
 
 use std::sync::Arc;
@@ -41,11 +41,15 @@ pub trait Action {
 pub struct PartialAction {
     action: Arc<Box<Action + Sync + Send>>,
     arg: String,
+
+    run_callback: Option<Box<Fn() + Sync + Send + 'static>>,
 }
 
 impl PartialAction {
-    pub fn new(action: Arc<Box<Action + Sync + Send>>, arg: String) -> Self {
-        PartialAction { action, arg, }
+    pub fn new(action: Arc<Box<Action + Sync + Send>>,
+               arg: String,
+               run_callback: Option<Box<Fn() + Sync + Send + 'static>>) -> Self {
+        PartialAction { action, arg, run_callback, }
     }
 }
 
@@ -53,6 +57,11 @@ impl Action for PartialAction {
 
     fn runnable_bare(&self) -> bool { true }
 
-    fn run_bare(&self) -> ActionResult { self.action.run_arg(&self.arg) }
+    fn run_bare(&self) -> ActionResult {
+        if let Some(ref f) = self.run_callback {
+            f();
+        }
+        self.action.run_arg(&self.arg)
+    }
 
 }

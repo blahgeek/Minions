@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-22
+* @Last Modified time: 2018-03-23
 */
 
 extern crate url;
@@ -14,7 +14,7 @@ use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, Encod
 use std::sync::Arc;
 use std::io::Read;
 
-use mcore::action::{Action, ActionResult, PartialAction};
+use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use actions::utils::open;
@@ -44,6 +44,7 @@ struct SearchEngine {
 impl Action for SearchEngine {
     fn runnable_arg(&self) -> bool { true }
     fn runnable_arg_realtime(&self) -> bool { self.suggestion_url.is_some() }
+    fn runnable_arg_realtime_is_suggestion(&self) -> bool { true }
 
     fn suggest_arg_scope(&self) -> Option<&str> { Some(&self.name) }
 
@@ -78,11 +79,6 @@ impl Action for SearchEngine {
                 let mut item = Item::new_text_item(a.as_str().unwrap());
                 item.subtitle = Some(b.as_str().unwrap().into());
                 item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
-                item.action = Some(Arc::new(Box::new(
-                                PartialAction::new(
-                                    Arc::new(Box::new(self.clone())),
-                                    a.as_str().unwrap().into(), None)
-                            )));
                 item
             })
             .collect::<Vec<Item>>()

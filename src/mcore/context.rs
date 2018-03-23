@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-22
+* @Last Modified time: 2018-03-23
 */
 
 extern crate gtk;
@@ -167,12 +167,35 @@ impl Context {
         let text = text.to_string();
         let thread_uuid = Uuid::new_v4().simple().to_string();
         let action = item.action.clone().unwrap();
+
+        let history_max_n = self.history_max_n;
+        let lrudb = self.lrudb.clone();
         thread::Builder::new()
             .name(thread_uuid.clone())
             .spawn(move || {
                 let items = action.run_arg_realtime(&text);
+                let scope = action.suggest_arg_scope();
                 debug!("async run with realtime text complete, calling back");
-                callback(items);
+                if action.runnable_arg_realtime_is_suggestion()
+                    && items.is_ok() && scope.is_some() {
+                    // insert partial action with lrudb
+                    let items = items.unwrap().into_iter().map(|mut item| {
+                        let data = item.title.clone();
+                        let scope : String = scope.unwrap().into();
+                        let lrudb = lrudb.clone();
+                        item.action = Some(Arc::new(Box::new(PartialAction::new(
+                                        action.clone(), data.clone(),
+                                        Some(Box::new(move || {
+                                            if let Err(error) = lrudb.add(&scope, &data, history_max_n) {
+                                                warn!("Unable to save arg history: {}", error);
+                                            }
+                                        }))))));
+                        Ok(item)
+                    }).collect();
+                    callback(items);
+                } else {
+                    callback(items);
+                }
             })
             .unwrap();
         thread_uuid

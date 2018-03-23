@@ -1,6 +1,6 @@
 [package]
 name = "minions"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["BlahGeek <i@BlahGeek.com>"]
 
 [lib]

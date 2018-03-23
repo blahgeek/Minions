@@ -12,7 +12,7 @@ extern crate serde_json;
 use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, EncodeSet};
 
 use std::sync::Arc;
-use std::io::Read;
+use std::sync::Mutex;
 
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
@@ -38,6 +38,13 @@ struct SearchEngine {
     address: String,
     /// The URL for suggestion, open search protocol
     suggestion_url: Option<String>,
+
+    #[serde(skip, default="default_suggestion_client")]
+    suggestion_client: Arc<Mutex<reqwest::Client>>,
+}
+
+fn default_suggestion_client() -> Arc<Mutex<reqwest::Client>> {
+    Arc::new(Mutex::new(reqwest::Client::new()))
 }
 
 
@@ -59,10 +66,14 @@ impl Action for SearchEngine {
         let text = utf8_percent_encode(text, DEFAULT_PLUS_ENCODE_SET).to_string();
         let url = self.suggestion_url.as_ref().unwrap().replace("%s", &text);
 
-        let mut result = String::new();
-        reqwest::get(&url)?.read_to_string(&mut result)?;
-        let result : serde_json::Value = serde_json::from_str(&result)?;
+        let result = if let Ok(client) = self.suggestion_client.try_lock() {
+            client.get(&url).send()?.text()?
+        } else {
+            warn!("Unable to use shared reqwest client!");
+            reqwest::get(&url)?.text()?
+        };
 
+        let result : serde_json::Value = serde_json::from_str(&result)?;
         let suggestions = match result.get(1) {
             Some(&serde_json::Value::Array(ref arr)) => arr.clone(),
             _ => Vec::new(),

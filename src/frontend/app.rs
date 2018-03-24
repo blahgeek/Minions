@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-03-24
 */
 
 extern crate glib;
@@ -565,9 +565,16 @@ impl MinionsApp {
             Status::Filtering {
                 selected_idx,
                 filtered_items,
+                filter_text,
                 ..
             } => {
-                if let Err(error) = self.ctx.copy_content_to_clipboard(&filtered_items[selected_idx as usize]) {
+
+                let item = &filtered_items[selected_idx as usize];
+                if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
+                    debug!("Unable to record hit: {}", error);
+                }
+
+                if let Err(error) = self.ctx.copy_content_to_clipboard(item) {
                     warn!("Unable to copy item: {}", error);
                 } else {
                     info!("Item copied");

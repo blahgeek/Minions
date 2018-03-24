@@ -1,0 +1,6 @@
+title = "Window Switcher"
+# subtitle = "Switch to window using wmctrl"
+# icon = "character::+"
+action = "./run.py"
+# requirements = ["exe:wmctrl", "py3:gi"]
+requirements = ["exe:wmctrl", ]

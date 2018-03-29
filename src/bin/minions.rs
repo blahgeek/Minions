@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-03-29
 */
 
 extern crate minions;
@@ -22,7 +22,7 @@ use minions::frontend::app::MinionsApp;
 
 fn main() {
     let mut logger = fern::Dispatch::new()
-                         .level(log::LogLevelFilter::Warn);
+                         .level(log::LevelFilter::Warn);
 
     let args = clap::App::new("Minions")
                         .author("BlahGeek <i@blahgeek.com>")
@@ -39,14 +39,15 @@ fn main() {
                         .get_matches();
 
     logger = match args.occurrences_of("verbose") {
-        0 => logger.level_for("minions", log::LogLevelFilter::Info),
-        1 => logger.level_for("minions", log::LogLevelFilter::Debug),
-        _ => logger.level_for("minions", log::LogLevelFilter::Trace),
+        0 => logger.level_for("minions", log::LevelFilter::Info),
+        1 => logger.level_for("minions", log::LevelFilter::Debug),
+        _ => logger.level_for("minions", log::LevelFilter::Trace),
     };
-    logger.format(|out, message, record| {
+    let logger_colors = fern::colors::ColoredLevelConfig::default();
+    logger.format(move |out, message, record| {
                out.finish(format_args!("{}[{}][{}] {}",
                                        chrono::Local::now().format("[%H:%M:%S]"),
-                                       record.level(),
+                                       logger_colors.color(record.level()),
                                        record.target(),
                                        message))
            })

@@ -1,0 +1,9 @@
+title = "PyCalculator"
+subtitle = "Math calculator using python sandbox"
+icon = "character::+"
+action = "./run.py"
+action_output_format = "json"
+action_run_bare = false
+action_run_arg = true
+action_run_realtime = true
+requirements = ["py3:asteval",]

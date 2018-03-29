@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-08-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-08
+* @Last Modified time: 2018-03-29
 */
 
 use std::process::{Command, Stdio};
@@ -34,7 +34,10 @@ impl Requirement {
     }
 
     fn check_executable(exe: &str) -> bool {
-        match Command::new("which").arg(exe).stdout(Stdio::null()).status() {
+        match Command::new("which").arg(exe)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status() {
             Err(error) => {
                 warn!("Error running which: {}", error);
                 false

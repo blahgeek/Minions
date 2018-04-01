@@ -27,6 +27,9 @@ pub fn parse_icon(text: &str, script_dir: &std::path::Path) -> Option<Icon> {
                 None
             }
         }
+    }
+    else if parts[0] == "fontawesome" {
+        Some(Icon::FontAwesome(parts[1].into()))
     } else {
         None
     }

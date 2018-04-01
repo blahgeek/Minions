@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-11
+* @Last Modified time: 2018-04-01
 */
 
 use std;
@@ -15,6 +15,7 @@ pub enum Icon {
     GtkName(String),
     Character{ch: char, font: String},
     File(std::path::PathBuf),
+    FontAwesome(String),
 }
 
 /// The item type (represents single selectable item (row))

@@ -2,11 +2,12 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-22
+* @Last Modified time: 2018-04-01
 */
 
 extern crate gdk_pixbuf;
 extern crate lru_cache;
+extern crate serde_json;
 
 use std::cmp;
 use std::cell::RefCell;
@@ -16,8 +17,10 @@ use std::error::Error;
 use mcore::item::{Item, Icon};
 use mcore::context::Context;
 
+use frontend::gdk;
 use frontend::gtk;
 use frontend::gtk::prelude::*;
+use self::gdk_pixbuf::prelude::*;
 use self::lru_cache::LruCache;
 
 
@@ -45,6 +48,11 @@ pub struct MinionsUI {
 
     gtkbuf_cache: RefCell<LruCache<PathBuf, Option<gdk_pixbuf::Pixbuf>>>,
     items: Vec<ItemUI>,
+}
+
+lazy_static! {
+    static ref FA_FONTS : serde_json::Value =
+        serde_json::from_str(include_str!("./resource/fontawesome/icons.json")).unwrap();
 }
 
 const LISTBOX_NUM: i32 = 5;
@@ -117,7 +125,7 @@ impl MinionsUI {
                 let buf = if let Some(pixbuf) = gtkbuf_cache.get_mut(path) {
                     pixbuf.clone()
                 } else {
-                    gdk_pixbuf::Pixbuf::new_from_file_at_size(&path.to_string_lossy(), ICON_SIZE, ICON_SIZE).ok()
+                    gdk_pixbuf::Pixbuf::new_from_file_at_size(path, ICON_SIZE, ICON_SIZE).ok()
                 };
                 w_image.set_from_pixbuf(buf.as_ref());
                 gtkbuf_cache.insert(path.clone(), buf);
@@ -128,6 +136,37 @@ impl MinionsUI {
                 w_label.set_markup(&format!("<span font_desc=\"{} {}\">{}</span>", font, ICON_FONT_SIZE, ch));
                 w_image.hide();
                 w_label.show();
+            },
+            &Icon::FontAwesome(ref name) => {
+                let mut pixbuf = gdk_pixbuf::Pixbuf::new(gdk_pixbuf::Colorspace::Rgb, true, 8, ICON_SIZE, ICON_SIZE);
+                let svg = FA_FONTS.get(&name)
+                    .and_then(|x| x.get("svg"))
+                    .and_then(|x| x.get("brands").or_else(|| x.get("solid")))
+                    .and_then(|x| x.get("raw"))
+                    .and_then(|x| x.as_str());
+                if let Some(svg) = svg {
+                    let mut color = gdk::RGBA::white();
+                    if let Some(ctx) = self.window.get_style_context() {
+                        color = ctx.get_color(gtk::StateFlags::NORMAL);
+                    }
+                    let red = (color.red * 256.0) as i32;
+                    let green = (color.green * 256.0) as i32;
+                    let blue = (color.blue * 256.0) as i32;
+                    let svg = svg.replace("<path",
+                                          &format!("<path stroke=\"rgb({},{},{})\" fill=\"rgb({},{},{})\"",
+                                                   red, green, blue,
+                                                   red, green, blue));
+                    let loader = gdk_pixbuf::PixbufLoader::new();
+                    let _ = loader.write(svg.as_bytes());
+                    let _ = loader.close();
+                    if let Some(p) = loader.get_pixbuf()
+                        .and_then(|x| x.scale_simple(ICON_SIZE, ICON_SIZE, gdk_pixbuf::InterpType::Bilinear)) {
+                            pixbuf = p.clone();
+                        }
+                }
+                w_image.set_from_pixbuf(&pixbuf);
+                w_image.show();
+                w_label.hide();
             },
         }
     }

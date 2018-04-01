@@ -2,7 +2,7 @@
 # @Author: BlahGeek
 # @Date:   2017-07-09
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-08-13
+# @Last Modified time: 2018-04-01
 
 cd "$(dirname "$0")"
 cd ../../
@@ -25,8 +25,6 @@ cp scripts/appimage/minions.desktop build/$APP/$APP.AppDir
 cp scripts/appimage/minions.png build/$APP/$APP.AppDir
 cp target/release/minions build/$APP/$APP.AppDir/usr/bin/minions
 cp -r plugins build/$APP/$APP.AppDir/usr/share/minions-plugins
-cp config/fonts.conf build/$APP/$APP.AppDir/etc/fonts.conf
-cp -r fonts build/$APP/$APP.AppDir/fonts
 
 cp $(which zenity) build/$APP/$APP.AppDir/usr/bin/
 

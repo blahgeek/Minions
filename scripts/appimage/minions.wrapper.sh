@@ -2,7 +2,7 @@
 # @Author: BlahGeek
 # @Date:   2017-08-13
 # @Last Modified by:   BlahGeek
-# @Last Modified time: 2017-08-13
+# @Last Modified time: 2018-04-01
 
 cd "$(dirname "$0")"
 cd ../../
@@ -20,12 +20,6 @@ check_update() {
         zenity --info --text "$MSG"
     fi
 }
-
-echo "Building font cache..."
-mkdir -p ~/.minions/fontconfig/
-export FONTCONFIG_FILE="$(pwd)/etc/fonts.conf"
-fc-cache
-echo "Build font cache done"
 
 unset XDG_DATA_DIRS
 check_update &

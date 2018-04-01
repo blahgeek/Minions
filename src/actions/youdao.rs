@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-04-01
 */
 
 extern crate url;
@@ -13,7 +13,6 @@ extern crate serde_json;
 use self::crypto::digest::Digest;
 use self::url::form_urlencoded;
 
-use std::char;
 use std::io::Read;
 use std::sync::Arc;
 use mcore::action::{Action, ActionResult};
@@ -101,7 +100,7 @@ pub fn get(_: &Config) -> Item {
     let mut item = Item::new("Youdao Translate");
     item.badge = Some("Translate".into());
     item.priority = -5;
-    item.icon = Some(Icon::Character{ch: char::from_u32(0xf02d).unwrap(), font: "FontAwesome".into()});
+    item.icon = Some(Icon::FontAwesome("globe".into()));
     item.action = Some(Arc::new(Box::new(Youdao{})));
     item
 }

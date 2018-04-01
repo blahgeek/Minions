@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-15
+* @Last Modified time: 2018-04-01
 */
 
 use std::env;
@@ -45,9 +45,9 @@ impl FileBrowserEntry {
             Some("Directory".into())
         };
         ret.icon = Some(if self.is_file {
-            Icon::Character{ch: '', font: "FontAwesome".into()}
+            Icon::FontAwesome("file".into())
         } else {
-            Icon::Character{ch: '', font: "FontAwesome".into()}
+            Icon::FontAwesome("folder".into())
         });
         ret.data = Some(self.path.to_string_lossy().into());
         ret.priority = -10;

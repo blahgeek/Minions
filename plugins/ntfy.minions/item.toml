@@ -1,6 +1,6 @@
 title = "Push Notification"
 subtitle = "Push notification using ntfy command"
-icon = "character::"
+icon = "fontawesome:bell"
 action = "./run.sh"
 action_run_bare = false
 action_run_arg = true

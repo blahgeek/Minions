@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-23
+* @Last Modified time: 2018-04-01
 */
 
 extern crate url;
@@ -89,7 +89,7 @@ impl Action for SearchEngine {
             .map(|(a, b)| {
                 let mut item = Item::new_text_item(a.as_str().unwrap());
                 item.subtitle = Some(b.as_str().unwrap().into());
-                item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+                item.icon = Some(Icon::FontAwesome("search".into()));
                 item
             })
             .collect::<Vec<Item>>()
@@ -106,7 +106,7 @@ pub fn get(config: &Config) -> Vec<Item> {
             let mut item = Item::new(&site.name);
             item.badge = Some("Search Engine".into());
             item.priority = -10;
-            item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+            item.icon = Some(Icon::FontAwesome("search".into()));
             item.action = Some(Arc::new(Box::new(site)));
             item
         })

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-18
+* @Last Modified time: 2018-04-01
 */
 
 extern crate gtk;
@@ -63,7 +63,7 @@ impl Action for ClipboardHistoryAction {
                 item.subtitle = Some(format!("{}, {} bytes",
                                              x.time.format("%T %b %e").to_string(),
                                              x.data.len()));
-                item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+                item.icon = Some(Icon::FontAwesome("paste".into()));
                 item
             }).collect())
         }
@@ -103,7 +103,7 @@ pub fn get(config: &Config) -> Item {
     let mut item = Item::new("Clipboard History");
     item.subtitle = Some(format!("View clipboard history up to {} entries",
                                  action.history_max_len));
-    item.icon = Some(Icon::Character{ch: '', font: "FontAwesome".into()});
+    item.icon = Some(Icon::FontAwesome("paste".into()));
     item.action = Some(Arc::new(Box::new(action)));
     item
 }

@@ -1,6 +1,5 @@
 extern crate nix;
 
-use std::char;
 use std::sync::Arc;
 
 use mcore::action::{Action, ActionResult};
@@ -23,10 +22,7 @@ pub fn get(_: &Config) -> Item {
     item.subtitle = Some("Equivalent to `kill -HUP 0`".into());
     item.badge = Some("Minions".into());
     item.priority = 100;
-    item.icon = Some(Icon::Character{
-        ch: char::from_u32(0xf013).unwrap(),
-        font: "FontAwsome".into(),
-    });
+    item.icon = Some(Icon::FontAwesome("cog".into()));
     item.action = Some(Arc::new(Box::new(ReloadAction{})));
     item
 }

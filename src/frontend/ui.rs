@@ -178,11 +178,11 @@ impl MinionsUI {
             if let Some(ref ico) = item.icon {
                 self.set_image_icon(&self.icon, &self.icon_text, ico);
             } else {
-                self.set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
+                self.set_image_icon(&self.icon, &self.icon_text, &Icon::FontAwesome("home".into()) );
             }
         } else {
             self.textentry.set_buffer(&gtk::EntryBuffer::new(None));
-            self.set_image_icon(&self.icon, &self.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()} );
+            self.set_image_icon(&self.icon, &self.icon_text, &Icon::FontAwesome("home".into()) );
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
@@ -249,7 +249,7 @@ impl MinionsUI {
         if let Some(ref ico) = item.icon {
             self.set_image_icon(&item_ui.icon, &item_ui.icon_text, ico);
         } else {
-            self.set_image_icon(&item_ui.icon, &item_ui.icon_text, &Icon::Character{ch: '', font: "FontAwesome".into()});
+            self.set_image_icon(&item_ui.icon, &item_ui.icon_text, &Icon::FontAwesome("info-circle".into()) );
         }
 
         match item.subtitle {

@@ -160,7 +160,17 @@ impl MinionsUI {
                     let _ = loader.write(svg.as_bytes());
                     let _ = loader.close();
                     if let Some(p) = loader.get_pixbuf()
-                        .and_then(|x| x.scale_simple(ICON_SIZE, ICON_SIZE, gdk_pixbuf::InterpType::Bilinear)) {
+                        .and_then(|x| {
+                            if x.get_width() >= x.get_height() {
+                                x.scale_simple(ICON_SIZE,
+                                               ((ICON_SIZE as f32) / (x.get_width() as f32) * (x.get_height() as f32)) as i32,
+                                               gdk_pixbuf::InterpType::Bilinear)
+                            } else {
+                                x.scale_simple(((ICON_SIZE as f32) / (x.get_height() as f32) * (x.get_width() as f32)) as i32,
+                                               ICON_SIZE,
+                                               gdk_pixbuf::InterpType::Bilinear)
+                            }
+                        }) {
                             pixbuf = p.clone();
                         }
                 }

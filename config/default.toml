@@ -32,14 +32,17 @@
 [search_engine]
     [[search_engine.sites]]
     name = "Google"
+    icon = "fontawesome:google"
     address = "https://www.google.com/search?q=%s"
     suggestion_url = "https://clients1.google.com/complete/search?q=%s&client=chrome"
     [[search_engine.sites]]
     name = "Google I'm Feeling Lucky"
+    icon = "fontawesome:google"
     address = "https://www.google.com/search?q=%s&btnI"
     suggestion_url = "https://clients1.google.com/complete/search?q=%s&client=chrome"
     [[search_engine.sites]]
     name = "Bing"
+    icon = "fontawesome:microsoft"
     address = "https://www.bing.com/search?q=%s"
     suggestion_url = "https://www.bing.com/osjson.aspx?query=%s"
     [[search_engine.sites]]
@@ -48,6 +51,7 @@
     suggestion_url = "https://ac.duckduckgo.com/ac/?q=%s&type=list"
     [[search_engine.sites]]
     name = "Wikipedia"
+    icon = "fontawesome:wikipedia-w"
     address = "https://en.wikipedia.org/wiki/Special:Search?search=%s"
     suggestion_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s"
 

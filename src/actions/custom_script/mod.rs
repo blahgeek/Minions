@@ -1,4 +1,4 @@
-mod parser;
+pub mod parser;
 mod item;
 mod action;
 mod requirement;

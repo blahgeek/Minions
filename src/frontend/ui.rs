@@ -267,9 +267,9 @@ impl MinionsUI {
         }
 
         if ctx.selectable(&item) {
-            item_ui.selectable.set_text("");
+            item_ui.selectable.set_text(">");
         } else if ctx.selectable_with_text(&item) {
-            item_ui.selectable.set_text("");
+            item_ui.selectable.set_text("A");
         } else {
             item_ui.selectable.set_text(" ");
         }

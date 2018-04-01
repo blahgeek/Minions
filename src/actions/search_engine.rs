@@ -13,11 +13,13 @@ use self::url::percent_encoding::{utf8_percent_encode, DEFAULT_ENCODE_SET, Encod
 
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::path::Path;
 
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use actions::utils::open;
+use actions::custom_script::parser::parse_icon;
 
 #[derive(Clone)]
 struct DefaultPlusEncodeSet {}
@@ -38,9 +40,14 @@ struct SearchEngine {
     address: String,
     /// The URL for suggestion, open search protocol
     suggestion_url: Option<String>,
+    /// Icon
+    icon: Option<String>,
 
     #[serde(skip, default="default_suggestion_client")]
     suggestion_client: Arc<Mutex<reqwest::Client>>,
+
+    #[serde(skip)]
+    icon_parsed: Option<Icon>,
 }
 
 fn default_suggestion_client() -> Arc<Mutex<reqwest::Client>> {
@@ -89,7 +96,8 @@ impl Action for SearchEngine {
             .map(|(a, b)| {
                 let mut item = Item::new_text_item(a.as_str().unwrap());
                 item.subtitle = Some(b.as_str().unwrap().into());
-                item.icon = Some(Icon::FontAwesome("search".into()));
+                item.icon = self.icon_parsed.clone()
+                    .or(Some(Icon::FontAwesome("search".into())));
                 item
             })
             .collect::<Vec<Item>>()
@@ -101,12 +109,18 @@ impl Action for SearchEngine {
 pub fn get(config: &Config) -> Vec<Item> {
     let sites = config.get::<Vec<SearchEngine>>(&["search_engine", "sites"]).unwrap();
     sites.into_iter()
+        .map(|mut site| {
+            site.icon_parsed = site.icon.clone().and_then(
+                |x| parse_icon(&x, Path::new(".")));
+            site
+        })
         .map(|site| {
             debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
             let mut item = Item::new(&site.name);
             item.badge = Some("Search Engine".into());
             item.priority = -10;
-            item.icon = Some(Icon::FontAwesome("search".into()));
+            item.icon = site.icon_parsed.clone()
+                .or(Some(Icon::FontAwesome("search".into())));
             item.action = Some(Arc::new(Box::new(site)));
             item
         })

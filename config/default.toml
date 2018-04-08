@@ -54,6 +54,9 @@
     icon = "fontawesome:wikipedia-w"
     address = "https://en.wikipedia.org/wiki/Special:Search?search=%s"
     suggestion_url = "https://en.wikipedia.org/w/api.php?action=opensearch&search=%s"
+    [[search_engine.sites]]
+    name = "WolframAlpha"
+    address = "https://www.wolframalpha.com/input/i=%s"
 
 # Linux desktop entries (Applications)
 [linux_desktop_entry]
@@ -79,3 +82,6 @@
     max_entries = 64
     # Whether to ignore entries with only single byte (useful if you use vim and press "x" a lot)
     ignore_single_byte = true
+
+[wolframalpha]
+    appid = "AT5PY2-5AQXHRXE8K"

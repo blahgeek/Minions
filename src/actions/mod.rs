@@ -12,6 +12,7 @@ mod search_engine;
 mod file_browser;
 mod custom_script;
 mod youdao;
+mod wolframalpha;
 mod clipboard;
 mod reload;
 
@@ -28,6 +29,7 @@ pub fn get_action_items(config: &Config) -> Vec<Item> {
 
     ret.push(clipboard::get(config));
     ret.push(youdao::get(config));
+    ret.push(wolframalpha::get(config));
     ret.push(reload::get(config));
 
     ret

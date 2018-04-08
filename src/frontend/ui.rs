@@ -53,7 +53,7 @@ pub struct MinionsUI {
 }
 
 lazy_static! {
-    static ref FA_FONTS : serde_json::Value =
+    pub static ref FA_FONTS : serde_json::Value =
         serde_json::from_str(include_str!("./resource/fontawesome/icons.json")).unwrap();
 }
 

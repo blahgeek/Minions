@@ -14,6 +14,7 @@ mod custom_script;
 mod youdao;
 mod wolframalpha;
 mod clipboard;
+mod fontawesome;
 mod reload;
 
 use mcore::config::Config;
@@ -31,6 +32,7 @@ pub fn get_action_items(config: &Config) -> Vec<Item> {
     ret.push(youdao::get(config));
     ret.push(wolframalpha::get(config));
     ret.push(reload::get(config));
+    ret.push(fontawesome::get(config));
 
     ret
 }

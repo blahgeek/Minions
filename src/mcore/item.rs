@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 use std;
@@ -39,7 +39,7 @@ pub struct Item {
     pub search_str: Option<String>,
 
     /// Action, optional
-    pub action: Option<Arc<Box<Action + Sync + Send>>>,
+    pub action: Option<Arc<Action + Sync + Send>>,
 }
 
 

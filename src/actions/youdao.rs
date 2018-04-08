@@ -103,7 +103,7 @@ pub fn get(_: &Config) -> Item {
     item.badge = Some("Translate".into());
     item.priority = -5;
     item.icon = Some(Icon::FontAwesome("globe".into()));
-    item.action = Some(Arc::new(Box::new(Youdao{})));
+    item.action = Some(Arc::new(Youdao{}));
     item
 }
 

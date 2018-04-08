@@ -87,7 +87,7 @@ impl ScriptItem {
             data: self.data,
             search_str: None,
             action: match action {
-                Some(action) => Some(Arc::new(Box::new(action))),
+                Some(action) => Some(Arc::new(action)),
                 None => None,
             },
         }

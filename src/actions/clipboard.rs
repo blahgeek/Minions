@@ -105,6 +105,6 @@ pub fn get(config: &Config) -> Item {
     item.subtitle = Some(format!("View clipboard history up to {} entries",
                                  action.history_max_len));
     item.icon = Some(Icon::FontAwesome("paste".into()));
-    item.action = Some(Arc::new(Box::new(action)));
+    item.action = Some(Arc::new(action));
     item
 }

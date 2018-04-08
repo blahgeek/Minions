@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 use std::env;
@@ -51,7 +51,7 @@ impl FileBrowserEntry {
         });
         ret.data = Some(self.path.to_string_lossy().into());
         ret.priority = -10;
-        ret.action = Some(Arc::new(Box::new(self)));
+        ret.action = Some(Arc::new(self));
         ret
     }
 }

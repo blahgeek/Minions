@@ -126,7 +126,7 @@ pub fn get(config: &Config) -> Vec<Item> {
             item.priority = -10;
             item.icon = site.icon_parsed.clone()
                 .or(Some(Icon::FontAwesome("search".into())));
-            item.action = Some(Arc::new(Box::new(site)));
+            item.action = Some(Arc::new(site));
             item
         })
         .collect()

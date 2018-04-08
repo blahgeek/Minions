@@ -45,14 +45,14 @@ pub trait Action {
 
 /// An actiton with arg
 pub struct PartialAction {
-    action: Arc<Box<Action + Sync + Send>>,
+    action: Arc<Action + Sync + Send>,
     arg: String,
 
     run_callback: Option<Box<Fn() + Sync + Send + 'static>>,
 }
 
 impl PartialAction {
-    pub fn new(action: Arc<Box<Action + Sync + Send>>,
+    pub fn new(action: Arc<Action + Sync + Send>,
                arg: String,
                run_callback: Option<Box<Fn() + Sync + Send + 'static>>) -> Self {
         PartialAction { action, arg, run_callback, }

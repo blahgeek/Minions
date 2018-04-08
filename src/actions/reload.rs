@@ -25,6 +25,6 @@ pub fn get(_: &Config) -> Item {
     item.badge = Some("Minions".into());
     item.priority = 100;
     item.icon = Some(Icon::FontAwesome("cog".into()));
-    item.action = Some(Arc::new(Box::new(ReloadAction{})));
+    item.action = Some(Arc::new(ReloadAction{}));
     item
 }

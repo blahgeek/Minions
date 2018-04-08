@@ -161,7 +161,7 @@ pub fn get(config: &Config) -> Vec<Item> {
             } else {
                 Some(Icon::GtkName("gtk-missing-image".into()))
             };
-            item.action = Some(Arc::new(Box::new(action)));
+            item.action = Some(Arc::new(action));
             item
         }).collect()
 }

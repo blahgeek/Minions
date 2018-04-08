@@ -36,11 +36,11 @@ impl Action for WolframAlpha {
             priority: 0,
             data: None,
             search_str: None,
-            action: Some(Arc::new(Box::new(
-                        PartialAction::new(Arc::new(Box::new(OpenAction{})),
+            action: Some(Arc::new(
+                        PartialAction::new(Arc::new(OpenAction{}),
                                            Url::parse_with_params(SEARCH_URL, &[("i", text)]).unwrap().to_string(),
                                            None)
-                        ))),
+                        )),
         }])
     }
 }
@@ -54,8 +54,8 @@ pub fn get(config: &Config) -> Item {
         priority: 0,
         data: None,
         search_str: None,
-        action: Some(Arc::new(Box::new(WolframAlpha{
+        action: Some(Arc::new(WolframAlpha{
             appid: config.get::<String>(&["wolframalpha", "appid"]).unwrap(),
-        }))),
+        })),
     }
 }

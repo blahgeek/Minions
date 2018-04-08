@@ -184,13 +184,13 @@ impl Context {
                         let data = item.title.clone();
                         let scope : String = scope.unwrap().into();
                         let lrudb = lrudb.clone();
-                        item.action = Some(Arc::new(Box::new(PartialAction::new(
+                        item.action = Some(Arc::new(PartialAction::new(
                                         action.clone(), data.clone(),
                                         Some(Box::new(move || {
                                             if let Err(error) = lrudb.add(&scope, &data, history_max_n) {
                                                 warn!("Unable to save arg history: {}", error);
                                             }
-                                        }))))));
+                                        })))));
                         Ok(item)
                     }).collect();
                     callback(items);
@@ -227,14 +227,14 @@ impl Context {
                         let scope : String = scope.into();
                         let arg = x.data.clone();
                         let history_max_n = self.history_max_n;
-                        sug.action = Some(Arc::new(Box::new(PartialAction::new(
+                        sug.action = Some(Arc::new(PartialAction::new(
                                         action.clone(), x.data,
                                         Some(Box::new(move || {
                                             if let Err(error) = lrudb.add(&scope, &arg, history_max_n) {
                                                 warn!("Unable to save arg history: {}", error);
                                             }
                                         }))
-                                        ))));
+                                        )));
                         sug
                     }).collect()
                 } else {

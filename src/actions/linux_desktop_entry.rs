@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-02-15
+* @Last Modified time: 2018-04-08
 */
 
 extern crate shlex;
@@ -11,14 +11,15 @@ extern crate ini;
 use self::ini::Ini;
 
 use std::ffi::OsStr;
-use std::error::Error;
 use std::sync::Arc;
 use std::path::Path;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
-use actions::ActionError;
+use mcore::errors::*;
 use actions::utils::subprocess;
+
+use error_chain::ChainedError;
 
 #[derive(Debug)]
 struct LinuxDesktopEntry {
@@ -52,7 +53,7 @@ impl LinuxDesktopEntry {
 
     fn run_path_or_empty(&self, path: Option<&str>) -> ActionResult {
         if self.exec.len() <= 0 {
-            return Err(Box::new(ActionError::new("Executable path is empty")));
+            bail!("Executable path is empty");
         }
 
         let mut cmd : Vec<&str> = Vec::new();
@@ -80,21 +81,23 @@ impl LinuxDesktopEntry {
     }
 
 
-    fn get(filepath: &Path) -> Result<LinuxDesktopEntry, Box<Error>> {
-        let config = Ini::load_from_file(filepath)?;
+    fn get(filepath: &Path) -> Result<LinuxDesktopEntry> {
+        let config = Ini::load_from_file(filepath)
+            .map_err(|e| Error::with_chain(e, "Error parsing .desktop file"))?;
         let typ = config.get_from_or(Some("Desktop Entry"), "Type", "");
         if typ != "Application" {
-            return Err(Box::new(ActionError::new("Unsupported desktop entry type")));
+            bail!("Unsupported desktop entry type");
         }
 
-        let err = ActionError::new("No exec key found in desktop entry");
-
-        let exec_str = config.get_from(Some("Desktop Entry"), "Exec").ok_or(err.clone())?;
+        let exec_str = config.get_from(Some("Desktop Entry"), "Exec")
+            .ok_or(Error::from("No exec key found in desktop entry"))?;
 
         Ok(LinuxDesktopEntry {
-            name: config.get_from(Some("Desktop Entry"), "Name").ok_or(err.clone())?.into(),
+            name: config.get_from(Some("Desktop Entry"), "Name").ok_or(
+                      Error::from("No name key found in desktop entry"))?.into(),
             comment: Some(config.get_from_or(Some("Desktop Entry"), "Comment", "").into()),
-            exec: shlex::split(exec_str).ok_or(err.clone())?,
+            exec: shlex::split(exec_str).ok_or(
+                      Error::from("Unable to parse Exec key"))?,
             icon_text: match config.get_from(Some("Desktop Entry"), "Icon") {
                 Some(s) => Some(s.into()),
                 None => None,
@@ -122,7 +125,8 @@ impl LinuxDesktopEntry {
                     }
                     match LinuxDesktopEntry::get(&entry_path) {
                         Ok(item) => ret.push(item),
-                        Err(_) => (),
+                        Err(error) => { warn!("Unable to load desktop entry at {:?}: {}",
+                                              entry_path, error.display_chain()); },
                     }
                 }
             }

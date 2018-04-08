@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 extern crate url;
@@ -18,7 +18,7 @@ use std::sync::Arc;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
-use actions::ActionError;
+use mcore::errors::*;
 
 struct Youdao {}
 
@@ -66,11 +66,13 @@ impl Action for Youdao {
         trace!("Youdao request url: {}", url);
 
         let mut result = String::new();
-        reqwest::get(&url)?.read_to_string(&mut result)?;
+        reqwest::get(&url).map_err(|e| Error::with_chain(e, "Failed to perform HTTP request"))?
+            .read_to_string(&mut result).map_err(|e| Error::with_chain(e, "Failed to read request reply"))?;
 
-        let result : YoudaoResult = serde_json::from_str(&result)?;
+        let result : YoudaoResult = serde_json::from_str(&result)
+            .map_err(|e| Error::with_chain(e, "Failed parsing JSON"))?;
         if result.errorCode != "0" || result.translation.len() == 0 {
-            return Err(Box::new(ActionError::new(&format!("Invalid API return code {}", result.errorCode))));
+            bail!("Invalid youdao API return code {}", result.errorCode);
         }
 
         let mut main_text = String::new();

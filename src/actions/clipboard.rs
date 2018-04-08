@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 extern crate gtk;
@@ -20,11 +20,11 @@ use self::gtk::ClipboardExt;
 use std::sync::Arc;
 use std::mem::transmute;
 
-use actions::ActionError;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
 use mcore::lrudb::LruDB;
+use mcore::errors::*;
 
 unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
                                 _: *mut libc::c_void,
@@ -54,9 +54,10 @@ impl Action for ClipboardHistoryAction {
     fn runnable_bare(&self) -> bool { true }
 
     fn run_bare(&self) -> ActionResult {
-        let history = self.lrudb.getall("clipboard_history")?;
+        let history = self.lrudb.getall("clipboard_history")
+            .map_err(|e| Error::with_chain(e, "Failed to get clipboard history from LRUDB"))?;
         if history.len() == 0 {
-            Err(Box::new(ActionError::new("No clipboard history available")))
+            bail!("No clipboard history available");
         } else {
             Ok(history.iter().map(|x| {
                 let mut item = Item::new_text_item(&x.data);

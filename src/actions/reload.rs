@@ -5,6 +5,7 @@ use std::sync::Arc;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
+use mcore::errors::*;
 
 
 struct ReloadAction {}
@@ -12,7 +13,8 @@ struct ReloadAction {}
 impl Action for ReloadAction {
     fn runnable_bare(&self) -> bool { true }
     fn run_bare(&self) -> ActionResult {
-        nix::sys::signal::kill(0, nix::sys::signal::SIGHUP)?;
+        nix::sys::signal::kill(0, nix::sys::signal::SIGHUP)
+            .map_err(|e| Error::with_chain(e, "Failed to send SIGHUP to myself"))?;
         Ok(Vec::new())
     }
 }

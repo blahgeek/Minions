@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-24
+* @Last Modified time: 2018-04-08
 */
 
 extern crate glib;
@@ -11,7 +11,6 @@ extern crate glib_sys;
 
 use std;
 use std::ffi;
-use std::error::Error;
 use frontend::gdk;
 use frontend::gtk;
 use frontend::gtk::prelude::*;
@@ -28,12 +27,15 @@ use mcore::action::ActionResult;
 use mcore::item::Item;
 use mcore::matcher::Matcher;
 use mcore::config::Config;
+use mcore::errors::Error;
+
+use error_chain::ChainedError;
 
 #[derive(Clone)]
 enum Status {
     Initial,
     Running(Rc<mpsc::Receiver<ActionResult>>),
-    Error(Rc<Box<Error>>), // Rc is for Clone
+    Error(Rc<Error>), // Rc is for Clone
     Default,
     Filtering {
         selected_idx: i32,
@@ -282,7 +284,7 @@ impl MinionsApp {
                         warn!("Unable to record hit: {}", error);
                     }
                     if let Err(error) = self.ctx.quicksend(item) {
-                        debug!("Unable to quicksend item: {}", error);
+                        debug!("Unable to quicksend item: {}", error.display_chain());
                         Status::Error(Rc::new(error))
                     } else {
                         Status::Default
@@ -418,7 +420,7 @@ impl MinionsApp {
                         }
                     },
                     Err(error) => {
-                        warn!("Error running realtime text: {}", error);
+                        warn!("Error running realtime text: {}", error.display_chain());
                         Status::Entering {
                             item: item,
                             suggestions: suggestions,
@@ -460,7 +462,7 @@ impl MinionsApp {
                     Status::Default
                 },
                 Err(error) => {
-                    debug!("Error from channel: {}", error);
+                    debug!("Error from channel: {}", error.display_chain());
                     Status::Error(Rc::new(error))
                 }
             };
@@ -575,7 +577,7 @@ impl MinionsApp {
                 }
 
                 if let Err(error) = self.ctx.copy_content_to_clipboard(item) {
-                    warn!("Unable to copy item: {}", error);
+                    warn!("Unable to copy item: {}", error.display_chain());
                 } else {
                     info!("Item copied");
                 }
@@ -635,7 +637,7 @@ impl MinionsApp {
         self.status = Status::Initial;
         if send_clipboard {
             if let Err(error) = self.ctx.quicksend_from_clipboard() {
-                warn!("Unable to get content from clipboard: {}", error);
+                warn!("Unable to get content from clipboard: {}", error.display_chain());
             } else {
                 self.status = Status::Default;
             }

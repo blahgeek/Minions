@@ -1,12 +1,11 @@
 extern crate serde_json;
 extern crate shlex;
 
-use std::error::Error;
 use std::path::PathBuf;
 use std::process::Command;
 
+use mcore::errors::*;
 use mcore::action::{ActionResult, Action};
-use actions::ActionError;
 
 use super::item::{ScriptOutputFormat, ScriptItem};
 
@@ -49,22 +48,24 @@ impl Action for ScriptAction {
 }
 
 
-fn parse_json (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
-    Ok(serde_json::from_slice(output)?)
+fn parse_json (output: &[u8]) -> Result<Vec<ScriptItem>> {
+    serde_json::from_slice(output).map_err(|e| Error::with_chain(e, "Error parsing JSON"))
 }
 
-fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>> {
     let mut ret : Vec<ScriptItem> = Vec::new();
     for item_output in output.split(|x| *x == 0u8) {
         let mut item_json = serde_json::map::Map::<String, serde_json::Value>::new();
         for line in item_output.split(|x| *x == 1u8) {
-            let line = String::from_utf8(line.to_vec())?;
+            let line = String::from_utf8(line.to_vec())
+                .map_err(|e| Error::with_chain(e, "Unable to parse escaped text"))?;
             let parts: Vec<&str> = line.as_str().trim().splitn(2, ':').collect();
             if parts.len() == 2 {
                 item_json.insert(parts[0].into(), serde_json::Value::String(parts[1].into()));
             }
         }
-        let item : ScriptItem = serde_json::from_value(serde_json::Value::Object(item_json))?;
+        let item : ScriptItem = serde_json::from_value(serde_json::Value::Object(item_json))
+            .map_err(|e| Error::with_chain(e, "Unable to parse escaped text, internal error"))?;
         if item.title.len() > 0 {
             ret.push(item)
         }
@@ -72,11 +73,12 @@ fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Sen
     Ok(ret)
 }
 
-fn parse_plain_text (output: &[u8]) -> Result<Vec<ScriptItem>, Box<Error + Send + Sync>> {
+fn parse_plain_text (output: &[u8]) -> Result<Vec<ScriptItem>> {
     let mut ret : Vec<ScriptItem> = Vec::new();
     for item_output in output.split(|x| *x == '\n' as u8) {
         let mut item = ScriptItem::default();
-        item.title = String::from_utf8(item_output.to_vec())?;
+        item.title = String::from_utf8(item_output.to_vec())
+            .map_err(|e| Error::with_chain(e, "Unable to parse plain text"))?;
         ret.push(item);
     }
     Ok(ret)
@@ -88,7 +90,7 @@ impl ScriptAction {
         // TODO: support some special commands, like copy, open, etc.
         let cmdline = shlex::split(&self.action);
         if cmdline.is_none() {
-            return Err(Box::new(ActionError::new("Invalid action command")))
+            bail!("Invalid action command");
         }
 
         let cmdline = cmdline.unwrap();

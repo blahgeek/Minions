@@ -3,8 +3,6 @@ extern crate rusqlite;
 
 use self::chrono::TimeZone;
 
-use std::result::Result;
-use std::error::Error;
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -17,11 +15,12 @@ pub struct LruDB {
     conn: Mutex<rusqlite::Connection>,
 }
 
+type Result<T> = ::std::result::Result<T, rusqlite::Error>;
 
 impl LruDB {
 
     /// Add data at scope, keep last max_n entries
-    pub fn add(&self, scope: &str, s: &str, max_n: i32) -> Result<(), Box<Error + Sync + Send>> {
+    pub fn add(&self, scope: &str, s: &str, max_n: i32) -> Result<()> {
         debug!("Adding `{}` to scope `{}`", s, scope);
         let conn = self.conn.lock().unwrap();
         let now = chrono::Local::now().timestamp();
@@ -34,7 +33,7 @@ impl LruDB {
     }
 
     /// Get all data in order
-    pub fn getall(&self, scope: &str) -> Result<Vec<LruResult>, Box<Error + Sync + Send>> {
+    pub fn getall(&self, scope: &str) -> Result<Vec<LruResult>> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare("SELECT data, time FROM lrudata WHERE scope = ? ORDER BY time DESC, id DESC")?;
         let data_iter =
@@ -51,13 +50,13 @@ impl LruDB {
         Ok(ret)
     }
 
-    pub fn getall_textonly(&self, scope: &str) -> Result<Vec<String>, Box<Error + Sync + Send>> {
+    pub fn getall_textonly(&self, scope: &str) -> Result<Vec<String>> {
         Ok(self.getall(scope)?.into_iter()
            .map(|x| x.data)
            .collect())
     }
 
-    pub fn new(dbpath: Option<&Path>) -> Result<LruDB, Box<Error + Sync + Send>> {
+    pub fn new(dbpath: Option<&Path>) -> Result<LruDB> {
         let conn =
             if let Some(dbpath) = dbpath {
                 rusqlite::Connection::open(dbpath)?

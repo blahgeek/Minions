@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-23
+* @Last Modified time: 2018-04-08
 */
 
 extern crate gtk;
@@ -13,12 +13,12 @@ use self::uuid::Uuid;
 
 use std::sync::Arc;
 use std::thread;
-use std::error::Error;
 use std::rc::Rc;
 use mcore::action::{ActionResult, PartialAction};
 use mcore::item::Item;
 use mcore::config::Config;
 use mcore::lrudb::LruDB;
+use mcore::errors::*;
 use actions;
 
 use self::gtk::ClipboardExt;
@@ -70,20 +70,21 @@ impl Context {
         self.list_items.sort_by_key(|item| item.priority );
     }
 
-    pub fn quicksend_from_clipboard(&mut self) -> Result<(), Box<Error + Sync + Send>> {
+    pub fn quicksend_from_clipboard(&mut self) -> Result<()> {
         for clipboard in vec!["PRIMARY", "CLIPBOARD"] {
             let clipboard = gtk::Clipboard::get(&gdk::Atom::intern(&clipboard));
             let content = clipboard.wait_for_text();
 
             if let Some(text) = content {
                 trace!("Clipboard content from: {:?}", text);
-                return self.quicksend(&Item::new_text_item(&text));
+                return self.quicksend(&Item::new_text_item(&text))
+                    .chain_err(|| "Failed quicksending from clipboard");
             }
         }
         Ok(())
     }
 
-    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<(), Box<Error + Sync + Send>> {
+    pub fn copy_content_to_clipboard(&self, item: &Item) -> Result<()> {
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
         clipboard.set_text(item.data.as_ref().unwrap_or(&item.title));
         Ok(())
@@ -130,7 +131,7 @@ impl Context {
                         action.run_bare()
                     };
                 debug!("async select complete, calling back");
-                callback(items);
+                callback(items.chain_err(|| "Failed selecting item"));
             })
             .unwrap();
         thread_uuid
@@ -155,7 +156,7 @@ impl Context {
             .spawn(move || {
                 let items = action.run_arg(&text);
                 debug!("async select with text complete, calling back");
-                callback(items);
+                callback(items.chain_err(|| "Failed selecting item with text"));
             })
             .unwrap();
         thread_uuid
@@ -194,14 +195,14 @@ impl Context {
                     }).collect();
                     callback(items);
                 } else {
-                    callback(items);
+                    callback(items.chain_err(|| "Failed running arg in realtime"));
                 }
             })
             .unwrap();
         thread_uuid
     }
 
-    pub fn quicksend(&mut self, item: &Item) -> Result<(), Box<Error + Send + Sync>> {
+    pub fn quicksend(&mut self, item: &Item) -> Result<()> {
         self.list_items =
             self.action_items.iter()
             .filter(|item| {

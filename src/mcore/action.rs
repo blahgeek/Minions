@@ -2,14 +2,14 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-23
+* @Last Modified time: 2018-04-08
 */
 
 use std::sync::Arc;
-use std::error::Error;
 use mcore::item::Item;
+use mcore::errors::Result;
 
-pub type ActionResult = Result<Vec<Item>, Box<Error + Send + Sync>>;
+pub type ActionResult = Result<Vec<Item>>;
 
 /// The general action type
 pub trait Action {

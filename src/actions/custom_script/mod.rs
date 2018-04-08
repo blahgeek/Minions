@@ -4,18 +4,18 @@ mod action;
 mod requirement;
 
 use toml;
-use std::error::Error;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 
 use mcore::item::Item;
 use mcore::config::Config;
+use mcore::errors::*;
+use error_chain::ChainedError;
 
-use actions::ActionError;
 use self::item::ScriptItem;
 
-fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
+fn get_item(script_dir: &Path) -> Result<Item> {
 
     let itemfile = script_dir.join("item.toml");
     debug!("Reading script item: {:?}", itemfile);
@@ -24,10 +24,11 @@ fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
     if let Ok(mut itemfile) = File::open(&itemfile) {
         itemfile.read_to_string(&mut itemdata)?;
     }
-    let mut item : ScriptItem = toml::from_str(&itemdata)?;
+    let mut item : ScriptItem = toml::from_str(&itemdata)
+        .map_err(|e| Error::with_chain(e, "Failed parsing item.toml"))?;
 
     if item.title.len() == 0 {
-        return Err(Box::new(ActionError::new("Invalid item.toml")));
+        bail!("Invalid item.toml: empty title");
     }
 
     if item.badge.is_none() {
@@ -37,8 +38,7 @@ fn get_item(script_dir: &Path) -> Result<Item, Box<Error>> {
     for req_text in item.requirements.iter() {
         if let Some(req) = requirement::Requirement::new(&req_text) {
             if !req.check() {
-                info!("Requirement {:?} for plugin {} not met, cannot load", req, item.title);
-                return Err(Box::new(ActionError::new("Requirements not met")));
+                bail!("Requirement not met: {:?}", req);
             }
         } else {
             warn!("Invalid requirement string {}, ignore", req_text);
@@ -66,8 +66,8 @@ pub fn get(config: &Config) -> Vec<Item> {
         info!("Loading custom action from {:?}", plugin_dir);
 
         let entries = plugin_dir.read_dir();
-        if let Err(error) = entries {
-            info!("Unable to read dir {:?}: {}", plugin_dir, error);
+        if let Err(_) = entries {
+            info!("Unable to read dir {:?}, ignore", plugin_dir);
             continue;
         }
         let entries = entries.unwrap();
@@ -81,7 +81,8 @@ pub fn get(config: &Config) -> Vec<Item> {
                         ret.push(x);
                     },
                     Err(error) => {
-                        warn!("Unable to load custom script at {:?}: {}", entry_path, error);
+                        warn!("Unable to load custom script at {:?}: {}",
+                              entry_path, error.display_chain());
                     }
                 }
             }

@@ -2,16 +2,16 @@
 * @Author: BlahGeek
 * @Date:   2017-07-07
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2017-07-20
+* @Last Modified time: 2018-04-08
 */
 
 extern crate nix;
 
-use std::error::Error;
 use std::ffi::CString;
+use std::io::Result;
 
 
-pub fn spawn(cmd: &str, args: &[&str]) -> Result<(), Box<Error + Sync + Send>> {
+pub fn spawn(cmd: &str, args: &[&str]) -> Result<()> {
 
     let execv_filename = CString::new(cmd)?;
     let mut execv_args = vec![execv_filename.clone()];

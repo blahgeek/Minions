@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 extern crate url;
@@ -18,6 +18,7 @@ use std::path::Path;
 use mcore::action::{Action, ActionResult};
 use mcore::item::{Item, Icon};
 use mcore::config::Config;
+use mcore::errors::*;
 use actions::utils::open;
 use actions::custom_script::parser::parse_icon;
 
@@ -74,13 +75,17 @@ impl Action for SearchEngine {
         let url = self.suggestion_url.as_ref().unwrap().replace("%s", &text);
 
         let result = if let Ok(client) = self.suggestion_client.try_lock() {
-            client.get(&url).send()?.text()?
+            client.get(&url)
+                .send().map_err(|e| Error::with_chain(e, "Suggestion request send failed"))?
+                .text().map_err(|e| Error::with_chain(e, "Suggestion reply decode failed"))?
         } else {
             warn!("Unable to use shared reqwest client!");
-            reqwest::get(&url)?.text()?
+            reqwest::get(&url).map_err(|e| Error::with_chain(e, "Suggestion request send failed"))?
+                .text().map_err(|e| Error::with_chain(e, "Suggestion reply decode failed"))?
         };
 
-        let result : serde_json::Value = serde_json::from_str(&result)?;
+        let result : serde_json::Value =
+            serde_json::from_str(&result).map_err(|e| Error::with_chain(e, "Suggestion reply parse failed"))?;
         let suggestions = match result.get(1) {
             Some(&serde_json::Value::Array(ref arr)) => arr.clone(),
             _ => Vec::new(),

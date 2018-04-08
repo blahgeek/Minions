@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-01
+* @Last Modified time: 2018-04-08
 */
 
 extern crate gdk_pixbuf;
@@ -12,16 +12,18 @@ extern crate serde_json;
 use std::cmp;
 use std::cell::RefCell;
 use std::path::PathBuf;
-use std::error::Error;
 
 use mcore::item::{Item, Icon};
 use mcore::context::Context;
+use mcore::errors::Error;
 
 use frontend::gdk;
 use frontend::gtk;
 use frontend::gtk::prelude::*;
 use self::gdk_pixbuf::prelude::*;
 use self::lru_cache::LruCache;
+
+use error_chain::ChainedError;
 
 
 pub struct ItemUI {
@@ -216,8 +218,8 @@ impl MinionsUI {
         self.filter_label.set_text(text);
     }
 
-    pub fn set_error(&self, error: &Box<Error>) {
-        self.reference_label.set_text(&format!("{}: {}", error.description(), error));
+    pub fn set_error(&self, error: &Error) {
+        self.reference_label.set_text(&error.display_chain().to_string());
         self.reference_label.show();
         self.set_image_icon(&self.icon, &self.icon_text, &Icon::GtkName("dialog-warning".into()));
     }

@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate glib;
@@ -358,6 +358,7 @@ impl MinionsApp {
                         Status::Entering{
                             item: item.clone(),
                             suggestions: self.ctx.suggest_arg(item)
+                                .unwrap_or(Vec::new())
                                 .into_iter().map(|x| Rc::new(x)).collect(),
                             selected_idx: -1,
                             receiver: None,
@@ -508,6 +509,7 @@ impl MinionsApp {
                         Status::Entering{
                             item: item.clone(),
                             suggestions: self.ctx.suggest_arg(item)
+                                .unwrap_or(Vec::new())
                                 .into_iter().map(|x| Rc::new(x)).collect(),
                             selected_idx: -1,
                             receiver: None,

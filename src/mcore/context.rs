@@ -215,42 +215,35 @@ impl Context {
         Ok(())
     }
 
-    pub fn suggest_arg(&self, item: &Item) -> Vec<Item> {
-        if let Some(ref action) = item.action {
-            if let Some(scope) = action.suggest_arg_scope() {
-                if let Ok(history) = self.lrudb.getall(scope) {
-                    history.into_iter().map(|x| {
+    pub fn suggest_arg(&self, item: &Item) -> Result<Vec<Item>> {
 
-                        let lrudb = self.lrudb.clone();
-                        let scope : String = scope.into();
-                        let arg = x.data.clone();
-                        let history_max_n = self.history_max_n;
+        let action = item.action.clone().ok_or(Error::from("No action in item"))?;
+        let scope = action.suggest_arg_scope().ok_or(Error::from("No arg scope defined in action"))?;
+        let history = self.lrudb.getall(scope).map_err(|e| Error::with_chain(e, "Unable to get history"))?;
 
-                        Item {
-                            title: x.data.clone(),
-                            subtitle: Some(x.time.format("%T %b %e").to_string()),
-                            icon: item.icon.clone(),
-                            badge: Some("History".into()),
-                            action: Some(Arc::new(PartialAction::new(
-                                        action.clone(), x.data,
-                                        Some(Box::new(move || {
-                                            if let Err(error) = lrudb.add(&scope, &arg, history_max_n) {
-                                                warn!("Unable to save arg history: {}", error);
-                                            }
-                                        }))
-                                        ))),
-                            .. Item::default()
-                        }
-                    }).collect()
-                } else {
-                    Vec::new()
-                }
-            } else {
-                Vec::new()
+        Ok(history.into_iter().map(|x| {
+            let lrudb = self.lrudb.clone();
+            let scope : String = scope.into();
+            let arg = x.data.clone();
+            let history_max_n = self.history_max_n;
+
+            Item {
+                title: x.data.clone(),
+                subtitle: Some(x.time.format("%T %b %e").to_string()),
+                icon: item.icon.clone(),
+                badge: Some("History".into()),
+                action: Some(Arc::new(PartialAction::new(
+                            action.clone(), x.data,
+                            Some(Box::new(move || {
+                                if let Err(error) = lrudb.add(&scope, &arg, history_max_n) {
+                                    warn!("Unable to save arg history: {}", error);
+                                }
+                            }))
+                            ))),
+                .. Item::default()
             }
-        } else {
-            Vec::new()
-        }
+        }).collect())
+
     }
 
 }

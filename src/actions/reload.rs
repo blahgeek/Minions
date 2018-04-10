@@ -20,11 +20,13 @@ impl Action for ReloadAction {
 }
 
 pub fn get(_: &Config) -> Item {
-    let mut item = Item::new("Reload All Actions");
-    item.subtitle = Some("Equivalent to `kill -HUP 0`".into());
-    item.badge = Some("Minions".into());
-    item.priority = 100;
-    item.icon = Some(Icon::FontAwesome("cog".into()));
-    item.action = Some(Arc::new(ReloadAction{}));
-    item
+    Item {
+        title: "Reload All Actions".into(),
+        subtitle: Some("Equivalent to `kill -HUP 0`".into()),
+        badge: Some("Minions".into()),
+        priority: 100,
+        icon: Some(Icon::FontAwesome("cog".into())),
+        action: Some(Arc::new(ReloadAction{})),
+        .. Item::default()
+    }
 }

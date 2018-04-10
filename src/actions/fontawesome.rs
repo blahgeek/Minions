@@ -25,18 +25,19 @@ impl Action for FontAwesome {
                    subtitle: search_terms.as_ref().map(|terms| terms.join(", ")),
                    icon: Some(Icon::FontAwesome(x.0.clone())),
                    badge: Some(format!("0x{}", x.1["unicode"].as_str().unwrap())),
-                   priority: 0,
                    data: Some(x.0.clone()),
                    search_str: search_terms.as_ref().map(|terms| x.0.clone() + " " + &terms.join(" ")),
-                   action: None,
+                   .. Item::default()
                }
            }).collect())
     }
 }
 
 pub fn get(_: &Config) -> Item {
-    let mut item = Item::new("FontAwesome");
-    item.icon = Some(Icon::FontAwesome("font-awesome".into()));
-    item.action = Some(Arc::new(FontAwesome{}));
-    item
+    Item {
+        title: "FontAwesome".into(),
+        icon: Some(Icon::FontAwesome("font-awesome".into())),
+        action: Some(Arc::new(FontAwesome{})),
+        .. Item::default()
+    }
 }

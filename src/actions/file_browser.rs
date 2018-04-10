@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 use std::env;
@@ -37,22 +37,24 @@ impl FileBrowserEntry {
     }
 
     fn into_item(self) -> Item {
-        let mut ret = Item::new(&self.name);
-        ret.subtitle = Some(self.path.to_string_lossy().into());
-        ret.badge = if self.is_file {
-            Some("File".into())
-        } else {
-            Some("Directory".into())
-        };
-        ret.icon = Some(if self.is_file {
-            Icon::FontAwesome("file".into())
-        } else {
-            Icon::FontAwesome("folder".into())
-        });
-        ret.data = Some(self.path.to_string_lossy().into());
-        ret.priority = -10;
-        ret.action = Some(Arc::new(self));
-        ret
+        Item {
+            title: self.name.clone(),
+            subtitle: Some(self.path.to_string_lossy().into()),
+            badge: if self.is_file {
+                    Some("File".into())
+                } else {
+                    Some("Directory".into())
+                },
+            icon: Some(if self.is_file {
+                    Icon::FontAwesome("file".into())
+                } else {
+                    Icon::FontAwesome("folder".into())
+                }),
+            data: Some(self.path.to_string_lossy().into()),
+            priority: -10,
+            action: Some(Arc::new(self)),
+            .. Item::default()
+        }
     }
 }
 

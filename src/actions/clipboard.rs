@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate gtk;
@@ -60,12 +60,14 @@ impl Action for ClipboardHistoryAction {
             bail!("No clipboard history available");
         } else {
             Ok(history.iter().map(|x| {
-                let mut item = Item::new_text_item(&x.data);
-                item.subtitle = Some(format!("{}, {} bytes",
-                                             x.time.format("%T %b %e").to_string(),
-                                             x.data.len()));
-                item.icon = Some(Icon::FontAwesome("paste".into()));
-                item
+                Item {
+                    title: x.data.clone(),
+                    subtitle: Some(format!("{}, {} bytes",
+                                           x.time.format("%T %b %e").to_string(),
+                                           x.data.len())),
+                    icon: Some(Icon::FontAwesome("paste".into())),
+                    .. Item::default()
+                }
             }).collect())
         }
     }
@@ -101,10 +103,12 @@ impl ClipboardHistoryAction {
 
 pub fn get(config: &Config) -> Item {
     let action = ClipboardHistoryAction::new(config);
-    let mut item = Item::new("Clipboard History");
-    item.subtitle = Some(format!("View clipboard history up to {} entries",
-                                 action.history_max_len));
-    item.icon = Some(Icon::FontAwesome("paste".into()));
-    item.action = Some(Arc::new(action));
-    item
+    Item {
+        title: "Clipboard History".into(),
+        subtitle: Some(format!("View clipboard history up to {} entries",
+                               action.history_max_len)),
+        icon: Some(Icon::FontAwesome("paste".into())),
+        action: Some(Arc::new(action)),
+        .. Item::default()
+    }
 }

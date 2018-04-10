@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-24
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate url;
@@ -83,14 +83,18 @@ impl Action for Youdao {
         }
         main_text += &result.translation[0];
 
-        let mut main_item = Item::new_text_item(&main_text);
-        main_item.subtitle = Some(result.query);
-
-        let mut ret = vec![main_item];
+        let mut ret = vec![ Item {
+            title: main_text,
+            subtitle: Some(result.query),
+            .. Item::default()
+        } ];
 
         if let Some(basic) = result.basic {
             for explain in basic.explains {
-                ret.push(Item::new_text_item(&explain));
+                ret.push( Item {
+                    title: explain,
+                    .. Item::default()
+                } )
             }
         }
 
@@ -99,12 +103,14 @@ impl Action for Youdao {
 }
 
 pub fn get(_: &Config) -> Item {
-    let mut item = Item::new("Youdao Translate");
-    item.badge = Some("Translate".into());
-    item.priority = -5;
-    item.icon = Some(Icon::FontAwesome("globe".into()));
-    item.action = Some(Arc::new(Youdao{}));
-    item
+    Item {
+        title: "Youdao Translate".into(),
+        badge: Some("Translate".into()),
+        priority: -5,
+        icon: Some(Icon::FontAwesome("globe".into())),
+        action: Some(Arc::new(Youdao{})),
+        .. Item::default()
+    }
 }
 
 #[test]

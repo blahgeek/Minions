@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-19
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 use std;
@@ -19,7 +19,7 @@ pub enum Icon {
 }
 
 /// The item type (represents single selectable item (row))
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Item {
     /// Main title text
     pub title: String,
@@ -58,25 +58,6 @@ impl fmt::Display for Item {
 
 
 impl Item {
-
-    pub fn new(title: &str) -> Item {
-        Item {
-            title: title.into(),
-            subtitle: None,
-            icon: None,
-            badge: None,
-            priority: 0,
-            data: None,
-            search_str: None,
-            action: None,
-        }
-    }
-
-    pub fn new_text_item(text: &str) -> Item {
-        let mut item = Item::new(text);
-        item.data = Some(text.into());
-        item
-    }
 
     /// Get searchable str reference
     /// aka `search_str` or `title`

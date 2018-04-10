@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate url;
@@ -99,11 +99,13 @@ impl Action for SearchEngine {
         suggestions.iter().zip(suggestions_desc.iter())
             .filter(|&(a, b)| a.is_string() && b.is_string())
             .map(|(a, b)| {
-                let mut item = Item::new_text_item(a.as_str().unwrap());
-                item.subtitle = Some(b.as_str().unwrap().into());
-                item.icon = self.icon_parsed.clone()
-                    .or(Some(Icon::FontAwesome("search".into())));
-                item
+                Item {
+                    title: a.as_str().unwrap().into(),
+                    subtitle: Some(b.as_str().unwrap().into()),
+                    icon: self.icon_parsed.clone()
+                        .or(Some(Icon::FontAwesome("search".into()))),
+                    .. Item::default()
+                }
             })
             .collect::<Vec<Item>>()
         )
@@ -121,13 +123,15 @@ pub fn get(config: &Config) -> Vec<Item> {
         })
         .map(|site| {
             debug!("Load search engine: {} = {} ({:?})", site.name, site.address, site.suggestion_url);
-            let mut item = Item::new(&site.name);
-            item.badge = Some("Search Engine".into());
-            item.priority = -10;
-            item.icon = site.icon_parsed.clone()
-                .or(Some(Icon::FontAwesome("search".into())));
-            item.action = Some(Arc::new(site));
-            item
+            Item {
+                title: site.name.clone(),
+                badge: Some("Search Engine".into()),
+                priority: -10,
+                icon: site.icon_parsed.clone()
+                    .or(Some(Icon::FontAwesome("search".into()))),
+                action: Some(Arc::new(site)),
+                .. Item::default()
+            }
         })
         .collect()
 }

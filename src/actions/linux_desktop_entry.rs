@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate shlex;
@@ -145,24 +145,23 @@ pub fn get(config: &Config) -> Vec<Item> {
             } else { None };
             let comment = action.comment.clone();
 
-            let mut item = Item::new(&action.name);
-            if let Some(exe_path) = exe_path {
-                item.data = Some(exe_path);
+            Item {
+                title: action.name.clone(),
+                data: exe_path,
+                subtitle: comment,
+                badge: Some("Desktop Entry".into()),
+                icon: if let Some(ref icon_text) = action.icon_text {
+                        Some( if icon_text.starts_with("/") {
+                            Icon::File(Path::new(&icon_text).to_path_buf())
+                        } else {
+                            Icon::GtkName(icon_text.clone())
+                        })
+                    } else {
+                        Some(Icon::GtkName("gtk-missing-image".into()))
+                    },
+                action: Some(Arc::new(action)),
+                .. Item::default()
             }
-            item.subtitle = comment;
-            item.badge = Some("Desktop Entry".into());
-
-            item.icon = if let Some(ref icon_text) = action.icon_text {
-                Some( if icon_text.starts_with("/") {
-                    Icon::File(Path::new(&icon_text).to_path_buf())
-                } else {
-                    Icon::GtkName(icon_text.clone())
-                })
-            } else {
-                Some(Icon::GtkName("gtk-missing-image".into()))
-            };
-            item.action = Some(Arc::new(action));
-            item
         }).collect()
 }
 

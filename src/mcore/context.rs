@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2018-04-10
 */
 
 extern crate gtk;
@@ -77,8 +77,10 @@ impl Context {
 
             if let Some(text) = content {
                 trace!("Clipboard content from: {:?}", text);
-                return self.quicksend(&Item::new_text_item(&text))
-                    .chain_err(|| "Failed quicksending from clipboard");
+                return self.quicksend(&Item {
+                    title: text,
+                    ..Item::default()
+                }).chain_err(|| "Failed quicksending from clipboard");
             }
         }
         Ok(())
@@ -218,24 +220,27 @@ impl Context {
             if let Some(scope) = action.suggest_arg_scope() {
                 if let Ok(history) = self.lrudb.getall(scope) {
                     history.into_iter().map(|x| {
-                        let mut sug = Item::new(&x.data);
-                        sug.subtitle = Some(x.time.format("%T %b %e").to_string());
-                        sug.icon = item.icon.clone();
-                        sug.badge = Some("History".into());
 
                         let lrudb = self.lrudb.clone();
                         let scope : String = scope.into();
                         let arg = x.data.clone();
                         let history_max_n = self.history_max_n;
-                        sug.action = Some(Arc::new(PartialAction::new(
+
+                        Item {
+                            title: x.data.clone(),
+                            subtitle: Some(x.time.format("%T %b %e").to_string()),
+                            icon: item.icon.clone(),
+                            badge: Some("History".into()),
+                            action: Some(Arc::new(PartialAction::new(
                                         action.clone(), x.data,
                                         Some(Box::new(move || {
                                             if let Err(error) = lrudb.add(&scope, &arg, history_max_n) {
                                                 warn!("Unable to save arg history: {}", error);
                                             }
                                         }))
-                                        )));
-                        sug
+                                        ))),
+                            .. Item::default()
+                        }
                     }).collect()
                 } else {
                     Vec::new()

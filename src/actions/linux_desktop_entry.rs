@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-05-01
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-10
+* @Last Modified time: 2018-04-16
 */
 
 extern crate shlex;
@@ -82,7 +82,7 @@ impl LinuxDesktopEntry {
 
 
     fn get(filepath: &Path) -> Result<LinuxDesktopEntry> {
-        let config = Ini::load_from_file(filepath)
+        let config = Ini::load_from_file_opt(filepath, ini::ParseOption{enabled_quote: false, ..ini::ParseOption::default()})
             .map_err(|e| Error::with_chain(e, "Error parsing .desktop file"))?;
         let typ = config.get_from_or(Some("Desktop Entry"), "Type", "");
         if typ != "Application" {

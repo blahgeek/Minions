@@ -75,7 +75,7 @@ fn parse_escaped_text (output: &[u8]) -> Result<Vec<ScriptItem>> {
 
 fn parse_plain_text (output: &[u8]) -> Result<Vec<ScriptItem>> {
     let mut ret : Vec<ScriptItem> = Vec::new();
-    for item_output in output.split(|x| *x == '\n' as u8) {
+    for item_output in output.split(|x| *x == '\n' as u8).filter(|x| x.len() > 0) {
         let mut item = ScriptItem::default();
         item.title = String::from_utf8(item_output.to_vec())
             .map_err(|e| Error::with_chain(e, "Unable to parse plain text"))?;

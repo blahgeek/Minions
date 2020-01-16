@@ -2,6 +2,7 @@ extern crate chrono;
 extern crate rusqlite;
 
 use self::chrono::TimeZone;
+use self::rusqlite::params;
 
 use std::path::Path;
 use std::sync::Mutex;
@@ -25,10 +26,10 @@ impl LruDB {
         let conn = self.conn.lock().unwrap();
         let now = chrono::Local::now().timestamp();
         conn.execute("INSERT OR REPLACE INTO lrudata (scope, data, time) VALUES (?, ?, ?)",
-                     &[&scope, &s, &now])?;
+                     params![&scope, &s, &now])?;
         conn.execute("DELETE FROM lrudata WHERE scope = ? AND id NOT IN
                       (SELECT id FROM lrudata WHERE scope = ? ORDER BY time DESC, id DESC LIMIT ?)",
-                      &[&scope, &scope, &max_n])?;
+                      params![&scope, &scope, &max_n])?;
         Ok(())
     }
 
@@ -38,10 +39,10 @@ impl LruDB {
         let mut stmt = conn.prepare("SELECT data, time FROM lrudata WHERE scope = ? ORDER BY time DESC, id DESC")?;
         let data_iter =
             stmt.query_map(&[&scope], |row| {
-                LruResult {
-                    data: row.get(0),
-                    time: chrono::Local.timestamp(row.get(1), 0),
-                }
+                Ok( LruResult {
+                    data: row.get(0)?,
+                    time: chrono::Local.timestamp(row.get(1)?, 0),
+                })
             })?;
         let mut ret : Vec<LruResult> = Vec::new();
         for data in data_iter {
@@ -70,8 +71,8 @@ impl LruDB {
                 data TEXT,
                 time INTEGER,
                 UNIQUE (scope, data)
-            )", &[])?;
-        conn.execute("CREATE INDEX IF NOT EXISTS scope_time_id_idx ON lrudata (scope, time, id)", &[])?;
+            )", params![])?;
+        conn.execute("CREATE INDEX IF NOT EXISTS scope_time_id_idx ON lrudata (scope, time, id)", params![])?;
 
         Ok(LruDB {
             conn: Mutex::new(conn),

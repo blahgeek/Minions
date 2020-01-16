@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-10
+* @Last Modified time: 2020-01-15
 */
 
 extern crate glib;
@@ -569,15 +569,14 @@ impl MinionsApp {
             Status::Filtering {
                 selected_idx,
                 filtered_items,
-                filter_text,
+                ..
+            } | Status::Entering{
+                selected_idx,
+                suggestions: filtered_items,
                 ..
             } => {
 
                 let item = &filtered_items[selected_idx as usize];
-                if let Err(error) = self.matcher.record(Some(&filter_text), &item) {
-                    debug!("Unable to record hit: {}", error);
-                }
-
                 if let Err(error) = self.ctx.copy_content_to_clipboard(item) {
                     warn!("Unable to copy item: {}", error.display_chain());
                 } else {
@@ -606,13 +605,13 @@ impl MinionsApp {
         } else if key == gdk::enums::key::Tab {
             self.process_keyevent_tab();
             Inhibit(true)
-        } else if key == 'j' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
+        } else if key == 'j' as u32 && modi.contains(gdk::ModifierType::CONTROL_MASK) {
             self.process_keyevent_move(1);
             Inhibit(true)
-        } else if key == 'k' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
+        } else if key == 'k' as u32 && modi.contains(gdk::ModifierType::CONTROL_MASK) {
             self.process_keyevent_move(-1);
             Inhibit(true)
-        } else if key == 'c' as u32 && modi == gdk::ModifierType::CONTROL_MASK {
+        } else if key == 'c' as u32 && modi.contains(gdk::ModifierType::CONTROL_MASK) {
             self.process_keyevent_copy();
             Inhibit(true)
         } else if key == gdk::enums::key::Down {

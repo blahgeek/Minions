@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-06-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-03-29
+* @Last Modified time: 2020-01-17
 */
 
 extern crate minions;
@@ -15,7 +15,8 @@ extern crate chrono;
 extern crate log;
 extern crate fern;
 
-use std::env;
+use dirs;
+
 use std::path::Path;
 
 use minions::frontend::app::MinionsApp;
@@ -57,7 +58,7 @@ fn main() {
 
     let configfile = match args.value_of("config") {
         Some(filename) => Path::new(&filename).to_path_buf(),
-        None => env::home_dir().unwrap().join(".minions/config.toml"),
+        None => dirs::home_dir().unwrap().join(".minions/config.toml"),
     };
 
     gtk::init().expect("Failed to initialize GTK");

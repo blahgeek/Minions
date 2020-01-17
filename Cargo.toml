@@ -1,6 +1,7 @@
 [package]
 name = "minions"
 version = "0.5.3"
+edition = "2018"
 authors = ["BlahGeek <i@BlahGeek.com>"]
 
 [lib]
@@ -41,4 +42,5 @@ lru-cache = "0.1.1"
 pinyin = "0.2"
 rusqlite = "0.21"
 lazy_static = "1.0"
-error-chain = "0.11"
+error-chain = "0.12"
+dirs = "2.0"

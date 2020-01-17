@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use mcore::item::Item;
+use crate::mcore::item::Item;
 
 use super::action::ScriptAction;
 use super::parser::parse_icon;

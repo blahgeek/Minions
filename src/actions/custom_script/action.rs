@@ -4,8 +4,8 @@ extern crate shlex;
 use std::path::PathBuf;
 use std::process::Command;
 
-use mcore::errors::*;
-use mcore::action::{ActionResult, Action};
+use crate::mcore::errors::*;
+use crate::mcore::action::{ActionResult, Action};
 
 use super::item::{ScriptOutputFormat, ScriptItem};
 

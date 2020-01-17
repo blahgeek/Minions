@@ -17,8 +17,8 @@ mod clipboard;
 mod fontawesome;
 mod reload;
 
-use mcore::config::Config;
-use mcore::item::Item;
+use crate::mcore::config::Config;
+use crate::mcore::item::Item;
 
 pub fn get_action_items(config: &Config) -> Vec<Item> {
     let mut ret : Vec<Item> = vec![];

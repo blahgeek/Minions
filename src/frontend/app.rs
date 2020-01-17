@@ -11,9 +11,9 @@ extern crate glib_sys;
 
 use std;
 use std::ffi;
-use frontend::gdk;
-use frontend::gtk;
-use frontend::gtk::prelude::*;
+use crate::frontend::gdk;
+use crate::frontend::gtk;
+use crate::frontend::gtk::prelude::*;
 
 use std::thread;
 use std::sync::mpsc;
@@ -21,13 +21,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::ops::Deref;
 
-use frontend::ui::MinionsUI;
-use mcore::context::Context;
-use mcore::action::ActionResult;
-use mcore::item::Item;
-use mcore::matcher::Matcher;
-use mcore::config::Config;
-use mcore::errors::Error;
+use crate::frontend::ui::MinionsUI;
+use crate::mcore::context::Context;
+use crate::mcore::action::ActionResult;
+use crate::mcore::item::Item;
+use crate::mcore::matcher::Matcher;
+use crate::mcore::config::Config;
+use crate::mcore::errors::Error;
 
 use error_chain::ChainedError;
 

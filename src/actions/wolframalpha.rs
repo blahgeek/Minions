@@ -4,12 +4,12 @@ extern crate reqwest;
 use self::url::Url;
 
 use std::sync::Arc;
-use mcore::action::{Action, ActionResult, PartialAction};
-use mcore::item::{Item, Icon};
-use mcore::config::Config;
-use mcore::errors::*;
+use crate::mcore::action::{Action, ActionResult, PartialAction};
+use crate::mcore::item::{Item};
+use crate::mcore::config::Config;
+use crate::mcore::errors::*;
 
-use actions::utils::open::OpenAction;
+use crate::actions::utils::open::OpenAction;
 
 
 struct WolframAlpha {

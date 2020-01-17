@@ -21,8 +21,8 @@ use std::fs::{File, OpenOptions};
 use std::path::Path;
 use std::rc::Rc;
 
-use mcore::item::Item;
-use mcore::fuzzymatch::fuzzymatch;
+use crate::mcore::item::Item;
+use crate::mcore::fuzzymatch::fuzzymatch;
 
 /// 20 byte array representing SHA1 hash result
 #[derive(PartialOrd, PartialEq, Eq, Ord, Debug)]
@@ -31,13 +31,13 @@ struct SHA1Result {
 }
 
 impl SHA1Result {
-    fn read_from(reader: &mut Read) -> io::Result<SHA1Result> {
+    fn read_from(reader: &mut dyn Read) -> io::Result<SHA1Result> {
         let mut sha1bytes: [u8; 20] = [0; 20];
         reader.read_exact(&mut sha1bytes)?;
         Ok(SHA1Result{ bytes: sha1bytes })
     }
 
-    fn write_to(&self, writer: &mut Write) -> io::Result<()> {
+    fn write_to(&self, writer: &mut dyn Write) -> io::Result<()> {
         writer.write_all(&self.bytes)?;
         Ok(())
     }

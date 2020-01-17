@@ -15,12 +15,12 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::path::Path;
 
-use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, Icon};
-use mcore::config::Config;
-use mcore::errors::*;
-use actions::utils::open;
-use actions::custom_script::parser::parse_icon;
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::config::Config;
+use crate::mcore::errors::*;
+use crate::actions::utils::open;
+use crate::actions::custom_script::parser::parse_icon;
 
 #[derive(Clone)]
 struct DefaultPlusEncodeSet {}

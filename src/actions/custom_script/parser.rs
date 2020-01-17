@@ -1,7 +1,7 @@
 use std;
 use std::path::Path;
 
-use mcore::item::Icon;
+use crate::mcore::item::Icon;
 
 pub fn parse_icon(text: &str, script_dir: &std::path::Path) -> Option<Icon> {
     let parts: Vec<&str> = text.splitn(2, ":").collect();

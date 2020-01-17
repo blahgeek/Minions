@@ -13,13 +13,13 @@ use std::cmp;
 use std::cell::RefCell;
 use std::path::PathBuf;
 
-use mcore::item::{Item, Icon};
-use mcore::context::Context;
-use mcore::errors::Error;
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::context::Context;
+use crate::mcore::errors::Error;
 
-use frontend::gdk;
-use frontend::gtk;
-use frontend::gtk::prelude::*;
+use crate::frontend::gdk;
+use crate::frontend::gtk;
+use crate::frontend::gtk::prelude::*;
 use self::gdk_pixbuf::prelude::*;
 use self::lru_cache::LruCache;
 

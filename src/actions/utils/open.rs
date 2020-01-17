@@ -1,7 +1,7 @@
 use std::io::Result;
-use actions::utils::subprocess;
-use mcore::action::{Action, ActionResult};
-use mcore::errors::*;
+use crate::actions::utils::subprocess;
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::errors::*;
 
 pub fn that(path: &str) -> Result<()> {
     info!("Opening URL: {}", path);

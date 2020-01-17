@@ -6,8 +6,8 @@
 */
 
 use std::sync::Arc;
-use mcore::item::Item;
-use mcore::errors::Result;
+use crate::mcore::item::Item;
+use crate::mcore::errors::Result;
 
 pub type ActionResult = Result<Vec<Item>>;
 
@@ -33,28 +33,28 @@ pub trait Action {
     fn suggest_arg_scope(&self) -> Option<&str> { None }
 
     /// Run realtime (auto-complete)
-    fn run_arg_realtime(&self, &str) -> ActionResult { unimplemented!() }
+    fn run_arg_realtime(&self, _: &str) -> ActionResult { unimplemented!() }
 
     /// Run the action without input
     fn run_bare(&self) -> ActionResult { unimplemented!() }
 
     /// Run the action with text input
-    fn run_arg(&self, &str) -> ActionResult { unimplemented!() }
+    fn run_arg(&self, _: &str) -> ActionResult { unimplemented!() }
 
 }
 
 /// An actiton with arg
 pub struct PartialAction {
-    action: Arc<Action + Sync + Send>,
+    action: Arc<dyn Action + Sync + Send>,
     arg: String,
 
-    run_callback: Option<Box<Fn() + Sync + Send + 'static>>,
+    run_callback: Option<Box<dyn Fn() + Sync + Send + 'static>>,
 }
 
 impl PartialAction {
-    pub fn new(action: Arc<Action + Sync + Send>,
+    pub fn new(action: Arc<dyn Action + Sync + Send>,
                arg: String,
-               run_callback: Option<Box<Fn() + Sync + Send + 'static>>) -> Self {
+               run_callback: Option<Box<dyn Fn() + Sync + Send + 'static>>) -> Self {
         PartialAction { action, arg, run_callback, }
     }
 }

@@ -2,6 +2,7 @@
 extern crate serde;
 
 use toml;
+use dirs;
 use self::serde::de::Deserialize;
 
 use std;
@@ -103,7 +104,7 @@ impl Config {
         let strval = self.get::<String>(path)?;
         let mut p = std::path::Path::new(&strval).to_path_buf();
         if strval.starts_with("~/") {
-            if let Some(homedir) = std::env::home_dir() {
+            if let Some(homedir) = dirs::home_dir() {
                 p = homedir;
                 p.push(std::path::Path::new(&strval[2..]));
             }

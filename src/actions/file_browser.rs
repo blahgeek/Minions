@@ -2,17 +2,18 @@
 * @Author: BlahGeek
 * @Date:   2017-06-17
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-10
+* @Last Modified time: 2020-01-17
 */
 
-use std::env;
 use std::sync::Arc;
 use std::path::{PathBuf, Path};
 
-use mcore::item::{Item, Icon};
-use mcore::action::{Action, ActionResult};
-use mcore::config::Config;
-use actions::utils::open;
+use dirs;
+
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::config::Config;
+use crate::actions::utils::open;
 
 struct FileBrowserEntry {
     name: String,
@@ -110,7 +111,7 @@ pub fn get(config: &Config) -> Vec<Item> {
         .map(|c| {
             let mut p = Path::new(&c.path).to_path_buf();
             if c.path.starts_with("~/") {
-                if let Some(homedir) = env::home_dir() {
+                if let Some(homedir) = dirs::home_dir() {
                     p = homedir;
                     p.push(Path::new(&c.path[2..]));
                 }

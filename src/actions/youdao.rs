@@ -15,10 +15,10 @@ use self::url::form_urlencoded;
 
 use std::io::Read;
 use std::sync::Arc;
-use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, Icon};
-use mcore::config::Config;
-use mcore::errors::*;
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::config::Config;
+use crate::mcore::errors::*;
 
 struct Youdao {}
 

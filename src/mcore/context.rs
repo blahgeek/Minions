@@ -14,12 +14,12 @@ use self::uuid::Uuid;
 use std::sync::Arc;
 use std::thread;
 use std::rc::Rc;
-use mcore::action::{ActionResult, PartialAction};
-use mcore::item::Item;
-use mcore::config::Config;
-use mcore::lrudb::LruDB;
-use mcore::errors::*;
-use actions;
+use crate::mcore::action::{ActionResult, PartialAction};
+use crate::mcore::item::Item;
+use crate::mcore::config::Config;
+use crate::mcore::lrudb::LruDB;
+use crate::mcore::errors::*;
+use crate::actions;
 
 use self::gtk::ClipboardExt;
 

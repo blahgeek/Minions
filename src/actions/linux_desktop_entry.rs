@@ -13,11 +13,11 @@ use self::ini::Ini;
 use std::ffi::OsStr;
 use std::sync::Arc;
 use std::path::Path;
-use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, Icon};
-use mcore::config::Config;
-use mcore::errors::*;
-use actions::utils::subprocess;
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::config::Config;
+use crate::mcore::errors::*;
+use crate::actions::utils::subprocess;
 
 use error_chain::ChainedError;
 

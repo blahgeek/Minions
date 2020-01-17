@@ -20,15 +20,15 @@ use self::gtk::ClipboardExt;
 use std::sync::Arc;
 use std::mem::transmute;
 
-use mcore::action::{Action, ActionResult};
-use mcore::item::{Item, Icon};
-use mcore::config::Config;
-use mcore::lrudb::LruDB;
-use mcore::errors::*;
+use crate::mcore::action::{Action, ActionResult};
+use crate::mcore::item::{Item, Icon};
+use crate::mcore::config::Config;
+use crate::mcore::lrudb::LruDB;
+use crate::mcore::errors::*;
 
 unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
                                 _: *mut libc::c_void,
-                                f: &Box<Fn(&Clipboard) + 'static>) {
+                                f: &Box<dyn Fn(&Clipboard) + 'static>) {
     f(&Clipboard::from_glib_none(clipboard))
 }
 
@@ -36,7 +36,7 @@ unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
 fn connect_clipboard_change<F>(clipboard: &Clipboard, f: F)
 where F: Fn(&Clipboard) + 'static {
     unsafe {
-        let f: Box<Box<Fn(&Clipboard) + 'static>> =
+        let f: Box<Box<dyn Fn(&Clipboard) + 'static>> =
             Box::new(Box::new(f));
         connect(clipboard.to_glib_none().0, "owner-change",
                 transmute(trampoline as usize), Box::into_raw(f) as *mut _);

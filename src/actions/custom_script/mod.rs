@@ -8,9 +8,9 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 
-use mcore::item::Item;
-use mcore::config::Config;
-use mcore::errors::*;
+use crate::mcore::item::Item;
+use crate::mcore::config::Config;
+use crate::mcore::errors::*;
 use error_chain::ChainedError;
 
 use self::item::ScriptItem;

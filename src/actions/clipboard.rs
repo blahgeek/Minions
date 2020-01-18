@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-07-16
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-10
+* @Last Modified time: 2020-01-17
 */
 
 extern crate gtk;
@@ -12,36 +12,15 @@ extern crate gtk_sys;
 extern crate libc;
 extern crate chrono;
 
-use self::glib::signal::connect;
-use self::glib::translate::*;
-use self::gtk::Clipboard;
-use self::gtk::ClipboardExt;
+use self::glib::ObjectExt;
 
 use std::sync::Arc;
-use std::mem::transmute;
 
 use crate::mcore::action::{Action, ActionResult};
 use crate::mcore::item::{Item, Icon};
 use crate::mcore::config::Config;
 use crate::mcore::lrudb::LruDB;
 use crate::mcore::errors::*;
-
-unsafe extern "C" fn trampoline(clipboard: *mut gtk_sys::GtkClipboard,
-                                _: *mut libc::c_void,
-                                f: &Box<dyn Fn(&Clipboard) + 'static>) {
-    f(&Clipboard::from_glib_none(clipboard))
-}
-
-
-fn connect_clipboard_change<F>(clipboard: &Clipboard, f: F)
-where F: Fn(&Clipboard) + 'static {
-    unsafe {
-        let f: Box<Box<dyn Fn(&Clipboard) + 'static>> =
-            Box::new(Box::new(f));
-        connect(clipboard.to_glib_none().0, "owner-change",
-                transmute(trampoline as usize), Box::into_raw(f) as *mut _);
-    }
-}
 
 
 struct ClipboardHistoryAction {
@@ -86,8 +65,9 @@ impl ClipboardHistoryAction {
 
         let lrudb = LruDB::new(Some(&db_file)).unwrap();
         let clipboard = gtk::Clipboard::get(&gdk::Atom::intern("CLIPBOARD"));
-        connect_clipboard_change(&clipboard, move |clipboard| {
-            let content = clipboard.wait_for_text();
+        let clipboard_copied = clipboard.clone();
+        clipboard.connect_local("owner-change", true, move |_ignore_value| {
+            let content = clipboard_copied.wait_for_text();
             if let Some(text) = content {
                 trace!("New clipboard text: {:?}", text);
                 if ignore_single_byte && text.len() <= 1 {
@@ -96,7 +76,8 @@ impl ClipboardHistoryAction {
                     warn!("Unable to store clipboard text: {}", err);
                 }
             }
-        });
+            None
+        }).expect("Unable to connect clipboard signal");
         action
     }
 }

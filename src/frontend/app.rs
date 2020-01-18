@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-23
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2020-01-15
+* @Last Modified time: 2020-01-17
 */
 
 extern crate glib;
@@ -386,7 +386,7 @@ impl MinionsApp {
 
             if entry_text.len() > 0 && self.ctx.runnable_with_text_realtime(&item) {
                 let (send_ch, recv_ch) = mpsc::channel::<ActionResult>();
-                let entry_text_ = entry_text.clone();
+                let entry_text_ = entry_text.as_str().to_owned();
                 self.ctx.async_run_with_text_realtime(&item, &entry_text, move |res: ActionResult| {
                     if let Err(error) = send_ch.send(res) {
                         warn!("Unable to send to channel: {}", error);

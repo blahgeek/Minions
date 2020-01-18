@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-20
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-10
+* @Last Modified time: 2020-01-17
 */
 
 extern crate gtk;
@@ -20,8 +20,6 @@ use crate::mcore::config::Config;
 use crate::mcore::lrudb::LruDB;
 use crate::mcore::errors::*;
 use crate::actions;
-
-use self::gtk::ClipboardExt;
 
 
 pub struct Context {
@@ -78,7 +76,7 @@ impl Context {
             if let Some(text) = content {
                 trace!("Clipboard content from: {:?}", text);
                 return self.quicksend(&Item {
-                    title: text,
+                    title: text.as_str().into(),
                     ..Item::default()
                 }).chain_err(|| "Failed quicksending from clipboard");
             }

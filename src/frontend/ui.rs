@@ -2,7 +2,7 @@
 * @Author: BlahGeek
 * @Date:   2017-04-22
 * @Last Modified by:   BlahGeek
-* @Last Modified time: 2018-04-08
+* @Last Modified time: 2020-01-17
 */
 
 extern crate gdk_pixbuf;
@@ -17,7 +17,6 @@ use crate::mcore::item::{Item, Icon};
 use crate::mcore::context::Context;
 use crate::mcore::errors::Error;
 
-use crate::frontend::gdk;
 use crate::frontend::gtk;
 use crate::frontend::gtk::prelude::*;
 use self::gdk_pixbuf::prelude::*;
@@ -147,10 +146,7 @@ impl MinionsUI {
                     .and_then(|x| x.get("raw"))
                     .and_then(|x| x.as_str());
                 if let Some(svg) = svg {
-                    let mut color = gdk::RGBA::white();
-                    if let Some(ctx) = self.window.get_style_context() {
-                        color = ctx.get_color(gtk::StateFlags::NORMAL);
-                    }
+                    let color = self.window.get_style_context().get_color(gtk::StateFlags::NORMAL);
                     let red = (color.red * 256.0) as i32;
                     let green = (color.green * 256.0) as i32;
                     let blue = (color.blue * 256.0) as i32;
@@ -161,22 +157,20 @@ impl MinionsUI {
                     let loader = gdk_pixbuf::PixbufLoader::new();
                     let _ = loader.write(svg.as_bytes());
                     let _ = loader.close();
-                    if let Some(p) = loader.get_pixbuf()
+                    pixbuf = loader.get_pixbuf()
                         .and_then(|x| {
                             if x.get_width() >= x.get_height() {
                                 x.scale_simple(ICON_SIZE,
-                                               ((ICON_SIZE as f32) / (x.get_width() as f32) * (x.get_height() as f32)) as i32,
-                                               gdk_pixbuf::InterpType::Bilinear)
+                                    ((ICON_SIZE as f32) / (x.get_width() as f32) * (x.get_height() as f32)) as i32,
+                                    gdk_pixbuf::InterpType::Bilinear)
                             } else {
                                 x.scale_simple(((ICON_SIZE as f32) / (x.get_height() as f32) * (x.get_width() as f32)) as i32,
-                                               ICON_SIZE,
-                                               gdk_pixbuf::InterpType::Bilinear)
+                                ICON_SIZE,
+                                gdk_pixbuf::InterpType::Bilinear)
                             }
-                        }) {
-                            pixbuf = p.clone();
-                        }
+                        });
                 }
-                w_image.set_from_pixbuf(&pixbuf);
+                w_image.set_from_pixbuf(pixbuf.as_ref());
                 w_image.show();
                 w_label.hide();
             },
@@ -198,7 +192,7 @@ impl MinionsUI {
         }
         self.textentry.set_can_focus(false);
         self.textentry.set_editable(false);
-        self.window.set_focus::<gtk::Entry, Option<&gtk::Entry>>(None);
+        self.window.set_focus::<gtk::Entry>(None);
     }
 
     pub fn set_entry_editable(&self) {
@@ -211,7 +205,7 @@ impl MinionsUI {
     }
 
     pub fn get_entry_text(&self) -> String {
-        self.textentry.get_text().unwrap_or(String::new())
+        self.textentry.get_text().and_then(|x| Some(x.as_str().to_owned())).unwrap_or(String::new())
     }
 
     pub fn set_filter_text(&self, text: &str) {
@@ -308,7 +302,7 @@ impl MinionsUI {
         }
 
         if highlight < 0 {
-            self.listbox.select_row(None);
+            self.listbox.select_row::<gtk::ListBoxRow>(None);
         } else {
             self.listbox.select_row(self.listbox.get_row_at_index(highlight - display_start).as_ref());
         }
